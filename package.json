@@ -9,6 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.0.12",
+    "@heroui/react": "^3.0.2",
+    "@heroui/styles": "^3.0.2",
+    "@tanstack/react-query": "^5.97.0",
+    "lucide-react": "^1.8.0",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"

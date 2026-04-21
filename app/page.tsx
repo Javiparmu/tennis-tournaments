@@ -1,64 +1,138 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { Button, Card, Chip } from "@heroui/react";
+import { ArrowRight, CalendarDays, MapPin, Sparkles, Trophy } from "lucide-react";
+import { SiteHeader } from "@/components/site-header";
+import { useUpcomingCalendarQuery } from "@/lib/queries";
+
+function formatDateRange(start: string, end: string) {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const formatter = new Intl.DateTimeFormat("en", { month: "short", day: "numeric" });
+  return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
+}
 
 export default function Home() {
+  const { data: upcoming = [], isLoading } = useUpcomingCalendarQuery(4);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-[#f6faf8] text-zinc-900">
+      <SiteHeader />
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-8">
+        <section className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <Card className="border border-emerald-100 bg-white shadow-sm">
+            <Card.Content className="gap-6 p-8">
+              <Chip variant="soft" className="w-fit border border-emerald-200 bg-emerald-50 text-emerald-700">
+                Built for tennis players and clubs
+              </Chip>
+              <h1 className="max-w-xl text-4xl font-semibold leading-tight text-zinc-900 md:text-5xl">
+                Spot your next tournament in seconds.
+              </h1>
+              <p className="max-w-2xl text-base text-zinc-600">
+                CourtRank blends tournament discovery, Elo progression, and player profiles in one
+                clean workflow. Clubs publish events, players join quickly, and everything is built
+                for speed and clarity.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/tournaments">
+                  <Button className="bg-emerald-600 font-medium text-white hover:bg-emerald-700">
+                    Explore tournaments
+                  </Button>
+                </Link>
+                <Link href="/profile">
+                  <Button variant="outline" className="border-emerald-200 text-emerald-700">
+                    Open my profile
+                  </Button>
+                </Link>
+              </div>
+              <div className="grid gap-3 border-t border-zinc-100 pt-5 text-sm text-zinc-600 sm:grid-cols-3">
+                <p className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  Live tournament feed
+                </p>
+                <p className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-emerald-600" />
+                  Elo-based ranking
+                </p>
+                <p className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-emerald-600" />
+                  Fast weekly planning
+                </p>
+              </div>
+            </Card.Content>
+          </Card>
+
+          <Card className="border border-zinc-200 bg-white shadow-sm">
+            <Card.Header className="items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-emerald-600" />
+                <p className="text-lg font-semibold text-zinc-900">Calendar at a glance</p>
+              </div>
+              <Link href="/tournaments" className="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+                View all
+              </Link>
+            </Card.Header>
+            <Card.Content className="gap-4 pt-0">
+              {upcoming.slice(0, 3).map((tournament) => (
+                <div key={tournament.id} className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3">
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-zinc-900">{tournament.name}</p>
+                    <Chip size="sm" variant="soft" color="success">
+                      {tournament.surface ?? "N/A"}
+                    </Chip>
+                  </div>
+                  <p className="text-xs text-zinc-500">{formatDateRange(tournament.startDate, tournament.endDate)}</p>
+                </div>
+              ))}
+              {!isLoading && upcoming.length === 0 && (
+                <p className="text-sm text-zinc-500">No upcoming tournaments available.</p>
+              )}
+            </Card.Content>
+          </Card>
+        </section>
+
+        <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-zinc-900">Upcoming tournaments</h2>
+            <Link href="/tournaments">
+              <Button variant="ghost" className="text-zinc-700">
+                See all
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {upcoming.map((tournament) => (
+              <Card key={tournament.id} className="border border-zinc-200 bg-zinc-50/70">
+                <Card.Content className="gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-zinc-900">{tournament.name}</p>
+                      <p className="text-sm text-zinc-500">Club #{tournament.clubId}</p>
+                    </div>
+                    <Chip color="success" variant="soft">
+                      {tournament.surface ?? "N/A"}
+                    </Chip>
+                  </div>
+                  <div className="space-y-2 text-sm text-zinc-600">
+                    <p className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-emerald-700" />
+                      {formatDateRange(tournament.startDate, tournament.endDate)}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-emerald-700" />
+                      {tournament.description ?? "Tournament details from backend"}
+                    </p>
+                  </div>
+                </Card.Content>
+              </Card>
+            ))}
+            {!isLoading && upcoming.length === 0 && (
+              <p className="text-sm text-zinc-500">No upcoming tournaments available.</p>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
