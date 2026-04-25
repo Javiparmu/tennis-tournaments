@@ -20,8 +20,18 @@ export type User = {
   id: number;
   username: string;
   email: string | null;
+  authProvider: string | null;
+  authSubject: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+  achievements: Achievement[];
+};
+
+export type Achievement = {
+  id: number;
+  key: string;
+  name: string;
+  description: string | null;
 };
 
 export type Player = {
@@ -70,6 +80,7 @@ export type Match = {
   score: TennisScore | null;
   status: MatchStatus;
   scheduledTime: string | null;
+  completedAt: string | null;
   court: string | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -121,11 +132,82 @@ export type Tournament = {
   phases: TournamentPhase[];
 };
 
-export type PlayerProfileView = {
+export type UserMatchResult = "WIN" | "LOSS";
+
+export type UserMatchTournamentSummary = {
+  id: number;
+  name: string;
+};
+
+export type UserMatchPhaseSummary = {
+  id: number;
+  phaseOrder: number;
+  format: PhaseFormat;
+  round: number;
+};
+
+export type UserMatchOpponentSummary = {
+  id: number;
+  name: string;
+  userId: number | null;
+};
+
+export type UserMatchActivityItem = {
+  matchId: number;
+  completedAt: string;
+  status: Extract<MatchStatus, "COMPLETED" | "WALKOVER">;
+  result: UserMatchResult;
+  score: TennisScore | null;
+  court: string | null;
+  tournament: UserMatchTournamentSummary;
+  phase: UserMatchPhaseSummary;
+  opponent: UserMatchOpponentSummary | null;
+};
+
+export type UserMatchActivityResponse = {
+  userId: number;
+  playerId: number | null;
+  playerName: string | null;
+  from: string;
+  to: string;
+  matches: UserMatchActivityItem[];
+};
+
+export type RacketVisibility = "PUBLIC" | "PRIVATE";
+
+export type RacketStringingHistoryEntry = {
+  id: number;
+  stringingDate: string;
+  mainsTensionKg: number;
+  crossesTensionKg: number;
+  mainStringType: string | null;
+  crossStringType: string | null;
+  performanceNotes: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type RacketSummary = {
+  id: number;
   displayName: string;
-  elo: number;
-  points: number;
-  achievements: string[];
-  bio: string;
-  favoriteSurface: SurfaceType | null;
+  brand: string | null;
+  model: string | null;
+  stringPattern: string | null;
+  visibility: RacketVisibility;
+  latestStringing: RacketStringingHistoryEntry | null;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type RacketDetails = {
+  id: number;
+  displayName: string;
+  brand: string | null;
+  model: string | null;
+  stringPattern: string | null;
+  visibility: RacketVisibility;
+  latestStringing: RacketStringingHistoryEntry | null;
+  history: RacketStringingHistoryEntry[];
+  createdAt: string;
+  updatedAt: string | null;
 };

@@ -1,4 +1,12 @@
-import type { ApiResponse, Player, PlayerProfileView, Tournament } from "./types";
+import type {
+  Achievement,
+  ApiResponse,
+  RacketSummary,
+  Tournament,
+  User,
+  UserMatchActivityItem,
+  UserMatchActivityResponse,
+} from "./types";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 const requestTimeoutMs = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS ?? 8000);
@@ -46,18 +54,150 @@ const mockTournaments: Tournament[] = [
   },
 ];
 
-const mockPlayers: Player[] = [
-  { id: 1, name: "Rising Baseline Player", external: false, user: { id: 1, username: "rising.player" } },
+const mockAchievements: Achievement[] = [
+  {
+    id: 1,
+    key: "tournament_winner",
+    name: "Tournament Winner",
+    description: "Awarded for winning at least one tournament.",
+  },
+  {
+    id: 2,
+    key: "match_hardened",
+    name: "Match Hardened",
+    description: "Played enough matches to show real consistency.",
+  },
 ];
 
-function getMockProfile(): PlayerProfileView {
+const mockUser: User = {
+  id: 1,
+  username: "rising.player",
+  email: "rising.player@example.com",
+  authProvider: "clerk",
+  authSubject: "mock-subject",
+  createdAt: "2026-04-01T10:00:00.000Z",
+  updatedAt: "2026-04-20T10:00:00.000Z",
+  achievements: mockAchievements,
+};
+
+const mockMatches: UserMatchActivityItem[] = [
+  {
+    matchId: 101,
+    completedAt: "2026-04-05T17:00:00.000Z",
+    status: "COMPLETED",
+    result: "WIN",
+    score: {
+      sets: [
+        { player1Games: 6, player2Games: 4, tiebreak: null },
+        { player1Games: 6, player2Games: 3, tiebreak: null },
+      ],
+    },
+    court: "Court 2",
+    tournament: { id: 7, name: "Madrid Spring Open" },
+    phase: { id: 18, phaseOrder: 1, format: "KNOCKOUT", round: 1 },
+    opponent: { id: 11, name: "Lucia Ramos", userId: 2 },
+  },
+  {
+    matchId: 102,
+    completedAt: "2026-04-12T10:30:00.000Z",
+    status: "COMPLETED",
+    result: "LOSS",
+    score: {
+      sets: [
+        { player1Games: 4, player2Games: 6, tiebreak: null },
+        { player1Games: 4, player2Games: 6, tiebreak: null },
+      ],
+    },
+    court: "Court 1",
+    tournament: { id: 7, name: "Madrid Spring Open" },
+    phase: { id: 18, phaseOrder: 1, format: "KNOCKOUT", round: 2 },
+    opponent: { id: 12, name: "Marta Gil", userId: 3 },
+  },
+  {
+    matchId: 103,
+    completedAt: "2026-04-18T09:00:00.000Z",
+    status: "WALKOVER",
+    result: "WIN",
+    score: null,
+    court: null,
+    tournament: { id: 9, name: "Valencia Weekend Cup" },
+    phase: { id: 21, phaseOrder: 1, format: "SWISS", round: 2 },
+    opponent: { id: 13, name: "Bye", userId: null },
+  },
+];
+
+const mockPublicRackets: RacketSummary[] = [
+  {
+    id: 1,
+    displayName: "Blade 98",
+    brand: "Wilson",
+    model: "V9",
+    stringPattern: "16x19",
+    visibility: "PUBLIC",
+    latestStringing: {
+      id: 100,
+      stringingDate: "2026-04-10",
+      mainsTensionKg: 22,
+      crossesTensionKg: 21,
+      mainStringType: "Alu Power",
+      crossStringType: "Alu Power",
+      performanceNotes: "Firm but controlled.",
+      createdAt: "2026-04-10T09:00:00.000Z",
+      updatedAt: null,
+    },
+    createdAt: "2026-03-01T09:00:00.000Z",
+    updatedAt: "2026-04-10T09:00:00.000Z",
+  },
+];
+
+const mockMyRackets: RacketSummary[] = [
+  ...mockPublicRackets,
+  {
+    id: 2,
+    displayName: "Prestige Tour",
+    brand: "Head",
+    model: "2025",
+    stringPattern: "18x20",
+    visibility: "PRIVATE",
+    latestStringing: {
+      id: 101,
+      stringingDate: "2026-04-14",
+      mainsTensionKg: 21.5,
+      crossesTensionKg: 20.5,
+      mainStringType: "Lynx Tour",
+      crossStringType: "Velocity",
+      performanceNotes: "Match-day setup.",
+      createdAt: "2026-04-14T11:00:00.000Z",
+      updatedAt: null,
+    },
+    createdAt: "2026-02-18T08:00:00.000Z",
+    updatedAt: "2026-04-14T11:00:00.000Z",
+  },
+];
+
+function buildMockUser(userId: number): User {
   return {
-    displayName: "Rising Baseline Player",
-    elo: 1420,
-    points: 980,
-    achievements: ["Top 8 Finish", "5 Match Win Streak", "Clay Specialist"],
-    favoriteSurface: "CLAY",
-    bio: "Competing every weekend and improving one tournament at a time.",
+    ...mockUser,
+    id: userId,
+    username: userId === mockUser.id ? mockUser.username : `player.${userId}`,
+  };
+}
+
+function buildMockActivity(userId: number, from: string, to: string): UserMatchActivityResponse {
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  const matches = mockMatches.filter((match) => {
+    const completedAt = new Date(match.completedAt);
+    return completedAt >= fromDate && completedAt <= toDate;
+  });
+
+  return {
+    userId,
+    playerId: userId,
+    playerName: "Rising Baseline Player",
+    from,
+    to,
+    matches,
   };
 }
 
@@ -70,14 +210,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
 
   try {
+    const headers = new Headers(init?.headers);
+    headers.set("Content-Type", "application/json");
+
     const response = await fetch(`${apiBaseUrl}${path}`, {
       ...init,
       signal: controller.signal,
       cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        ...(init?.headers ?? {}),
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -91,6 +231,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function buildRequestInit(init?: RequestInit, token?: string | null): RequestInit {
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json");
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return {
+    ...init,
+    headers,
+  };
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
@@ -110,35 +263,55 @@ export async function getUpcomingCalendar(limit = 4): Promise<Tournament[]> {
     .slice(0, limit);
 }
 
-export async function getPlayers(): Promise<Player[]> {
-  if (useMockData) return mockPlayers;
-
-  try {
-    return await request<Player[]>("/players");
-  } catch {
-    return mockPlayers;
+export async function getUser(userId: number): Promise<User> {
+  if (useMockData) {
+    return buildMockUser(userId);
   }
+
+  return request<User>(`/users/${userId}`);
 }
 
-export async function getCurrentPlayerProfile(username?: string): Promise<PlayerProfileView | null> {
-  if (useMockData) return getMockProfile();
-
-  try {
-    const players = await getPlayers();
-    const current =
-      players.find((player) => player.user?.username === username) ??
-      players.find((player) => !player.external) ??
-      players[0];
-    if (!current) return null;
-    return {
-      displayName: current.name,
-      elo: 1400,
-      points: 0,
-      achievements: [],
-      favoriteSurface: null,
-      bio: "Your profile is linked from Clerk and hydrated by backend data.",
-    };
-  } catch {
-    return getMockProfile();
+export async function getMe(token: string | null | undefined): Promise<User> {
+  if (useMockData) {
+    return mockUser;
   }
+
+  if (!token) {
+    throw new Error("Authentication token is required.");
+  }
+
+  return request<User>("/users/me", buildRequestInit(undefined, token));
+}
+
+export async function getUserMatchActivity(
+  userId: number,
+  from: string,
+  to: string,
+): Promise<UserMatchActivityResponse> {
+  if (useMockData) {
+    return buildMockActivity(userId, from, to);
+  }
+
+  const query = new URLSearchParams({ from, to }).toString();
+  return request<UserMatchActivityResponse>(`/users/${userId}/matches?${query}`);
+}
+
+export async function getPublicRackets(userId: number): Promise<RacketSummary[]> {
+  if (useMockData) {
+    return mockPublicRackets;
+  }
+
+  return request<RacketSummary[]>(`/users/${userId}/rackets`);
+}
+
+export async function getMyRackets(token: string | null | undefined): Promise<RacketSummary[]> {
+  if (useMockData) {
+    return mockMyRackets;
+  }
+
+  if (!token) {
+    throw new Error("Authentication token is required.");
+  }
+
+  return request<RacketSummary[]>("/users/me/rackets", buildRequestInit(undefined, token));
 }
