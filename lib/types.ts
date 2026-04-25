@@ -173,7 +173,86 @@ export type UserMatchActivityResponse = {
   matches: UserMatchActivityItem[];
 };
 
+export type UserProfileMatchEntry = {
+  matchId: number;
+  status: MatchStatus;
+  result: UserMatchResult | null;
+  scheduledTime: string | null;
+  completedAt: string | null;
+  score: TennisScore | null;
+  court: string | null;
+  tournament: UserMatchTournamentSummary;
+  phase: UserMatchPhaseSummary;
+  opponent: UserMatchOpponentSummary | null;
+};
+
+export type ProfileCalendarDay = {
+  date: string;
+  totalCount: number;
+  scheduledMatchCount: number;
+  liveMatchCount: number;
+  completedMatchCount: number;
+  walkoverMatchCount: number;
+  trainingCount: number;
+};
+
+export type ProfileCalendarEvent = {
+  eventId: string;
+  eventType: "MATCH" | "TRAINING";
+  date: string;
+  sortTime: string | null;
+  match: UserProfileMatchEntry | null;
+  training: UserTrainingEntry | null;
+};
+
+export type ProfileCalendarResponse = {
+  userId: number;
+  from: string;
+  to: string;
+  calendarDays: ProfileCalendarDay[];
+  events: ProfileCalendarEvent[];
+};
+
 export type RacketVisibility = "PUBLIC" | "PRIVATE";
+
+export type TrainingVisibility = "PUBLIC" | "PRIVATE";
+
+export type UserTrainingEntry = {
+  id: number;
+  trainingDate: string;
+  durationMinutes: number | null;
+  notes: string | null;
+  visibility: TrainingVisibility;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+export type UserTrainingCalendarDay = {
+  date: string;
+  trainingCount: number;
+};
+
+export type UserTrainingRangeResponse = {
+  userId: number;
+  from: string;
+  to: string;
+  calendarDays: UserTrainingCalendarDay[];
+  trainings: UserTrainingEntry[];
+};
+
+export type CreateTrainingRequest = {
+  trainingDate: string;
+  durationMinutes?: number | null;
+  notes?: string | null;
+  visibility: TrainingVisibility;
+};
+
+export type UpdateTrainingRequest = {
+  trainingDate?: string;
+  durationMinutes?: number | null;
+  notes?: string | null;
+  visibility?: TrainingVisibility;
+};
 
 export type RacketStringingHistoryEntry = {
   id: number;

@@ -1,12 +1,14 @@
-import type { UserMatchActivityItem } from "@/lib/types";
+import type { ProfileCalendarDay, ProfileCalendarEvent, UserProfileMatchEntry } from "@/lib/types";
 
 export type CalendarMode = "month" | "week";
+export type AgendaFilter = "ALL" | "MATCH" | "TRAINING";
 
 export type CalendarDay = {
   date: Date;
   key: string;
   inCurrentPeriod: boolean;
-  matches: UserMatchActivityItem[];
+  summary: ProfileCalendarDay | null;
+  events: ProfileCalendarEvent[];
 };
 
 const weekdayFormatter = new Intl.DateTimeFormat("en", { weekday: "short" });
@@ -15,6 +17,16 @@ const dayFormatter = new Intl.DateTimeFormat("en", {
   weekday: "short",
   month: "short",
   day: "numeric",
+});
+const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const timeFormatter = new Intl.DateTimeFormat("en", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
 function copyDate(value: Date) {
@@ -40,10 +52,6 @@ export function toLocalDayKey(value: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export function getLocalDayKeyFromIso(value: string) {
-  return toLocalDayKey(new Date(value));
-}
-
 export function startOfLocalWeek(value: Date) {
   const start = normalizeLocalStart(value);
   const dayOffset = (start.getDay() + 6) % 7;
@@ -64,8 +72,8 @@ export function getVisibleRange(mode: CalendarMode, anchorDate: Date) {
     return {
       from,
       to,
-      fromIso: from.toISOString(),
-      toIso: to.toISOString(),
+      fromDate: toLocalDayKey(from),
+      toDate: toLocalDayKey(to),
     };
   }
 
@@ -74,8 +82,8 @@ export function getVisibleRange(mode: CalendarMode, anchorDate: Date) {
   return {
     from,
     to,
-    fromIso: from.toISOString(),
-    toIso: to.toISOString(),
+    fromDate: toLocalDayKey(from),
+    toDate: toLocalDayKey(to),
   };
 }
 
@@ -108,12 +116,16 @@ export function getWeekdayLabels() {
   });
 }
 
-export function buildMatchesByDay(matches: UserMatchActivityItem[]) {
-  return matches.reduce<Record<string, UserMatchActivityItem[]>>((acc, match) => {
-    const key = getLocalDayKeyFromIso(match.completedAt);
-    acc[key] = [...(acc[key] ?? []), match].sort(
-      (left, right) => +new Date(left.completedAt) - +new Date(right.completedAt),
-    );
+export function buildCalendarSummariesByDay(days: ProfileCalendarDay[]) {
+  return days.reduce<Record<string, ProfileCalendarDay>>((acc, day) => {
+    acc[day.date] = day;
+    return acc;
+  }, {});
+}
+
+export function buildEventsByDay(events: ProfileCalendarEvent[]) {
+  return events.reduce<Record<string, ProfileCalendarEvent[]>>((acc, event) => {
+    acc[event.date] = [...(acc[event.date] ?? []), event];
     return acc;
   }, {});
 }
@@ -121,14 +133,19 @@ export function buildMatchesByDay(matches: UserMatchActivityItem[]) {
 export function getCalendarDays(
   mode: CalendarMode,
   anchorDate: Date,
-  matchesByDay: Record<string, UserMatchActivityItem[]>,
+  summariesByDay: Record<string, ProfileCalendarDay>,
+  eventsByDay: Record<string, ProfileCalendarEvent[]>,
 ) {
   return mode === "week"
-    ? buildWeekDays(anchorDate, matchesByDay)
-    : buildMonthDays(anchorDate, matchesByDay);
+    ? buildWeekDays(anchorDate, summariesByDay, eventsByDay)
+    : buildMonthDays(anchorDate, summariesByDay, eventsByDay);
 }
 
-function buildWeekDays(anchorDate: Date, matchesByDay: Record<string, UserMatchActivityItem[]>) {
+function buildWeekDays(
+  anchorDate: Date,
+  summariesByDay: Record<string, ProfileCalendarDay>,
+  eventsByDay: Record<string, ProfileCalendarEvent[]>,
+) {
   const start = startOfLocalWeek(anchorDate);
   return Array.from({ length: 7 }, (_, index) => {
     const day = copyDate(start);
@@ -138,12 +155,17 @@ function buildWeekDays(anchorDate: Date, matchesByDay: Record<string, UserMatchA
       date: day,
       key,
       inCurrentPeriod: true,
-      matches: matchesByDay[key] ?? [],
+      summary: summariesByDay[key] ?? null,
+      events: eventsByDay[key] ?? [],
     } satisfies CalendarDay;
   });
 }
 
-function buildMonthDays(anchorDate: Date, matchesByDay: Record<string, UserMatchActivityItem[]>) {
+function buildMonthDays(
+  anchorDate: Date,
+  summariesByDay: Record<string, ProfileCalendarDay>,
+  eventsByDay: Record<string, ProfileCalendarEvent[]>,
+) {
   const monthStart = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
   const gridStart = startOfLocalWeek(monthStart);
 
@@ -155,7 +177,8 @@ function buildMonthDays(anchorDate: Date, matchesByDay: Record<string, UserMatch
       date: day,
       key,
       inCurrentPeriod: day.getMonth() === anchorDate.getMonth(),
-      matches: matchesByDay[key] ?? [],
+      summary: summariesByDay[key] ?? null,
+      events: eventsByDay[key] ?? [],
     } satisfies CalendarDay;
   });
 }
@@ -169,13 +192,67 @@ export function formatDayHeading(dayKey: string) {
   return dayFormatter.format(new Date(`${dayKey}T12:00:00`));
 }
 
-export function formatTime(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+export function formatDateTime(value: string) {
+  return dateTimeFormatter.format(new Date(value));
 }
 
-export function countWins(matches: UserMatchActivityItem[]) {
-  return matches.filter((match) => match.result === "WIN").length;
+export function formatTime(value: string) {
+  return timeFormatter.format(new Date(value));
+}
+
+export function getInitialSelectedDayKey(
+  anchorDate: Date,
+  rangeFrom: Date,
+  rangeTo: Date,
+  manualSelectedDayKey: string | null,
+  eventsByDay: Record<string, ProfileCalendarEvent[]>,
+) {
+  if (manualSelectedDayKey && isDayKeyWithinRange(manualSelectedDayKey, rangeFrom, rangeTo)) {
+    return manualSelectedDayKey;
+  }
+
+  return Object.keys(eventsByDay).sort()[0] ?? toLocalDayKey(anchorDate);
+}
+
+export function filterAgendaEvents(events: ProfileCalendarEvent[], filter: AgendaFilter) {
+  if (filter === "ALL") return events;
+  return events.filter((event) => event.eventType === filter);
+}
+
+export function countMatchOutcomes(events: ProfileCalendarEvent[]) {
+  return events.reduce(
+    (acc, event) => {
+      if (event.eventType !== "MATCH" || !event.match) return acc;
+
+      switch (event.match.status) {
+        case "SCHEDULED":
+          acc.scheduled += 1;
+          break;
+        case "LIVE":
+          acc.live += 1;
+          break;
+        case "COMPLETED":
+          acc.completed += 1;
+          break;
+        case "WALKOVER":
+          acc.walkover += 1;
+          break;
+      }
+
+      if (event.match.result === "WIN") {
+        acc.wins += 1;
+      }
+
+      return acc;
+    },
+    { scheduled: 0, live: 0, completed: 0, walkover: 0, wins: 0 },
+  );
+}
+
+export function countTrainingSessions(events: ProfileCalendarEvent[]) {
+  return events.filter((event) => event.eventType === "TRAINING").length;
+}
+
+export function getMatchDisplayTime(match: UserProfileMatchEntry) {
+  return match.completedAt ?? match.scheduledTime;
 }

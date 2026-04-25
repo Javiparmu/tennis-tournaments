@@ -1,29 +1,27 @@
 "use client";
 
 import { Button, Card, Chip } from "@heroui/react";
-import type { UserMatchActivityItem } from "@/lib/types";
+import type { UserProfileMatchEntry } from "@/lib/types";
 
 type MatchModalProps = {
-  match: UserMatchActivityItem | null;
+  match: UserProfileMatchEntry | null;
   onClose: () => void;
 };
 
-function formatScore(match: UserMatchActivityItem) {
+function formatScore(match: UserProfileMatchEntry) {
   if (!match.score) {
     return match.status === "WALKOVER" ? "Walkover" : "No score recorded";
   }
 
   return match.score.sets
     .map((set) => {
-      const tiebreak = set.tiebreak
-        ? ` (${set.tiebreak.player1Points}-${set.tiebreak.player2Points})`
-        : "";
+      const tiebreak = set.tiebreak ? ` (${set.tiebreak.player1Points}-${set.tiebreak.player2Points})` : "";
       return `${set.player1Games}-${set.player2Games}${tiebreak}`;
     })
     .join("  ");
 }
 
-function formatCompletedAt(value: string) {
+function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
@@ -36,6 +34,8 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
   if (!match) {
     return null;
   }
+
+  const primaryTime = match.completedAt ?? match.scheduledTime;
 
   return (
     <div
@@ -60,10 +60,21 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
         </Card.Header>
         <Card.Content className="gap-5 p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Chip color={match.result === "WIN" ? "success" : "danger"} variant="soft">
-              {match.result}
-            </Chip>
-            <Chip variant="soft" color={match.status === "WALKOVER" ? "warning" : "default"}>
+            {match.result ? (
+              <Chip color={match.result === "WIN" ? "success" : "danger"} variant="soft">
+                {match.result}
+              </Chip>
+            ) : null}
+            <Chip
+              variant="soft"
+              color={
+                match.status === "WALKOVER"
+                  ? "warning"
+                  : match.status === "LIVE"
+                    ? "warning"
+                    : "default"
+              }
+            >
               {match.status}
             </Chip>
           </div>
@@ -74,8 +85,10 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
               <p className="mt-1 font-medium text-zinc-900">{match.opponent?.name ?? "No opponent recorded"}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Completed</p>
-              <p className="mt-1 font-medium text-zinc-900">{formatCompletedAt(match.completedAt)}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                {match.completedAt ? "Completed" : "Scheduled"}
+              </p>
+              <p className="mt-1 font-medium text-zinc-900">{primaryTime ? formatDateTime(primaryTime) : "Not set"}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Court</p>
