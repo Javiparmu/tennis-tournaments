@@ -15,14 +15,14 @@ import {
   useUpdateTrainingMutation,
   useUserProfileCalendarQuery,
   useUserQuery,
-} from "@/lib/queries";
+} from "@/data/queries";
 import type {
   CreateTrainingRequest,
   ProfileCalendarEvent,
   RacketSummary,
   UserProfileMatchEntry,
   UserTrainingEntry,
-} from "@/lib/types";
+} from "@/models";
 import {
   type AgendaFilter,
   type CalendarMode,

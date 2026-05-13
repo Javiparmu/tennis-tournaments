@@ -1,4 +1,4 @@
-import type { ProfileCalendarDay, ProfileCalendarEvent, UserProfileMatchEntry } from "@/lib/types";
+import type { ProfileCalendarDay, ProfileCalendarEvent, UserProfileMatchEntry } from "@/models";
 
 export type CalendarMode = "month" | "week";
 export type AgendaFilter = "ALL" | "MATCH" | "TRAINING";

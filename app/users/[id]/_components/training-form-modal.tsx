@@ -2,7 +2,7 @@
 
 import { Button, Card, Chip } from "@heroui/react";
 import { useState } from "react";
-import type { CreateTrainingRequest, TrainingVisibility, UserTrainingEntry } from "@/lib/types";
+import type { CreateTrainingRequest, TrainingVisibility, UserTrainingEntry } from "@/models";
 
 type TrainingFormModalProps = {
   training: UserTrainingEntry | null | undefined;

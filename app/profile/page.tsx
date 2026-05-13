@@ -4,7 +4,7 @@ import { Show, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { SiteHeader } from "@/components/site-header";
-import { useMeQuery } from "@/lib/queries";
+import { useMeQuery } from "@/data/queries";
 
 export default function ProfilePage() {
   const router = useRouter();

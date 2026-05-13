@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button, Card, Chip } from "@heroui/react";
 import { ArrowRight, CalendarDays, MapPin, Sparkles, Trophy } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { useUpcomingCalendarQuery } from "@/lib/queries";
+import { useUpcomingCalendarQuery } from "@/data/queries";
 
 function formatDateRange(start: string, end: string) {
   const startDate = new Date(start);

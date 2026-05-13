@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, Chip } from "@heroui/react";
-import type { UserProfileMatchEntry } from "@/lib/types";
+import type { UserProfileMatchEntry } from "@/models";
 
 type MatchModalProps = {
   match: UserProfileMatchEntry | null;

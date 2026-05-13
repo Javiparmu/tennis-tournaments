@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card } from "@heroui/react";
-import type { ProfileCalendarDay, ProfileCalendarEvent } from "@/lib/types";
+import type { ProfileCalendarDay, ProfileCalendarEvent } from "@/models";
 import {
   type CalendarMode,
   buildCalendarSummariesByDay,
