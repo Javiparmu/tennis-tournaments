@@ -3,7 +3,7 @@
 import { Card, Chip } from "@heroui/react";
 import { CalendarDays, Gauge, MapPin, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { useTournamentsQuery } from "@/lib/queries";
+import { useTournamentsQuery } from "@/data/queries";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
