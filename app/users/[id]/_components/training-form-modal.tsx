@@ -47,19 +47,21 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
   const isEditing = training != null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isSubmitting) {
-          onClose();
-        }
-      }}
-    >
-      <Card className="w-full max-w-xl border border-zinc-200 bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8">
+      <button
+        type="button"
+        aria-label="Close training form"
+        className="absolute inset-0 cursor-default disabled:cursor-not-allowed"
+        disabled={isSubmitting}
+        onClick={onClose}
+      />
+      <Card className="relative z-10 w-full max-w-xl border border-zinc-200 bg-white shadow-2xl">
         <Card.Header className="flex items-start justify-between gap-4 p-5 pb-0">
           <div>
             <p className="text-lg font-semibold">{isEditing ? "Edit training session" : "Add training session"}</p>
-            <p className="text-sm text-zinc-500">Choose a date, note the work done, and decide if it is public or private.</p>
+            <p className="text-sm text-zinc-500">
+              Choose a date, note the work done, and decide if it is public or private.
+            </p>
           </div>
           <Chip variant="soft" color={form.visibility === "PUBLIC" ? "success" : "default"}>
             {form.visibility}
@@ -148,7 +150,13 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
             {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-zinc-700"
+                onPress={onClose}
+                isDisabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700" isLoading={isSubmitting}>

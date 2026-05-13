@@ -38,15 +38,14 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
   const primaryTime = match.completedAt ?? match.scheduledTime;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <Card className="w-full max-w-xl border border-zinc-200 bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8">
+      <button
+        type="button"
+        aria-label="Close match details"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+      />
+      <Card className="relative z-10 w-full max-w-xl border border-zinc-200 bg-white shadow-2xl">
         <Card.Header className="flex items-start justify-between gap-4 p-5 pb-0">
           <div>
             <p className="text-lg font-semibold">{match.tournament.name}</p>
@@ -67,13 +66,7 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
             ) : null}
             <Chip
               variant="soft"
-              color={
-                match.status === "WALKOVER"
-                  ? "warning"
-                  : match.status === "LIVE"
-                    ? "warning"
-                    : "default"
-              }
+              color={match.status === "WALKOVER" ? "warning" : match.status === "LIVE" ? "warning" : "default"}
             >
               {match.status}
             </Chip>
