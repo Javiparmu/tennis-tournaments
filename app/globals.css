@@ -2,27 +2,85 @@
 @import "@heroui/styles";
 
 :root {
-  --background: #f6faf8;
-  --foreground: #121713;
-  --accent: #16945f;
+  --background: #fafcf6;
+  --foreground: #0e1a12;
+
+  /* Brand */
+  --court: #0b6b3a;
+  --court-hover: #085c31;
+  --court-ink: #0e1a12;
+  --ball: #c6f24e;
+  --ball-bright: #d7ff3e;
+  --blue: #1d4ed8;
+
+  /* Surfaces */
+  --surface-clay: #d8694c;
+  --surface-hard: #2563eb;
+  --surface-grass: #16a34a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-court: var(--court);
+  --color-court-hover: var(--court-hover);
+  --color-court-ink: var(--court-ink);
+  --color-ball: var(--ball);
+  --color-ball-bright: var(--ball-bright);
+  --color-blue: var(--blue);
+
+  --color-clay: var(--surface-clay);
+  --color-hard: var(--surface-hard);
+  --color-grass: var(--surface-grass);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-archivo);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #f6faf8;
-    --foreground: #121713;
-  }
+  --animate-marquee: marquee 40s linear infinite;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Tennis-court line texture — subtle, layered behind the hero. */
+.court-lines {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--court) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--court) 8%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Soft radial glow blob (lime / court). Apply to an absolutely-positioned div. */
+.glow {
+  background: radial-gradient(closest-side, var(--ball-bright), transparent);
+  filter: blur(40px);
+  opacity: 0.55;
+}
+.glow-court {
+  background: radial-gradient(closest-side, var(--court), transparent);
+  filter: blur(48px);
+  opacity: 0.22;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Respect reduced motion: halt the auto-scroll marquee. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  [class*="animate-marquee"] {
+    /* biome-ignore lint/complexity/noImportantStyles: must override the keyframe animation to honor reduced-motion */
+    animation: none !important;
+  }
 }

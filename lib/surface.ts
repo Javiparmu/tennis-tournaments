@@ -1,0 +1,35 @@
+// Surface → color mapping, reused across the timeline, grid, and (later) the
+// tournaments page so clay/hard/grass read the same everywhere.
+
+export type Surface = "CLAY" | "HARD" | "GRASS";
+
+type SurfaceStyle = {
+  label: string;
+  /** Tailwind text color token. */
+  text: string;
+  /** Tailwind background tint for soft chips. */
+  bg: string;
+  /** Tailwind border token. */
+  border: string;
+  /** Raw hex, for inline accents (left bars, dots). */
+  hex: string;
+};
+
+const STYLES: Record<Surface, SurfaceStyle> = {
+  CLAY: { label: "Tierra batida", text: "text-clay", bg: "bg-clay/10", border: "border-clay/30", hex: "#d8694c" },
+  HARD: { label: "Pista dura", text: "text-hard", bg: "bg-hard/10", border: "border-hard/30", hex: "#2563eb" },
+  GRASS: { label: "Hierba", text: "text-grass", bg: "bg-grass/10", border: "border-grass/30", hex: "#16a34a" },
+};
+
+const FALLBACK: SurfaceStyle = {
+  label: "Por definir",
+  text: "text-zinc-500",
+  bg: "bg-zinc-100",
+  border: "border-zinc-200",
+  hex: "#71717a",
+};
+
+export function surfaceStyle(surface: string | null | undefined): SurfaceStyle {
+  if (!surface) return FALLBACK;
+  return STYLES[surface.toUpperCase() as Surface] ?? FALLBACK;
+}
