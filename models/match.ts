@@ -69,6 +69,10 @@ export type UserMatchActivityResponse = {
   matches: UserMatchActivityItem[];
 };
 
+export type UpdateMatchScoreRequest = {
+  score: TennisScore;
+};
+
 export type UserProfileMatchEntry = {
   matchId: number;
   status: MatchStatus;

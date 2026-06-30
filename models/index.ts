@@ -1,5 +1,7 @@
 export type * from "./api";
+export type * from "./bracket";
 export type * from "./club";
+export type * from "./join-request";
 export type * from "./match";
 export type * from "./player";
 export type * from "./profile-calendar";
