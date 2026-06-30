@@ -1,7 +1,7 @@
 import type { ProfileCalendarDay, ProfileCalendarEvent, UserProfileMatchEntry } from "@/models";
 
 export type CalendarMode = "month" | "week";
-export type AgendaFilter = "ALL" | "MATCH" | "TRAINING";
+export type AgendaFilter = "ALL" | "MATCH" | "TRAINING" | "TOURNAMENT";
 
 export type CalendarDay = {
   date: Date;
@@ -11,20 +11,20 @@ export type CalendarDay = {
   events: ProfileCalendarEvent[];
 };
 
-const weekdayFormatter = new Intl.DateTimeFormat("en", { weekday: "short" });
-const monthFormatter = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
-const dayFormatter = new Intl.DateTimeFormat("en", {
+const weekdayFormatter = new Intl.DateTimeFormat("es-ES", { weekday: "short" });
+const monthFormatter = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" });
+const dayFormatter = new Intl.DateTimeFormat("es-ES", {
   weekday: "short",
   month: "short",
   day: "numeric",
 });
-const dateTimeFormatter = new Intl.DateTimeFormat("en", {
+const dateTimeFormatter = new Intl.DateTimeFormat("es-ES", {
   month: "short",
   day: "numeric",
   hour: "2-digit",
   minute: "2-digit",
 });
-const timeFormatter = new Intl.DateTimeFormat("en", {
+const timeFormatter = new Intl.DateTimeFormat("es-ES", {
   hour: "2-digit",
   minute: "2-digit",
 });

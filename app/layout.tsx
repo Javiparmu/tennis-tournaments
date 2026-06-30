@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import { esES } from "@clerk/localizations";
+import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -14,9 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Tennis Tournaments",
-  description: "Discover upcoming tennis tournaments and track your Elo journey.",
+  title: "CourtRank — Torneos de tenis, organizados y jugados en un solo lugar",
+  description:
+    "Los clubes publican torneos, los jugadores se inscriben y escalan en una clasificación estilo Elo. Encuentra tu próximo partido y registra cada resultado.",
 };
 
 export default function RootLayout({
@@ -26,11 +34,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider>
+        <ClerkProvider localization={esES}>
           <Providers>{children}</Providers>
         </ClerkProvider>
       </body>

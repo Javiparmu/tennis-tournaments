@@ -4,19 +4,28 @@ import { Button, Card, Chip } from "@heroui/react";
 import { CalendarDays, Dumbbell, Lock, Medal, Target, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { startTransition, useMemo, useState } from "react";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
+  useCreateRacketMutation,
+  useCreateStringingMutation,
   useCreateTrainingMutation,
+  useDeleteRacketMutation,
   useDeleteTrainingMutation,
   useMeQuery,
+  useMyJoinRequestsQuery,
   useMyProfileCalendarQuery,
   useMyRacketsQuery,
   usePublicRacketsQuery,
+  useTournamentsQuery,
+  useUpdateRacketMutation,
   useUpdateTrainingMutation,
+  useUserByUsernameQuery,
   useUserProfileCalendarQuery,
-  useUserQuery,
 } from "@/data/queries";
 import type {
+  CreateRacketRequest,
+  CreateRacketStringingRequest,
   CreateTrainingRequest,
   ProfileCalendarEvent,
   RacketSummary,
@@ -36,9 +45,15 @@ import {
   getInitialSelectedDayKey,
   getMatchDisplayTime,
   getVisibleRange,
+  isDayKeyWithinRange,
+  toLocalDayKey,
 } from "./_components/date-utils";
 import { MatchModal } from "./_components/match-modal";
 import { MiniCalendar } from "./_components/mini-calendar";
+import { ProfileEditModal } from "./_components/profile-edit-modal";
+import { RacketFormModal } from "./_components/racket-form-modal";
+import { RegisteredTournamentsCarousel } from "./_components/registered-tournaments-carousel";
+import { StringingFormModal } from "./_components/stringing-form-modal";
 import { TrainingFormModal } from "./_components/training-form-modal";
 
 type ProfileSection = "overview" | "calendar" | "training" | "rackets";
@@ -54,8 +69,8 @@ function createInitials(value: string) {
 }
 
 function formatDate(value: string | null | undefined) {
-  if (!value) return "Unknown";
-  return new Intl.DateTimeFormat("en", {
+  if (!value) return "Desconocido";
+  return new Intl.DateTimeFormat("es-ES", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -63,7 +78,7 @@ function formatDate(value: string | null | undefined) {
 }
 
 function formatTrainingDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
+  return new Intl.DateTimeFormat("es-ES", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -72,7 +87,7 @@ function formatTrainingDate(value: string) {
 }
 
 function getTrainingDurationLabel(durationMinutes: number | null) {
-  if (durationMinutes == null) return "No duration recorded";
+  if (durationMinutes == null) return "Sin duración registrada";
   if (durationMinutes < 60) return `${durationMinutes} min`;
   const hours = Math.floor(durationMinutes / 60);
   const minutes = durationMinutes % 60;
@@ -83,52 +98,107 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : null;
 }
 
+const MATCH_STATUS_LABEL: Record<string, string> = {
+  SCHEDULED: "Programado",
+  LIVE: "En juego",
+  COMPLETED: "Finalizado",
+  WALKOVER: "W.O.",
+};
+
+const RESULT_LABEL: Record<string, string> = {
+  WIN: "Victoria",
+  LOSS: "Derrota",
+};
+
+const VISIBILITY_LABEL: Record<string, string> = {
+  PUBLIC: "Pública",
+  PRIVATE: "Privada",
+};
+
+const JOIN_STATUS_LABEL: Record<string, string> = {
+  PENDING: "Pendiente",
+  ACCEPTED: "Aceptada",
+  REJECTED: "Rechazada",
+  WITHDRAWN: "Retirada",
+  EXPIRED: "Caducada",
+};
+
+const PHASE_FORMAT_LABEL: Record<string, string> = {
+  KNOCKOUT: "Eliminatoria",
+  GROUP: "Grupos",
+  SWISS: "Suizo",
+};
+
 function UserSummaryCard({
   displayName,
   username,
+  imageUrl,
   createdAt,
   achievements,
   isOwner,
+  onEdit,
 }: {
   displayName: string;
   username: string;
+  imageUrl: string | null;
   createdAt: string | null;
   achievements: Array<{ id: number; name: string; description: string | null }>;
   isOwner: boolean;
+  onEdit?: () => void;
 }) {
   const initials = createInitials(displayName);
 
   return (
-    <Card className="border border-zinc-200 bg-white shadow-sm">
+    <Card className="relative overflow-hidden rounded-2xl border border-court/10 bg-white shadow-sm">
+      <div className="court-lines absolute inset-0 -z-10 opacity-50" />
       <Card.Content className="gap-5 p-6">
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-lg font-semibold text-emerald-700">
-            {initials}
-          </div>
+          {imageUrl ? (
+            // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
+            <img
+              src={imageUrl}
+              alt={displayName}
+              className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-2 ring-court/20"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-court to-court-hover font-display text-xl font-black text-ball-bright shadow-sm ring-2 ring-court/20">
+              {initials}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold text-zinc-900">{displayName}</h1>
+              <h1 className="font-display text-2xl font-black tracking-tight text-court-ink">{displayName}</h1>
               {isOwner ? (
                 <Chip color="success" variant="soft">
-                  Your page
+                  Tu página
                 </Chip>
               ) : null}
             </div>
             <p className="text-sm text-zinc-500">@{username}</p>
           </div>
+          {isOwner && onEdit ? (
+            <Button variant="ghost" className="text-court" onPress={onEdit}>
+              Editar perfil
+            </Button>
+          ) : null}
         </div>
 
-        <p className="text-sm text-zinc-600">Joined {formatDate(createdAt)}. Public profile data is synced from the backend.</p>
+        <p className="text-sm text-zinc-600">Se unió el {formatDate(createdAt)}. Los datos públicos del perfil se sincronizan desde el servidor.</p>
 
         <div className="flex flex-wrap gap-2">
           {achievements.length > 0 ? (
             achievements.map((achievement) => (
-              <Chip key={achievement.id} variant="soft" color="success" title={achievement.description ?? achievement.name}>
+              <span
+                key={achievement.id}
+                title={achievement.description ?? achievement.name}
+                className="inline-flex items-center gap-1.5 rounded-full border border-court/15 bg-court/5 px-3 py-1 text-xs font-medium text-court"
+              >
+                <Medal className="h-3 w-3" />
                 {achievement.name}
-              </Chip>
+              </span>
             ))
           ) : (
-            <p className="text-sm text-zinc-500">No achievements unlocked yet.</p>
+            <p className="text-sm text-zinc-500">Aún no se han desbloqueado logros.</p>
           )}
         </div>
       </Card.Content>
@@ -151,80 +221,122 @@ function StatsCard({
   racketsCount: number;
   isOwner: boolean;
 }) {
+  const tiles = [
+    { icon: CalendarDays, value: totalEvents, label: "Eventos en vista", color: "text-court" },
+    { icon: Target, value: scheduledMatches, label: "Programados / en juego", color: "text-hard" },
+    { icon: Trophy, value: playedMatches, label: "Jugados", color: "text-court" },
+    { icon: Dumbbell, value: trainings, label: "Entrenamientos", color: "text-violet-600" },
+    { icon: Medal, value: racketsCount, label: isOwner ? "Tus raquetas" : "Raquetas públicas", color: "text-amber-600" },
+  ];
+
   return (
-    <Card className="border border-zinc-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
       <Card.Header>
-        <p className="text-lg font-semibold">Snapshot</p>
+        <p className="font-display text-lg font-bold">Resumen</p>
       </Card.Header>
-      <Card.Content className="space-y-4 pt-0">
-        <p className="flex items-center gap-2 text-zinc-700">
-          <CalendarDays className="h-4 w-4 text-emerald-700" />
-          Events in view: <strong>{totalEvents}</strong>
-        </p>
-        <p className="flex items-center gap-2 text-zinc-700">
-          <Target className="h-4 w-4 text-sky-700" />
-          Scheduled / live matches: <strong>{scheduledMatches}</strong>
-        </p>
-        <p className="flex items-center gap-2 text-zinc-700">
-          <Trophy className="h-4 w-4 text-emerald-700" />
-          Played matches: <strong>{playedMatches}</strong>
-        </p>
-        <p className="flex items-center gap-2 text-zinc-700">
-          <Dumbbell className="h-4 w-4 text-violet-700" />
-          Training sessions: <strong>{trainings}</strong>
-        </p>
-        <p className="flex items-center gap-2 text-zinc-700">
-          <Medal className="h-4 w-4 text-amber-700" />
-          {isOwner ? "Your rackets" : "Public rackets"}: <strong>{racketsCount}</strong>
-        </p>
+      <Card.Content className="pt-0">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {tiles.map((tile) => (
+            <div key={tile.label} className="rounded-xl border border-court/10 bg-court/5 p-3 text-center">
+              <tile.icon className={`mx-auto h-4 w-4 ${tile.color}`} />
+              <p className="mt-1 font-display text-2xl font-black text-court-ink">{tile.value}</p>
+              <p className="text-[11px] text-zinc-500">{tile.label}</p>
+            </div>
+          ))}
+        </div>
       </Card.Content>
     </Card>
   );
 }
 
-function RacketsCard({ rackets, isOwner, isLoading }: { rackets: RacketSummary[]; isOwner: boolean; isLoading: boolean }) {
+function RacketsCard({
+  rackets,
+  isOwner,
+  isLoading,
+  onAdd,
+  onEdit,
+  onDelete,
+  onAddStringing,
+  isMutating,
+}: {
+  rackets: RacketSummary[];
+  isOwner: boolean;
+  isLoading: boolean;
+  onAdd?: () => void;
+  onEdit?: (racket: RacketSummary) => void;
+  onDelete?: (racket: RacketSummary) => void;
+  onAddStringing?: (racket: RacketSummary) => void;
+  isMutating?: boolean;
+}) {
+  const showActions = isOwner && Boolean(onEdit || onDelete || onAddStringing);
+
   return (
-    <Card className="border border-zinc-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
       <Card.Header className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-lg font-semibold">{isOwner ? "Rackets" : "Public rackets"}</p>
+          <p className="font-display text-lg font-bold">{isOwner ? "Raquetas" : "Raquetas públicas"}</p>
           <p className="text-sm text-zinc-500">
-            {isOwner ? "Private rackets are visible only on your own page." : "Only publicly visible rackets appear here."}
+            {isOwner ? "Las raquetas privadas solo se ven en tu propia página." : "Aquí solo aparecen las raquetas visibles públicamente."}
           </p>
         </div>
-        {isOwner ? (
-          <Chip color="default" variant="soft">
-            Owner view
-          </Chip>
+        {isOwner && onAdd ? (
+          <Button className="bg-court text-ball-bright hover:bg-court-hover" onPress={onAdd}>
+            Añadir raqueta
+          </Button>
         ) : null}
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
-        {isLoading ? <p className="text-sm text-zinc-500">Loading rackets...</p> : null}
-        {!isLoading && rackets.length === 0 ? <p className="text-sm text-zinc-500">No rackets available for this view.</p> : null}
+        {isLoading ? <p className="text-sm text-zinc-500">Cargando raquetas...</p> : null}
+        {!isLoading && rackets.length === 0 ? <p className="text-sm text-zinc-500">No hay raquetas disponibles en esta vista.</p> : null}
         {rackets.map((racket) => (
           <div key={racket.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-semibold text-zinc-900">{racket.displayName}</p>
                 <p className="text-sm text-zinc-500">
-                  {[racket.brand, racket.model, racket.stringPattern].filter(Boolean).join(" · ") || "No racket details"}
+                  {[racket.brand, racket.model, racket.stringPattern].filter(Boolean).join(" · ") || "Sin detalles de la raqueta"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {isOwner && racket.visibility === "PRIVATE" ? <Lock className="h-4 w-4 text-zinc-500" /> : null}
                 <Chip color={racket.visibility === "PUBLIC" ? "success" : "default"} variant="soft">
-                  {racket.visibility}
+                  {VISIBILITY_LABEL[racket.visibility] ?? racket.visibility}
                 </Chip>
               </div>
             </div>
             {racket.latestStringing ? (
               <p className="mt-3 text-sm text-zinc-600">
-                Last stringing {racket.latestStringing.stringingDate} · {racket.latestStringing.mainsTensionKg}/
+                Último encordado {racket.latestStringing.stringingDate} · {racket.latestStringing.mainsTensionKg}/
                 {racket.latestStringing.crossesTensionKg} kg
               </p>
             ) : (
-              <p className="mt-3 text-sm text-zinc-500">No stringing history yet.</p>
+              <p className="mt-3 text-sm text-zinc-500">Aún no hay historial de encordados.</p>
             )}
+            {showActions ? (
+              <div className="mt-3 flex flex-wrap gap-2 border-t border-zinc-200 pt-3">
+                {onAddStringing ? (
+                  <Button size="sm" variant="ghost" className="text-court" onPress={() => onAddStringing(racket)}>
+                    Añadir encordado
+                  </Button>
+                ) : null}
+                {onEdit ? (
+                  <Button size="sm" variant="ghost" className="text-zinc-700" onPress={() => onEdit(racket)}>
+                    Editar
+                  </Button>
+                ) : null}
+                {onDelete ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-rose-600"
+                    onPress={() => onDelete(racket)}
+                    isDisabled={isMutating}
+                  >
+                    Eliminar
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ))}
       </Card.Content>
@@ -235,15 +347,21 @@ function RacketsCard({ rackets, isOwner, isLoading }: { rackets: RacketSummary[]
 function SectionNavigation({
   activeSection,
   onChange,
+  isOwner,
 }: {
   activeSection: ProfileSection;
   onChange: (section: ProfileSection) => void;
+  isOwner: boolean;
 }) {
+  // Training and Rackets are owner-only; other players see just the Overview.
   const sections: Array<{ key: ProfileSection; label: string }> = [
-    { key: "overview", label: "Overview" },
-    { key: "calendar", label: "Matches & Calendar" },
-    { key: "training", label: "Training" },
-    { key: "rackets", label: "Rackets" },
+    { key: "overview", label: "Resumen" },
+    ...(isOwner
+      ? ([
+          { key: "training", label: "Entrenamiento" },
+          { key: "rackets", label: "Raquetas" },
+        ] as const)
+      : []),
   ];
 
   return (
@@ -252,7 +370,7 @@ function SectionNavigation({
         <Button
           key={section.key}
           variant={activeSection === section.key ? "primary" : "ghost"}
-          className={activeSection === section.key ? "bg-emerald-600 text-white" : "text-zinc-700"}
+          className={activeSection === section.key ? "bg-court text-ball-bright" : "text-zinc-700"}
           onPress={() => onChange(section.key)}
         >
           {section.label}
@@ -267,7 +385,7 @@ function StatusChip({ status }: { status: UserProfileMatchEntry["status"] }) {
 
   return (
     <Chip color={color} variant="soft">
-      {status}
+      {MATCH_STATUS_LABEL[status] ?? status}
     </Chip>
   );
 }
@@ -288,18 +406,19 @@ function AgendaCard({
   onMatchSelect: (match: UserProfileMatchEntry) => void;
 }) {
   const filters: Array<{ key: AgendaFilter; label: string }> = [
-    { key: "ALL", label: "All" },
-    { key: "MATCH", label: "Matches" },
-    { key: "TRAINING", label: "Trainings" },
+    { key: "ALL", label: "Todo" },
+    { key: "MATCH", label: "Partidos" },
+    { key: "TRAINING", label: "Entrenamientos" },
+    { key: "TOURNAMENT", label: "Torneos" },
   ];
 
   return (
-    <Card className="border border-zinc-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
       <Card.Header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-lg font-semibold">{formatDayHeading(selectedDayKey)}</p>
+          <p className="font-display text-lg font-bold">{formatDayHeading(selectedDayKey)}</p>
           <p className="text-sm text-zinc-500">
-            {allEvents.length} item{allEvents.length === 1 ? "" : "s"} scheduled for this day.
+            {allEvents.length} {allEvents.length === 1 ? "evento programado" : "eventos programados"} para este día.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -308,7 +427,7 @@ function AgendaCard({
               key={filter.key}
               size="sm"
               variant={agendaFilter === filter.key ? "primary" : "ghost"}
-              className={agendaFilter === filter.key ? "bg-emerald-600 text-white" : "text-zinc-700"}
+              className={agendaFilter === filter.key ? "bg-court text-ball-bright" : "text-zinc-700"}
               onPress={() => onAgendaFilterChange(filter.key)}
             >
               {filter.label}
@@ -317,7 +436,7 @@ function AgendaCard({
         </div>
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
-        {filteredEvents.length === 0 ? <p className="text-sm text-zinc-500">No items match the current filter.</p> : null}
+        {filteredEvents.length === 0 ? <p className="text-sm text-zinc-500">Ningún evento coincide con el filtro actual.</p> : null}
         {filteredEvents.map((event) => {
           if (event.eventType === "MATCH" && event.match) {
             const match = event.match;
@@ -327,29 +446,46 @@ function AgendaCard({
                 key={event.eventId}
                 type="button"
                 onClick={() => onMatchSelect(match)}
-                className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:border-emerald-300 hover:bg-white"
+                className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:border-court/40 hover:bg-white"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-zinc-900">vs {match.opponent?.name ?? "Unknown opponent"}</p>
+                      <p className="font-semibold text-zinc-900">vs {match.opponent?.name ?? "Rival desconocido"}</p>
                       {match.result ? (
                         <Chip color={match.result === "WIN" ? "success" : "danger"} variant="soft">
-                          {match.result}
+                          {RESULT_LABEL[match.result] ?? match.result}
                         </Chip>
                       ) : null}
                       <StatusChip status={match.status} />
                     </div>
                     <p className="mt-1 text-sm text-zinc-500">
-                      {match.tournament.name} · {match.phase.format} round {match.phase.round}
+                      {match.tournament.name} · {PHASE_FORMAT_LABEL[match.phase.format] ?? match.phase.format} ronda {match.phase.round}
                     </p>
                   </div>
                   <div className="text-right text-sm text-zinc-500">
-                    <p>{referenceTime ? formatTime(referenceTime) : "Time TBD"}</p>
-                    <p>{match.court ?? "No court"}</p>
+                    <p>{referenceTime ? formatTime(referenceTime) : "Hora por definir"}</p>
+                    <p>{match.court ?? "Sin pista"}</p>
                   </div>
                 </div>
               </button>
+            );
+          }
+
+          if (event.eventType === "TOURNAMENT" && event.tournament) {
+            const tournament = event.tournament;
+            return (
+              <div key={event.eventId} className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-zinc-900">{tournament.name}</p>
+                    <p className="mt-1 text-sm text-zinc-500">Torneo · empieza hoy</p>
+                  </div>
+                  <Chip color={tournament.status === "ACCEPTED" ? "success" : "warning"} variant="soft">
+                    {JOIN_STATUS_LABEL[tournament.status] ?? tournament.status}
+                  </Chip>
+                </div>
+              </div>
             );
           }
 
@@ -361,15 +497,15 @@ function AgendaCard({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-zinc-900">Training session</p>
+                    <p className="font-semibold text-zinc-900">Sesión de entrenamiento</p>
                     <Chip color="default" variant="soft">
                       {getTrainingDurationLabel(training.durationMinutes)}
                     </Chip>
                     <Chip color={training.visibility === "PUBLIC" ? "success" : "default"} variant="soft">
-                      {training.visibility}
+                      {VISIBILITY_LABEL[training.visibility] ?? training.visibility}
                     </Chip>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No notes recorded for this session."}</p>
+                  <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No hay notas para esta sesión."}</p>
                 </div>
               </div>
             </div>
@@ -398,25 +534,25 @@ function TrainingSection({
   deleteError: string | null;
 }) {
   return (
-    <Card className="border border-zinc-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
       <Card.Header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-lg font-semibold">Training sessions</p>
+          <p className="font-display text-lg font-bold">Sesiones de entrenamiento</p>
           <p className="text-sm text-zinc-500">
             {isOwner
-              ? "Log new sessions, add notes, and choose whether each one is public or private."
-              : "Only training sessions shared publicly by this player appear here."}
+              ? "Registra nuevas sesiones, añade notas y elige si cada una es pública o privada."
+              : "Aquí solo aparecen las sesiones de entrenamiento que este jugador comparte públicamente."}
           </p>
         </div>
         {isOwner ? (
-          <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onPress={onCreate}>
-            Add training session
+          <Button className="bg-court text-ball-bright hover:bg-court-hover" onPress={onCreate}>
+            Añadir sesión de entrenamiento
           </Button>
         ) : null}
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
         {deleteError ? <p className="text-sm text-rose-600">{deleteError}</p> : null}
-        {trainings.length === 0 ? <p className="text-sm text-zinc-500">No training sessions recorded in this range.</p> : null}
+        {trainings.length === 0 ? <p className="text-sm text-zinc-500">No hay sesiones de entrenamiento registradas en este rango.</p> : null}
         {trainings.map((training) => (
           <div key={training.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -427,20 +563,20 @@ function TrainingSection({
                     {getTrainingDurationLabel(training.durationMinutes)}
                   </Chip>
                   <Chip color={training.visibility === "PUBLIC" ? "success" : "default"} variant="soft">
-                    {training.visibility}
+                    {VISIBILITY_LABEL[training.visibility] ?? training.visibility}
                   </Chip>
                 </div>
-                <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No notes recorded for this session."}</p>
+                <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No hay notas para esta sesión."}</p>
                 <p className="mt-2 text-xs text-zinc-400">
-                  Logged {formatDateTime(training.createdAt)}
-                  {training.updatedAt ? ` · Updated ${formatDateTime(training.updatedAt)}` : ""}
+                  Registrado {formatDateTime(training.createdAt)}
+                  {training.updatedAt ? ` · Actualizado ${formatDateTime(training.updatedAt)}` : ""}
                 </p>
               </div>
 
               {isOwner ? (
                 <div className="flex gap-2">
                   <Button variant="ghost" className="text-zinc-700" onPress={() => onEdit(training)}>
-                    Edit
+                    Editar
                   </Button>
                   <Button
                     variant="ghost"
@@ -448,7 +584,7 @@ function TrainingSection({
                     onPress={() => onDelete(training)}
                     isDisabled={isDeleting}
                   >
-                    Delete
+                    Eliminar
                   </Button>
                 </div>
               ) : null}
@@ -461,10 +597,10 @@ function TrainingSection({
 }
 
 export default function UserPage() {
+  // The [id] route segment carries the unique username, not the DB id — ids are not exposed in URLs.
   const params = useParams<{ id: string | string[] }>();
-  const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const viewedUserId = Number(rawId);
-  const isValidUserId = Number.isInteger(viewedUserId) && viewedUserId > 0;
+  const rawUsername = Array.isArray(params.id) ? params.id[0] : params.id;
+  const username = rawUsername ? decodeURIComponent(rawUsername) : "";
 
   const [activeSection, setActiveSection] = useState<ProfileSection>("overview");
   const [mode, setMode] = useState<CalendarMode>("month");
@@ -473,14 +609,18 @@ export default function UserPage() {
   const [selectedMatch, setSelectedMatch] = useState<UserProfileMatchEntry | null>(null);
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("ALL");
   const [editingTraining, setEditingTraining] = useState<UserTrainingEntry | null | undefined>(undefined);
+  const [editingRacket, setEditingRacket] = useState<RacketSummary | null | undefined>(undefined);
+  const [stringingRacket, setStringingRacket] = useState<RacketSummary | null>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", []);
   const range = useMemo(() => getVisibleRange(mode, anchorDate), [anchorDate, mode]);
 
-  const userQuery = useUserQuery(isValidUserId ? viewedUserId : undefined);
+  const userQuery = useUserByUsernameQuery(username || undefined);
   const meQuery = useMeQuery();
-  const isOwner = meQuery.data?.id === viewedUserId;
-  const shouldLoadPublicCalendar = isValidUserId && !isOwner;
+  const viewedUserId = userQuery.data?.id;
+  const isOwner = viewedUserId != null && meQuery.data?.id === viewedUserId;
+  const shouldLoadPublicCalendar = viewedUserId != null && !isOwner;
 
   const myCalendarQuery = useMyProfileCalendarQuery(isOwner, range.fromDate, range.toDate, timezone);
   const publicCalendarQuery = useUserProfileCalendarQuery(
@@ -489,14 +629,62 @@ export default function UserPage() {
     range.toDate,
     timezone,
   );
-  const publicRacketsQuery = usePublicRacketsQuery(isValidUserId && !isOwner ? viewedUserId : undefined);
+  const publicRacketsQuery = usePublicRacketsQuery(viewedUserId != null && !isOwner ? viewedUserId : undefined);
   const myRacketsQuery = useMyRacketsQuery(isOwner);
   const createTrainingMutation = useCreateTrainingMutation();
   const updateTrainingMutation = useUpdateTrainingMutation();
   const deleteTrainingMutation = useDeleteTrainingMutation();
+  const createRacketMutation = useCreateRacketMutation();
+  const updateRacketMutation = useUpdateRacketMutation();
+  const deleteRacketMutation = useDeleteRacketMutation();
+  const createStringingMutation = useCreateStringingMutation();
+  const joinRequestsQuery = useMyJoinRequestsQuery();
+  const tournamentsQuery = useTournamentsQuery();
 
   const calendarQuery = isOwner ? myCalendarQuery : publicCalendarQuery;
-  const events = calendarQuery.data?.events ?? EMPTY_EVENTS;
+  const baseEvents = calendarQuery.data?.events ?? EMPTY_EVENTS;
+
+  // Registrations (join requests) are a separate pipeline from the calendar feed.
+  // Project active ones (PENDING/ACCEPTED) onto their tournament's start date so the
+  // user's next tournament shows up. Owner-only: we only have the current user's requests.
+  const tournamentEvents = useMemo<ProfileCalendarEvent[]>(() => {
+    if (!isOwner) return EMPTY_EVENTS;
+    const requests = joinRequestsQuery.data ?? [];
+    const tournamentsById = new Map((tournamentsQuery.data ?? []).map((tournament) => [tournament.id, tournament]));
+
+    return requests.flatMap((request) => {
+      if (request.status !== "PENDING" && request.status !== "ACCEPTED") return [];
+      const tournament = tournamentsById.get(request.tournamentId);
+      if (!tournament?.startDate) return [];
+      const dayKey = toLocalDayKey(new Date(tournament.startDate));
+      if (!isDayKeyWithinRange(dayKey, range.from, range.to)) return [];
+
+      return [
+        {
+          eventId: `tournament-${request.id}`,
+          eventType: "TOURNAMENT" as const,
+          date: dayKey,
+          sortTime: null,
+          match: null,
+          training: null,
+          tournament: {
+            id: tournament.id,
+            name: tournament.name,
+            status: request.status,
+            tournamentStatus: tournament.status,
+            startDate: tournament.startDate,
+            endDate: tournament.endDate,
+            surface: tournament.surface,
+          },
+        },
+      ];
+    });
+  }, [isOwner, joinRequestsQuery.data, tournamentsQuery.data, range.from, range.to]);
+
+  const events = useMemo(
+    () => (tournamentEvents.length ? [...baseEvents, ...tournamentEvents] : baseEvents),
+    [baseEvents, tournamentEvents],
+  );
   const calendarDays = calendarQuery.data?.calendarDays ?? [];
   const eventsByDay = useMemo(() => buildEventsByDay(events), [events]);
   const selectedDayKey = useMemo(
@@ -531,13 +719,15 @@ export default function UserPage() {
 
   const trainingSubmitError = getErrorMessage(createTrainingMutation.error) ?? getErrorMessage(updateTrainingMutation.error);
   const trainingDeleteError = getErrorMessage(deleteTrainingMutation.error);
+  const racketSubmitError = getErrorMessage(createRacketMutation.error) ?? getErrorMessage(updateRacketMutation.error);
+  const stringingSubmitError = getErrorMessage(createStringingMutation.error);
 
-  if (!isValidUserId) {
+  if (!username) {
     return (
-      <div className="min-h-screen bg-[#f6faf8] text-zinc-900">
+      <div className="flex min-h-screen flex-col bg-background text-court-ink">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-6xl px-6 py-10">
-          <p className="text-rose-600">The requested user id is invalid.</p>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+          <p className="text-rose-600">El perfil solicitado no es válido.</p>
         </main>
       </div>
     );
@@ -545,10 +735,10 @@ export default function UserPage() {
 
   if (userQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-[#f6faf8] text-zinc-900">
+      <div className="flex min-h-screen flex-col bg-background text-court-ink">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-6xl px-6 py-10">
-          <p className="text-zinc-600">Loading user page...</p>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+          <p className="text-zinc-600">Cargando página de usuario...</p>
         </main>
       </div>
     );
@@ -556,17 +746,18 @@ export default function UserPage() {
 
   if (userQuery.error || !userQuery.data) {
     return (
-      <div className="min-h-screen bg-[#f6faf8] text-zinc-900">
+      <div className="flex min-h-screen flex-col bg-background text-court-ink">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-6xl px-6 py-10">
-          <p className="text-rose-600">Could not load this user page.</p>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+          <p className="text-rose-600">No se pudo cargar esta página de usuario.</p>
         </main>
       </div>
     );
   }
 
   const user = userQuery.data;
-  const displayName = user.username;
+  const displayName = user.name ?? user.username;
+  const handle = user.username;
 
   async function handleTrainingSubmit(payload: CreateTrainingRequest) {
     try {
@@ -586,7 +777,7 @@ export default function UserPage() {
   }
 
   async function handleTrainingDelete(training: UserTrainingEntry) {
-    const confirmed = window.confirm(`Delete the training session on ${training.trainingDate}?`);
+    const confirmed = window.confirm(`¿Eliminar la sesión de entrenamiento del ${training.trainingDate}?`);
     if (!confirmed) return;
 
     try {
@@ -602,19 +793,64 @@ export default function UserPage() {
     setEditingTraining(undefined);
   }
 
+  async function handleRacketSubmit(payload: CreateRacketRequest) {
+    try {
+      if (editingRacket) {
+        await updateRacketMutation.mutateAsync({ racketId: editingRacket.id, payload });
+      } else {
+        await createRacketMutation.mutateAsync(payload);
+      }
+      setEditingRacket(undefined);
+    } catch {
+      // Error surfaced via the mutation objects; modal stays open.
+    }
+  }
+
+  async function handleRacketDelete(racket: RacketSummary) {
+    if (!window.confirm(`¿Eliminar la raqueta "${racket.displayName}"?`)) return;
+    try {
+      await deleteRacketMutation.mutateAsync(racket.id);
+    } catch {
+      // Error surfaced via the mutation object.
+    }
+  }
+
+  async function handleStringingSubmit(payload: CreateRacketStringingRequest) {
+    if (!stringingRacket) return;
+    try {
+      await createStringingMutation.mutateAsync({ racketId: stringingRacket.id, payload });
+      setStringingRacket(null);
+    } catch {
+      // Error surfaced via the mutation object; modal stays open.
+    }
+  }
+
+  function closeRacketModal() {
+    createRacketMutation.reset();
+    updateRacketMutation.reset();
+    setEditingRacket(undefined);
+  }
+
+  function closeStringingModal() {
+    createStringingMutation.reset();
+    setStringingRacket(null);
+  }
+
   const overviewPreview = allSelectedDayEvents.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#f6faf8] text-zinc-900">
+    <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
           <UserSummaryCard
             displayName={displayName}
-            username={user.username}
+            username={handle}
+            imageUrl={user.imageUrl}
             createdAt={user.createdAt}
-            achievements={user.achievements}
+            achievements={user.achievements ?? []}
             isOwner={isOwner}
+            onEdit={() => setIsEditingProfile(true)}
           />
           <StatsCard
             totalEvents={events.length}
@@ -626,44 +862,50 @@ export default function UserPage() {
           />
         </div>
 
-        <SectionNavigation activeSection={activeSection} onChange={setActiveSection} />
+        <SectionNavigation activeSection={activeSection} onChange={setActiveSection} isOwner={isOwner} />
 
         {(calendarQuery.error || publicRacketsQuery.error || myRacketsQuery.error) && !racketsLoading ? (
-          <p className="mt-6 text-sm text-rose-600">Some profile sections could not be loaded completely.</p>
+          <p className="mt-6 text-sm text-rose-600">Algunas secciones del perfil no se pudieron cargar por completo.</p>
         ) : null}
 
-        {activeSection === "overview" ? (
-          <div className="mt-8 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-            <div className="space-y-6">
-              <MiniCalendar
-                mode={mode}
-                anchorDate={anchorDate}
-                selectedDayKey={selectedDayKey}
-                calendarDays={calendarDays}
-                events={events}
-                onModeChange={(nextMode) => {
-                  startTransition(() => {
-                    setMode(nextMode);
-                  });
-                }}
-                onDaySelect={setManualSelectedDayKey}
-                onAnchorDateChange={(date) => {
-                  startTransition(() => {
-                    setAnchorDate(date);
-                  });
-                }}
-              />
-              <Card className="border border-zinc-200 bg-white shadow-sm">
+        {activeSection === "overview" && !isOwner ? (
+          <div className="mt-8">
+            <RegisteredTournamentsCarousel userId={viewedUserId} />
+          </div>
+        ) : null}
+
+        {activeSection === "overview" && isOwner ? (
+          <div className="mt-8 space-y-6">
+            <MiniCalendar
+              mode={mode}
+              anchorDate={anchorDate}
+              selectedDayKey={selectedDayKey}
+              calendarDays={calendarDays}
+              events={events}
+              onModeChange={(nextMode) => {
+                startTransition(() => {
+                  setMode(nextMode);
+                });
+              }}
+              onDaySelect={setManualSelectedDayKey}
+              onAnchorDateChange={(date) => {
+                startTransition(() => {
+                  setAnchorDate(date);
+                });
+              }}
+            />
+            <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+              <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
                 <Card.Header>
                   <div>
-                    <p className="text-lg font-semibold">At a glance</p>
-                    <p className="text-sm text-zinc-500">Quick preview of the currently selected day.</p>
+                    <p className="font-display text-lg font-bold">De un vistazo</p>
+                    <p className="text-sm text-zinc-500">Vista rápida del día seleccionado.</p>
                   </div>
                 </Card.Header>
                 <Card.Content className="gap-3 pt-0">
-                  {calendarLoading ? <p className="text-sm text-zinc-500">Loading calendar...</p> : null}
+                  {calendarLoading ? <p className="text-sm text-zinc-500">Cargando calendario...</p> : null}
                   {!calendarLoading && overviewPreview.length === 0 ? (
-                    <p className="text-sm text-zinc-500">Nothing is scheduled for this day yet.</p>
+                    <p className="text-sm text-zinc-500">Aún no hay nada programado para este día.</p>
                   ) : null}
                   {overviewPreview.map((event) => (
                     <div key={event.eventId} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
@@ -673,21 +915,31 @@ export default function UserPage() {
                           return (
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div>
-                                <p className="font-semibold text-zinc-900">Match vs {event.match.opponent?.name ?? "Unknown opponent"}</p>
+                                <p className="font-semibold text-zinc-900">Partido vs {event.match.opponent?.name ?? "Rival desconocido"}</p>
                                 <p className="text-sm text-zinc-500">{event.match.tournament.name}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <StatusChip status={event.match.status} />
-                                <span className="text-sm text-zinc-500">{referenceTime ? formatTime(referenceTime) : "Time TBD"}</span>
+                                <span className="text-sm text-zinc-500">{referenceTime ? formatTime(referenceTime) : "Hora por definir"}</span>
                               </div>
                             </div>
                           );
                         })()
+                      ) : event.eventType === "TOURNAMENT" && event.tournament ? (
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-zinc-900">{event.tournament.name}</p>
+                            <p className="text-sm text-zinc-500">El torneo empieza hoy</p>
+                          </div>
+                          <Chip color={event.tournament.status === "ACCEPTED" ? "success" : "warning"} variant="soft">
+                            {JOIN_STATUS_LABEL[event.tournament.status] ?? event.tournament.status}
+                          </Chip>
+                        </div>
                       ) : event.training ? (
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
-                            <p className="font-semibold text-zinc-900">Training session</p>
-                            <p className="text-sm text-zinc-500">{event.training.notes ?? "No notes recorded."}</p>
+                            <p className="font-semibold text-zinc-900">Sesión de entrenamiento</p>
+                            <p className="text-sm text-zinc-500">{event.training.notes ?? "Sin notas."}</p>
                           </div>
                           <Chip color="default" variant="soft">
                             {getTrainingDurationLabel(event.training.durationMinutes)}
@@ -698,56 +950,56 @@ export default function UserPage() {
                   ))}
                 </Card.Content>
               </Card>
-            </div>
 
-            <div className="space-y-6">
-              <RacketsCard rackets={rackets.slice(0, 3)} isOwner={isOwner} isLoading={racketsLoading} />
-              <Card className="border border-zinc-200 bg-white shadow-sm">
+              <div className="space-y-6">
+                <RacketsCard rackets={rackets.slice(0, 3)} isOwner={isOwner} isLoading={racketsLoading} />
+              <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
                 <Card.Header>
                   <div>
-                    <p className="text-lg font-semibold">Training visibility</p>
+                    <p className="font-display text-lg font-bold">Visibilidad del entrenamiento</p>
                     <p className="text-sm text-zinc-500">
                       {isOwner
-                        ? "Each training session can be shared publicly or kept private."
-                        : "Only sessions shared publicly are visible on this profile."}
+                        ? "Cada sesión de entrenamiento se puede compartir públicamente o mantener privada."
+                        : "En este perfil solo se ven las sesiones compartidas públicamente."}
                     </p>
                   </div>
                 </Card.Header>
                 <Card.Content className="pt-0 text-sm text-zinc-600">
                   {isOwner
-                    ? "Use the training tab to record sessions, notes, and visibility for each entry."
-                    : "Training notes only appear when the player marks that session as public."}
+                    ? "Usa la pestaña de entrenamiento para registrar sesiones, notas y la visibilidad de cada entrada."
+                    : "Las notas de entrenamiento solo aparecen cuando el jugador marca esa sesión como pública."}
                 </Card.Content>
               </Card>
+              </div>
             </div>
           </div>
         ) : null}
 
         {activeSection === "calendar" ? (
-          <div className="mt-8 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-            <div className="space-y-6">
-              <MiniCalendar
-                mode={mode}
-                anchorDate={anchorDate}
-                selectedDayKey={selectedDayKey}
-                calendarDays={calendarDays}
-                events={events}
-                onModeChange={(nextMode) => {
-                  startTransition(() => {
-                    setMode(nextMode);
-                  });
-                }}
-                onDaySelect={setManualSelectedDayKey}
-                onAnchorDateChange={(date) => {
-                  startTransition(() => {
-                    setAnchorDate(date);
-                  });
-                }}
-              />
+          <div className="mt-8 space-y-6">
+            <MiniCalendar
+              mode={mode}
+              anchorDate={anchorDate}
+              selectedDayKey={selectedDayKey}
+              calendarDays={calendarDays}
+              events={events}
+              onModeChange={(nextMode) => {
+                startTransition(() => {
+                  setMode(nextMode);
+                });
+              }}
+              onDaySelect={setManualSelectedDayKey}
+              onAnchorDateChange={(date) => {
+                startTransition(() => {
+                  setAnchorDate(date);
+                });
+              }}
+            />
 
-              {calendarLoading ? <p className="text-sm text-zinc-500">Loading calendar...</p> : null}
-              {calendarQuery.error ? <p className="text-sm text-rose-600">Could not load calendar activity for this range.</p> : null}
+            {calendarLoading ? <p className="text-sm text-zinc-500">Cargando calendario...</p> : null}
+            {calendarQuery.error ? <p className="text-sm text-rose-600">No se pudo cargar la actividad del calendario para este rango.</p> : null}
 
+            <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
               <AgendaCard
                 selectedDayKey={selectedDayKey}
                 allEvents={allSelectedDayEvents}
@@ -756,25 +1008,25 @@ export default function UserPage() {
                 onAgendaFilterChange={setAgendaFilter}
                 onMatchSelect={setSelectedMatch}
               />
-            </div>
 
-            <div className="space-y-6">
-              <Card className="border border-zinc-200 bg-white shadow-sm">
-                <Card.Header>
-                  <div>
-                    <p className="text-lg font-semibold">Range summary</p>
-                    <p className="text-sm text-zinc-500">Use the calendar to switch between month and week planning.</p>
-                  </div>
-                </Card.Header>
-                <Card.Content className="space-y-3 pt-0 text-sm text-zinc-600">
-                  <p>Scheduled matches: {matchCounts.scheduled}</p>
-                  <p>Live matches: {matchCounts.live}</p>
-                  <p>Completed / walkover matches: {playedMatches}</p>
-                  <p>Training sessions: {trainingCount}</p>
-                  <p>Wins in range: {matchCounts.wins}</p>
-                </Card.Content>
-              </Card>
-              <RacketsCard rackets={rackets} isOwner={isOwner} isLoading={racketsLoading} />
+              <div className="space-y-6">
+                <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
+                  <Card.Header>
+                    <div>
+                      <p className="font-display text-lg font-bold">Resumen del rango</p>
+                      <p className="text-sm text-zinc-500">Usa el calendario para alternar entre planificación mensual y semanal.</p>
+                    </div>
+                  </Card.Header>
+                  <Card.Content className="space-y-3 pt-0 text-sm text-zinc-600">
+                    <p>Partidos programados: {matchCounts.scheduled}</p>
+                    <p>Partidos en juego: {matchCounts.live}</p>
+                    <p>Partidos finalizados / W.O.: {playedMatches}</p>
+                    <p>Sesiones de entrenamiento: {trainingCount}</p>
+                    <p>Victorias en el rango: {matchCounts.wins}</p>
+                  </Card.Content>
+                </Card>
+                <RacketsCard rackets={rackets} isOwner={isOwner} isLoading={racketsLoading} />
+              </div>
             </div>
           </div>
         ) : null}
@@ -795,12 +1047,25 @@ export default function UserPage() {
 
         {activeSection === "rackets" ? (
           <div className="mt-8">
-            <RacketsCard rackets={rackets} isOwner={isOwner} isLoading={racketsLoading} />
+            <RacketsCard
+              rackets={rackets}
+              isOwner={isOwner}
+              isLoading={racketsLoading}
+              onAdd={isOwner ? () => setEditingRacket(null) : undefined}
+              onEdit={isOwner ? setEditingRacket : undefined}
+              onDelete={isOwner ? handleRacketDelete : undefined}
+              onAddStringing={isOwner ? setStringingRacket : undefined}
+              isMutating={deleteRacketMutation.isPending}
+            />
           </div>
         ) : null}
       </main>
+      <SiteFooter />
 
       <MatchModal match={selectedMatch} onClose={() => setSelectedMatch(null)} />
+      {isEditingProfile && isOwner ? (
+        <ProfileEditModal initialName={user.name ?? ""} onClose={() => setIsEditingProfile(false)} />
+      ) : null}
       {editingTraining !== undefined ? (
         <TrainingFormModal
           key={editingTraining?.id ?? "create-training"}
@@ -809,6 +1074,25 @@ export default function UserPage() {
           onSubmit={handleTrainingSubmit}
           isSubmitting={createTrainingMutation.isPending || updateTrainingMutation.isPending}
           submitError={trainingSubmitError}
+        />
+      ) : null}
+      {editingRacket !== undefined ? (
+        <RacketFormModal
+          key={editingRacket?.id ?? "create-racket"}
+          racket={editingRacket}
+          onClose={closeRacketModal}
+          onSubmit={handleRacketSubmit}
+          isSubmitting={createRacketMutation.isPending || updateRacketMutation.isPending}
+          submitError={racketSubmitError}
+        />
+      ) : null}
+      {stringingRacket ? (
+        <StringingFormModal
+          racketName={stringingRacket.displayName}
+          onClose={closeStringingModal}
+          onSubmit={handleStringingSubmit}
+          isSubmitting={createStringingMutation.isPending}
+          submitError={stringingSubmitError}
         />
       ) : null}
     </div>
