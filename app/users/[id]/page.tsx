@@ -1,9 +1,11 @@
 "use client";
 
 import { Button, Card, Chip } from "@heroui/react";
-import { CalendarDays, Dumbbell, Lock, Medal, Target, Trophy } from "lucide-react";
+import { CalendarDays, CalendarX, Dumbbell, Lock, Medal, Target, Trophy } from "lucide-react";
 import { useParams } from "next/navigation";
 import { startTransition, useMemo, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -149,60 +151,66 @@ function UserSummaryCard({
   const initials = createInitials(displayName);
 
   return (
-    <Card className="relative overflow-hidden rounded-2xl border border-court/10 bg-white shadow-sm">
-      <div className="court-lines absolute inset-0 -z-10 opacity-50" />
-      <Card.Content className="gap-5 p-6">
-        <div className="flex flex-wrap items-center gap-4">
-          {imageUrl ? (
-            // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
-            <img
-              src={imageUrl}
-              alt={displayName}
-              className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-2 ring-court/20"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-court to-court-hover font-display text-xl font-black text-ball-bright shadow-sm ring-2 ring-court/20">
-              {initials}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-black tracking-tight text-court-ink">{displayName}</h1>
-              {isOwner ? (
-                <Chip color="success" variant="soft">
-                  Tu página
-                </Chip>
-              ) : null}
-            </div>
-            <p className="text-sm text-zinc-500">@{username}</p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-4">
+        {imageUrl ? (
+          // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
+          <img
+            src={imageUrl}
+            alt={displayName}
+            className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-2 ring-ball-bright/30"
+          />
+        ) : (
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-court to-court-hover font-display text-xl font-black text-ball-bright shadow-sm ring-2 ring-ball-bright/30">
+            {initials}
           </div>
-          {isOwner && onEdit ? (
-            <Button variant="ghost" className="text-court" onPress={onEdit}>
-              Editar perfil
-            </Button>
-          ) : null}
-        </div>
-
-        <p className="text-sm text-zinc-600">Se unió el {formatDate(createdAt)}. Los datos públicos del perfil se sincronizan desde el servidor.</p>
-
-        <div className="flex flex-wrap gap-2">
-          {achievements.length > 0 ? (
-            achievements.map((achievement) => (
-              <span
-                key={achievement.id}
-                title={achievement.description ?? achievement.name}
-                className="inline-flex items-center gap-1.5 rounded-full border border-court/15 bg-court/5 px-3 py-1 text-xs font-medium text-court"
-              >
-                <Medal className="h-3 w-3" />
-                {achievement.name}
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-display text-2xl font-black tracking-tight text-white">{displayName}</h1>
+            {isOwner ? (
+              <span className="rounded-full bg-ball-bright/15 px-2 py-0.5 text-xs font-semibold text-ball-bright">
+                Tu página
               </span>
-            ))
-          ) : (
-            <p className="text-sm text-zinc-500">Aún no se han desbloqueado logros.</p>
-          )}
+            ) : null}
+          </div>
+          <p className="text-sm text-white/60">@{username}</p>
         </div>
-      </Card.Content>
-    </Card>
+        {isOwner && onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
+          >
+            Editar perfil
+          </button>
+        ) : null}
+      </div>
+
+      <p className="text-sm text-white/60">
+        Se unió el {formatDate(createdAt)}. Los datos públicos del perfil se sincronizan desde el servidor.
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        {achievements.length > 0 ? (
+          achievements.map((achievement) => (
+            <span
+              key={achievement.id}
+              title={achievement.description ?? achievement.name}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/80"
+            >
+              <Medal className="h-3 w-3 text-ball-bright" />
+              {achievement.name}
+            </span>
+          ))
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-white/20 px-3 py-1 text-xs font-medium text-white/60">
+            <Medal className="h-3 w-3 text-white/40" />
+            Aún no se han desbloqueado logros.
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -222,30 +230,26 @@ function StatsCard({
   isOwner: boolean;
 }) {
   const tiles = [
-    { icon: CalendarDays, value: totalEvents, label: "Eventos en vista", color: "text-court" },
-    { icon: Target, value: scheduledMatches, label: "Programados / en juego", color: "text-hard" },
-    { icon: Trophy, value: playedMatches, label: "Jugados", color: "text-court" },
-    { icon: Dumbbell, value: trainings, label: "Entrenamientos", color: "text-violet-600" },
-    { icon: Medal, value: racketsCount, label: isOwner ? "Tus raquetas" : "Raquetas públicas", color: "text-amber-600" },
+    { icon: CalendarDays, value: totalEvents, label: "Eventos en vista" },
+    { icon: Target, value: scheduledMatches, label: "Programados / en juego" },
+    { icon: Trophy, value: playedMatches, label: "Jugados" },
+    { icon: Dumbbell, value: trainings, label: "Entrenamientos" },
+    { icon: Medal, value: racketsCount, label: isOwner ? "Tus raquetas" : "Raquetas públicas" },
   ];
 
   return (
-    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
-      <Card.Header>
-        <p className="font-display text-lg font-bold">Resumen</p>
-      </Card.Header>
-      <Card.Content className="pt-0">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {tiles.map((tile) => (
-            <div key={tile.label} className="rounded-xl border border-court/10 bg-court/5 p-3 text-center">
-              <tile.icon className={`mx-auto h-4 w-4 ${tile.color}`} />
-              <p className="mt-1 font-display text-2xl font-black text-court-ink">{tile.value}</p>
-              <p className="text-[11px] text-zinc-500">{tile.label}</p>
-            </div>
-          ))}
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {tiles.map((tile) => (
+        <div
+          key={tile.label}
+          className="rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center backdrop-blur-md"
+        >
+          <tile.icon className="mx-auto h-4 w-4 text-ball-bright" />
+          <p className="mt-1 font-display text-2xl font-black text-white">{tile.value}</p>
+          <p className="text-[11px] text-white/70">{tile.label}</p>
         </div>
-      </Card.Content>
-    </Card>
+      ))}
+    </div>
   );
 }
 
@@ -287,7 +291,14 @@ function RacketsCard({
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
         {isLoading ? <p className="text-sm text-zinc-500">Cargando raquetas...</p> : null}
-        {!isLoading && rackets.length === 0 ? <p className="text-sm text-zinc-500">No hay raquetas disponibles en esta vista.</p> : null}
+        {!isLoading && rackets.length === 0 ? (
+          <EmptyState
+            size="compact"
+            icon={Target}
+            title="Sin raquetas"
+            description="No hay raquetas disponibles en esta vista."
+          />
+        ) : null}
         {rackets.map((racket) => (
           <div key={racket.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -436,7 +447,14 @@ function AgendaCard({
         </div>
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
-        {filteredEvents.length === 0 ? <p className="text-sm text-zinc-500">Ningún evento coincide con el filtro actual.</p> : null}
+        {filteredEvents.length === 0 ? (
+          <EmptyState
+            size="compact"
+            icon={CalendarX}
+            title="Nada por aquí"
+            description="Ningún evento coincide con el filtro actual."
+          />
+        ) : null}
         {filteredEvents.map((event) => {
           if (event.eventType === "MATCH" && event.match) {
             const match = event.match;
@@ -552,7 +570,14 @@ function TrainingSection({
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
         {deleteError ? <p className="text-sm text-rose-600">{deleteError}</p> : null}
-        {trainings.length === 0 ? <p className="text-sm text-zinc-500">No hay sesiones de entrenamiento registradas en este rango.</p> : null}
+        {trainings.length === 0 ? (
+          <EmptyState
+            size="compact"
+            icon={Dumbbell}
+            title="Sin entrenamientos"
+            description="No hay sesiones de entrenamiento registradas en este rango."
+          />
+        ) : null}
         {trainings.map((training) => (
           <div key={training.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -842,24 +867,28 @@ export default function UserPage() {
     <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-          <UserSummaryCard
-            displayName={displayName}
-            username={handle}
-            imageUrl={user.imageUrl}
-            createdAt={user.createdAt}
-            achievements={user.achievements ?? []}
-            isOwner={isOwner}
-            onEdit={() => setIsEditingProfile(true)}
-          />
-          <StatsCard
-            totalEvents={events.length}
-            scheduledMatches={scheduledMatches}
-            playedMatches={playedMatches}
-            trainings={trainingCount}
-            racketsCount={rackets.length}
-            isOwner={isOwner}
-          />
+        <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-6 text-white shadow-lg md:p-8">
+          <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+          <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
+          <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
+            <UserSummaryCard
+              displayName={displayName}
+              username={handle}
+              imageUrl={user.imageUrl}
+              createdAt={user.createdAt}
+              achievements={user.achievements ?? []}
+              isOwner={isOwner}
+              onEdit={() => setIsEditingProfile(true)}
+            />
+            <StatsCard
+              totalEvents={events.length}
+              scheduledMatches={scheduledMatches}
+              playedMatches={playedMatches}
+              trainings={trainingCount}
+              racketsCount={rackets.length}
+              isOwner={isOwner}
+            />
+          </div>
         </div>
 
         <SectionNavigation activeSection={activeSection} onChange={setActiveSection} isOwner={isOwner} />
@@ -905,7 +934,12 @@ export default function UserPage() {
                 <Card.Content className="gap-3 pt-0">
                   {calendarLoading ? <p className="text-sm text-zinc-500">Cargando calendario...</p> : null}
                   {!calendarLoading && overviewPreview.length === 0 ? (
-                    <p className="text-sm text-zinc-500">Aún no hay nada programado para este día.</p>
+                    <EmptyState
+                      size="compact"
+                      icon={CalendarX}
+                      title="Día libre"
+                      description="Aún no hay nada programado para este día."
+                    />
                   ) : null}
                   {overviewPreview.map((event) => (
                     <div key={event.eventId} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">

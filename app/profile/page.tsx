@@ -1,38 +1,74 @@
 "use client";
 
-import { Show, useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { PageHero } from "@/components/page-hero";
+import { PlayersRanking } from "@/components/players/players-ranking";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useMeQuery } from "@/data/queries";
 
-export default function ProfilePage() {
-  const router = useRouter();
+/* The CTA shell always renders at full height and swaps its content once Clerk /
+   the profile query resolve. Rendering nothing while loading (previous version)
+   made the card pop in ~1s after mount, shifting the ranking list down under the
+   cursor and killing the row hover state mid-hover. */
+function RankingCta() {
   const { isLoaded, isSignedIn } = useUser();
-  const { data: me, isLoading, error } = useMeQuery();
+  const { data: me } = useMeQuery();
 
-  useEffect(() => {
-    if (me) {
-      router.replace(`/users/${encodeURIComponent(me.username)}`);
-    }
-  }, [me, router]);
+  const btnClass =
+    "rounded-lg bg-ball-bright px-4 py-2 text-sm font-semibold text-court-ink shadow-sm transition-colors hover:bg-ball focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright";
+
+  let content: React.ReactNode;
+  if (!isLoaded || (isSignedIn && !me)) {
+    // Placeholder with the same height as the real button so the card never resizes.
+    content = <div className="h-9 w-56 animate-pulse rounded-lg bg-white/10" />;
+  } else if (isSignedIn && me) {
+    content = (
+      <>
+        <p className="text-sm text-white/80">Consulta tu progreso, logros y torneos.</p>
+        <Link href={`/users/${encodeURIComponent(me.username)}`} className={btnClass}>
+          Abrir mi perfil
+        </Link>
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <p className="text-sm text-white/80">Crea tu perfil y aparece en el ranking.</p>
+        <Link href="/sign-in" className={btnClass}>
+          Empezar
+        </Link>
+      </>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background text-court-ink">
+    <div className="mt-6 flex min-h-[68px] flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+      {content}
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl px-6 py-10">
-        <Show when="signed-out">
-          <p className="text-zinc-600">Inicia sesión para abrir tu perfil.</p>
-        </Show>
-        <Show when="signed-in">
-          {!isLoaded || isLoading ? <p className="text-zinc-600">Cargando tu perfil...</p> : null}
-          {error ? <p className="text-rose-600">No se pudo cargar tu perfil.</p> : null}
-          {me ? <p className="text-zinc-600">Redirigiendo a tu página de usuario...</p> : null}
-          {isLoaded && isSignedIn && !isLoading && !error && !me ? (
-            <p className="text-zinc-600">Todavía no se ha encontrado un perfil de usuario para esta cuenta.</p>
-          ) : null}
-        </Show>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <div className="mb-8">
+          <PageHero
+            eyebrow="Jugadores"
+            title="Ranking de jugadores"
+            accent=" jugadores"
+            subtitle="Los mejores jugadores de la plataforma. Abre un perfil para ver su historial."
+          >
+            <RankingCta />
+          </PageHero>
+        </div>
+
+        <PlayersRanking />
       </main>
+      <SiteFooter />
     </div>
   );
 }

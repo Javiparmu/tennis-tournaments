@@ -1,9 +1,10 @@
 "use client";
 
 import { Chip } from "@heroui/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarX, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
+import { EmptyState } from "@/components/empty-state";
 import { useUserTournamentsQuery } from "@/data/queries";
 import { countdown, dayMonth } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
@@ -92,7 +93,13 @@ export function RegisteredTournamentsCarousel({ userId }: { userId?: number }) {
           })}
 
         {!isLoading && upcoming.length === 0 && (
-          <p className="px-1 py-6 text-sm text-zinc-500">No está inscrito en ningún torneo próximo.</p>
+          <EmptyState
+            size="compact"
+            icon={CalendarX}
+            title="Sin torneos próximos"
+            description="No está inscrito en ningún torneo próximo."
+            className="w-full"
+          />
         )}
       </div>
     </div>
