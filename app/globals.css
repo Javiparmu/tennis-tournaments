@@ -13,6 +13,10 @@
   --ball-bright: #d7ff3e;
   --blue: #1d4ed8;
 
+  /* Night-session hero */
+  --court-night: #0a4023;
+  --court-night-deep: #07301c;
+
   /* Surfaces */
   --surface-clay: #d8694c;
   --surface-hard: #2563eb;
@@ -30,6 +34,9 @@
   --color-ball-bright: var(--ball-bright);
   --color-blue: var(--blue);
 
+  --color-court-night: var(--court-night);
+  --color-court-night-deep: var(--court-night-deep);
+
   --color-clay: var(--surface-clay);
   --color-hard: var(--surface-hard);
   --color-grass: var(--surface-grass);
@@ -39,6 +46,16 @@
   --font-display: var(--font-archivo);
 
   --animate-marquee: marquee 40s linear infinite;
+}
+
+/* Keep the vertical scrollbar always present so short pages (no scroll) and tall
+   pages (scroll) have identical content width. Prevents the centered header and
+   page frame from shifting horizontally when switching tabs. `overflow-y: scroll`
+   is the reliable form here — `scrollbar-gutter: stable` alone is defeated by the
+   `h-full` on <html>. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -65,6 +82,13 @@ body {
   background: radial-gradient(closest-side, var(--court), transparent);
   filter: blur(48px);
   opacity: 0.22;
+}
+
+/* Restrained floodlight radial for the dark night-session hero. */
+.floodlight {
+  background: radial-gradient(closest-side, var(--ball-bright), transparent 70%);
+  filter: blur(70px);
+  opacity: 0.12;
 }
 
 @keyframes marquee {
