@@ -10,6 +10,7 @@ export const queryKeys = {
   tournamentJoinRequests: (id?: number, status?: string) =>
     ["tournament-join-requests", id ?? "unknown", status ?? "all"] as const,
   clubs: ["clubs"] as const,
+  clubContactRequests: ["club-contact-requests"] as const,
   club: (id?: number) => ["club", id ?? "unknown"] as const,
   clubAdmins: (id?: number) => ["club-admins", id ?? "unknown"] as const,
   players: ["players"] as const,

@@ -5,15 +5,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addClubAdmin,
   createClub,
-  deleteClub,
+  deleteClubContactRequest,
   getClub,
   getClubAdmins,
+  getClubContactRequests,
   getClubs,
   removeClubAdmin,
+  sendClubContactRequest,
   updateClub,
 } from "@/data/api/clubs";
-import type { CreateClubRequest, UpdateClubRequest } from "@/models";
+import type { ClubContactRequestPayload, CreateClubRequest, UpdateClubRequest } from "@/models";
 import { queryKeys } from "./keys";
+import { useMeQuery } from "./users";
 
 export function useClubsQuery() {
   return useQuery({
@@ -41,6 +44,39 @@ export function useClubAdminsQuery(id?: number) {
   });
 }
 
+export function useClubContactRequestMutation() {
+  return useMutation({
+    mutationFn: async (payload: ClubContactRequestPayload) => sendClubContactRequest(payload),
+  });
+}
+
+// Admin review queue (/admin). Only fetches for platform admins — the endpoint
+// 403s for everyone else anyway.
+export function useClubContactRequestsQuery() {
+  const me = useMeQuery();
+  const { getToken } = useAuth();
+
+  return useQuery({
+    queryKey: queryKeys.clubContactRequests,
+    queryFn: async () => getClubContactRequests(await getToken()),
+    enabled: me.data?.role === "PLATFORM_ADMIN",
+    staleTime: 30_000,
+  });
+}
+
+export function useDeleteClubContactRequestMutation() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (id: number) => deleteClubContactRequest(await getToken(), id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.clubContactRequests });
+    },
+  });
+}
+
+// Platform admin only (/admin): provisions a club for an existing owner user.
 export function useCreateClubMutation() {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
@@ -62,18 +98,6 @@ export function useUpdateClubMutation() {
     onSuccess: async (club) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.clubs });
       await queryClient.invalidateQueries({ queryKey: queryKeys.club(club.id) });
-    },
-  });
-}
-
-export function useDeleteClubMutation() {
-  const queryClient = useQueryClient();
-  const { getToken } = useAuth();
-
-  return useMutation({
-    mutationFn: async (id: number) => deleteClub(await getToken(), id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.clubs });
     },
   });
 }
