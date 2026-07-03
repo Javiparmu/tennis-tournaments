@@ -3,6 +3,7 @@
 import { Building2, Gamepad2, Trophy } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { LogoMark } from "@/components/logo-mark";
 import { FadeContent } from "@/components/react-bits/FadeContent";
 import { RotatingText } from "@/components/react-bits/RotatingText";
 
@@ -45,9 +46,7 @@ export function AuthBrandPanel({
 
       <FadeContent>
         <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-ball-bright text-court">
-            <span className="font-display text-base font-black">C</span>
-          </span>
+          <LogoMark className="h-9 w-9 bg-ball-bright" />
           <span className="font-display text-2xl font-extrabold tracking-tight text-white">
             Court<span className="text-ball-bright">Rank</span>
           </span>

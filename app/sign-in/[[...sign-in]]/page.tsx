@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
 import { SignInForm } from "@/components/auth/sign-in-form";
+import { LogoMark } from "@/components/logo-mark";
 
 export default function SignInPage() {
   return (
@@ -20,9 +21,7 @@ export default function SignInPage() {
           <div className="w-full max-w-sm">
             {/* Compact logo lockup — only on mobile, where the brand panel is hidden. */}
             <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-court text-ball-bright">
-                <span className="font-display text-sm font-black">C</span>
-              </span>
+              <LogoMark className="h-8 w-8 bg-court" />
               <span className="font-display text-xl font-extrabold tracking-tight text-court-ink">
                 Court<span className="text-court">Rank</span>
               </span>
