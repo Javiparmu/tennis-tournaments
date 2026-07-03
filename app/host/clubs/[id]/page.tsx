@@ -1,12 +1,14 @@
 "use client";
 
 import { Chip } from "@heroui/react";
-import { ArrowLeft, Plus, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Trophy, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { ClubFormModal } from "@/components/host/club-form-modal";
+import { ClubFormModal, type ClubFormValues } from "@/components/host/club-form-modal";
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
+import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
+import { EmptyState } from "@/components/empty-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -21,7 +23,6 @@ import {
 } from "@/data/queries";
 import { formatDateRange } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
-import type { CreateClubRequest } from "@/models";
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : null;
@@ -58,7 +59,7 @@ export default function ClubManagePage() {
   const club = clubQuery.data;
   const clubTournaments = (tournamentsQuery.data ?? []).filter((t) => t.clubId === clubId);
 
-  async function handleClubUpdate(payload: CreateClubRequest) {
+  async function handleClubUpdate(payload: ClubFormValues) {
     try {
       await updateClub.mutateAsync({ id: clubId, ...payload });
       setEditingClub(false);
@@ -91,7 +92,7 @@ export default function ClubManagePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <Link href="/host" className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-court">
           <ArrowLeft className="h-4 w-4" />
           Zona de organizador
@@ -103,19 +104,22 @@ export default function ClubManagePage() {
 
         {club && (
           <>
-            <div className="rounded-3xl border border-court/10 bg-white p-8 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
+              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+              <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
+              <div className="relative flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h1 className="font-display text-3xl font-black tracking-tight md:text-4xl">{club.name}</h1>
-                  <p className="mt-2 text-zinc-600">{club.address ?? "Sin dirección"}</p>
-                  {club.phoneNumber ? <p className="text-zinc-600">{club.phoneNumber}</p> : null}
-                  <p className="mt-1 text-sm text-zinc-400">Propietario: @{club.user.username}</p>
+                  <p className="font-display text-sm font-bold uppercase tracking-wide text-ball-bright/90">Club</p>
+                  <h1 className="mt-1 font-display text-3xl font-black tracking-tight md:text-4xl">{club.name}</h1>
+                  <p className="mt-2 text-white/70">{club.address ?? "Sin dirección"}</p>
+                  {club.phoneNumber ? <p className="text-white/70">{club.phoneNumber}</p> : null}
+                  <p className="mt-1 text-sm text-white/50">Propietario: @{club.user.username}</p>
                 </div>
                 {canManage ? (
                   <button
                     type="button"
                     onClick={() => setEditingClub(true)}
-                    className="rounded-xl border border-court/20 px-4 py-2 text-sm font-semibold text-court-ink hover:bg-court/5"
+                    className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
                   >
                     Editar club
                   </button>
@@ -148,9 +152,11 @@ export default function ClubManagePage() {
                 {createTournament.error ? <p className="mb-3 text-sm text-rose-600">{errorMessage(createTournament.error)}</p> : null}
 
                 {clubTournaments.length === 0 ? (
-                  <p className="rounded-2xl border border-dashed border-court/20 bg-white p-8 text-center text-sm text-zinc-500">
-                    Aún no hay torneos.
-                  </p>
+                  <EmptyState
+                    icon={Trophy}
+                    title="Sin torneos"
+                    description="Este club todavía no ha publicado torneos. Crea el primero."
+                  />
                 ) : (
                   <div className="space-y-3">
                     {clubTournaments.map((t) => {
@@ -201,7 +207,9 @@ export default function ClubManagePage() {
                       </li>
                     ))}
                     {!adminsQuery.isLoading && (adminsQuery.data ?? []).length === 0 ? (
-                      <li className="text-sm text-zinc-500">Aún no hay administradores.</li>
+                      <li className="rounded-xl bg-court/5 px-3 py-4 text-center text-sm text-zinc-500">
+                        Aún no hay administradores.
+                      </li>
                     ) : null}
                   </ul>
 

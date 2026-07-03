@@ -2,27 +2,33 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
-import type { Club, CreateClubRequest } from "@/models";
+import type { Club } from "@/models";
 import { ModalShell, inputClass } from "./modal-shell";
 
+// Clubs are provisioned by the platform operator, so this modal only edits.
+export type ClubFormValues = {
+  name: string;
+  phoneNumber: string | null;
+  address: string | null;
+};
+
 type ClubFormModalProps = {
-  club: Club | null;
+  club: Club;
   onClose: () => void;
-  onSubmit: (payload: CreateClubRequest) => Promise<void>;
+  onSubmit: (payload: ClubFormValues) => Promise<void>;
   isSubmitting: boolean;
   submitError: string | null;
 };
 
 export function ClubFormModal({ club, onClose, onSubmit, isSubmitting, submitError }: ClubFormModalProps) {
-  const [name, setName] = useState(club?.name ?? "");
-  const [phoneNumber, setPhoneNumber] = useState(club?.phoneNumber ?? "");
-  const [address, setAddress] = useState(club?.address ?? "");
+  const [name, setName] = useState(club.name);
+  const [phoneNumber, setPhoneNumber] = useState(club.phoneNumber ?? "");
+  const [address, setAddress] = useState(club.address ?? "");
   const [validationError, setValidationError] = useState<string | null>(null);
-  const isEditing = club != null;
 
   return (
     <ModalShell
-      title={isEditing ? "Editar club" : "Crear club"}
+      title="Editar club"
       subtitle="Tu club organiza y gestiona torneos."
       onClose={onClose}
       disabled={isSubmitting}
@@ -64,7 +70,7 @@ export function ClubFormModal({ club, onClose, onSubmit, isSubmitting, submitErr
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>
-            {isEditing ? "Guardar cambios" : "Crear club"}
+            Guardar cambios
           </Button>
         </div>
       </Form>

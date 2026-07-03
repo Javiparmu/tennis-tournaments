@@ -1,7 +1,8 @@
 "use client";
 
 import { Button, Chip } from "@heroui/react";
-import { Check, X } from "lucide-react";
+import { Check, Inbox, X } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 import {
   useAcceptJoinRequestMutation,
   useAllowResubmitJoinRequestMutation,
@@ -44,7 +45,14 @@ export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
       <h2 className="mb-3 font-display text-lg font-bold">Solicitudes de inscripción</h2>
 
       {isLoading && <div className="h-16 animate-pulse rounded-xl bg-zinc-100/70" />}
-      {!isLoading && sorted.length === 0 && <p className="text-sm text-zinc-500">Aún no hay solicitudes.</p>}
+      {!isLoading && sorted.length === 0 && (
+        <EmptyState
+          size="compact"
+          icon={Inbox}
+          title="Sin solicitudes"
+          description="Las inscripciones de los jugadores aparecerán aquí."
+        />
+      )}
 
       <ul className="space-y-3">
         {sorted.map((req) => (

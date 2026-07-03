@@ -1,20 +1,16 @@
 "use client";
 
 import { Show } from "@clerk/nextjs";
-import { Building2, Pencil, Plus, Settings2, Trash2 } from "lucide-react";
+import { LogIn, Mail, Pencil, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { ClubFormModal } from "@/components/host/club-form-modal";
+import { ClubContactCta } from "@/components/club-contact-modal";
+import { ClubFormModal, type ClubFormValues } from "@/components/host/club-form-modal";
+import { PageHero } from "@/components/page-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import {
-  useClubsQuery,
-  useCreateClubMutation,
-  useDeleteClubMutation,
-  useMeQuery,
-  useUpdateClubMutation,
-} from "@/data/queries";
-import type { Club, CreateClubRequest } from "@/models";
+import { useClubsQuery, useMeQuery, useUpdateClubMutation } from "@/data/queries";
+import type { Club } from "@/models";
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : null;
@@ -23,31 +19,19 @@ function errorMessage(error: unknown) {
 export default function HostDashboardPage() {
   const me = useMeQuery();
   const clubsQuery = useClubsQuery();
-  const createClub = useCreateClubMutation();
   const updateClub = useUpdateClubMutation();
-  const deleteClub = useDeleteClubMutation();
-  const [editingClub, setEditingClub] = useState<Club | null | undefined>(undefined);
+  const [editingClub, setEditingClub] = useState<Club | null>(null);
 
-  const myClubs = (clubsQuery.data ?? []).filter((club) => club.user.id === me.data?.id);
-  const submitError = errorMessage(createClub.error) ?? errorMessage(updateClub.error);
+  const managedClubIds = me.data?.managedClubIds ?? [];
+  const myClubs = (clubsQuery.data ?? []).filter((club) => managedClubIds.includes(club.id));
+  const isLoading = me.isLoading || clubsQuery.isLoading;
+  const submitError = errorMessage(updateClub.error);
 
-  async function handleSubmit(payload: CreateClubRequest) {
+  async function handleSubmit(payload: ClubFormValues) {
+    if (!editingClub) return;
     try {
-      if (editingClub) {
-        await updateClub.mutateAsync({ id: editingClub.id, ...payload });
-      } else {
-        await createClub.mutateAsync(payload);
-      }
-      setEditingClub(undefined);
-    } catch {
-      // surfaced via mutation error
-    }
-  }
-
-  async function handleDelete(club: Club) {
-    if (!window.confirm(`¿Eliminar el club "${club.name}"? También se eliminarán sus torneos.`)) return;
-    try {
-      await deleteClub.mutateAsync(club.id);
+      await updateClub.mutateAsync({ id: editingClub.id, ...payload });
+      setEditingClub(null);
     } catch {
       // surfaced via mutation error
     }
@@ -56,40 +40,62 @@ export default function HostDashboardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
-        <div className="relative mb-8 overflow-hidden rounded-3xl border border-court/10 bg-white p-8 shadow-sm">
-          <div className="court-lines absolute inset-0 -z-10 opacity-60" />
-          <div className="glow absolute -right-16 -top-20 -z-10 h-56 w-56" />
-          <p className="font-display text-sm font-bold uppercase tracking-wide text-court">Zona de organizador</p>
-          <h1 className="mt-2 font-display text-4xl font-black tracking-tight md:text-5xl">Tus clubes</h1>
-          <p className="mt-3 max-w-xl text-zinc-600">Crea un club y luego publica y gestiona torneos a los que los jugadores puedan apuntarse.</p>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <div className="mb-8">
+          <PageHero
+            eyebrow="Zona de organizador"
+            title="Tus clubes"
+            accent=" clubes"
+            subtitle="Publica y gestiona los torneos de tu club. ¿Aún no tienes club en CourtRank? Escríbenos y lo damos de alta."
+          />
         </div>
 
         <Show when="signed-out">
-          <p className="text-zinc-600">Inicia sesión para gestionar tus clubes.</p>
+          <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
+            <LogIn className="mx-auto h-8 w-8 text-court" />
+            <p className="mt-2 font-display text-lg font-bold">Inicia sesión para organizar</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500">
+              Los torneos se publican desde la cuenta de tu club. Inicia sesión para acceder a tus clubes y gestionar
+              tus torneos.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center gap-2 rounded-xl bg-court px-4 py-2 text-sm font-semibold text-ball-bright hover:bg-court-hover"
+              >
+                <LogIn className="h-4 w-4" />
+                Iniciar sesión
+              </Link>
+              <ClubContactCta className="inline-flex items-center gap-2 rounded-xl border border-court/20 bg-white px-4 py-2 text-sm font-semibold text-court-ink hover:bg-court/5">
+                <Mail className="h-4 w-4" />
+                ¿Aún sin club? Escríbenos
+              </ClubContactCta>
+            </div>
+          </div>
         </Show>
 
         <Show when="signed-in">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="font-display text-xl font-bold">Clubes que gestionas</h2>
-            <button
-              type="button"
-              onClick={() => setEditingClub(null)}
-              className="inline-flex items-center gap-2 rounded-xl bg-court px-4 py-2 text-sm font-semibold text-ball-bright hover:bg-court-hover"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo club
-            </button>
           </div>
 
-          {clubsQuery.isLoading ? <p className="text-sm text-zinc-500">Cargando clubes…</p> : null}
-          {deleteClub.error ? <p className="mb-3 text-sm text-rose-600">{errorMessage(deleteClub.error)}</p> : null}
-
-          {!clubsQuery.isLoading && myClubs.length === 0 ? (
+          {isLoading ? (
             <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
-              <Building2 className="mx-auto h-8 w-8 text-court" />
-              <p className="mt-2 font-display text-lg font-bold">Aún no hay clubes</p>
-              <p className="mt-1 text-sm text-zinc-500">Crea tu primer club para empezar a organizar.</p>
+              <p className="text-sm text-zinc-500">Cargando clubes…</p>
+            </div>
+          ) : null}
+
+          {!isLoading && myClubs.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
+              <Mail className="mx-auto h-8 w-8 text-court" />
+              <p className="mt-2 font-display text-lg font-bold">¿Gestionas un club?</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Los clubes se dan de alta personalmente con nosotros. Escríbenos y te creamos la cuenta de tu club.
+              </p>
+              <ClubContactCta className="mt-4 inline-flex items-center gap-2 rounded-xl bg-court px-4 py-2 text-sm font-semibold text-ball-bright hover:bg-court-hover">
+                <Mail className="h-4 w-4" />
+                Contactar
+              </ClubContactCta>
             </div>
           ) : null}
 
@@ -119,15 +125,6 @@ export default function HostDashboardPage() {
                     <Pencil className="h-4 w-4" />
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(club)}
-                    disabled={deleteClub.isPending}
-                    className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Eliminar
-                  </button>
                 </div>
               </div>
             ))}
@@ -136,17 +133,16 @@ export default function HostDashboardPage() {
       </main>
       <SiteFooter />
 
-      {editingClub !== undefined ? (
+      {editingClub ? (
         <ClubFormModal
-          key={editingClub?.id ?? "create-club"}
+          key={editingClub.id}
           club={editingClub}
           onClose={() => {
-            createClub.reset();
             updateClub.reset();
-            setEditingClub(undefined);
+            setEditingClub(null);
           }}
           onSubmit={handleSubmit}
-          isSubmitting={createClub.isPending || updateClub.isPending}
+          isSubmitting={updateClub.isPending}
           submitError={submitError}
         />
       ) : null}
