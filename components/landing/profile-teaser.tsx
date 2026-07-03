@@ -3,8 +3,9 @@
 import { useUser } from "@clerk/nextjs";
 import { Award, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
-import { FadeContent } from "@/components/react-bits/FadeContent";
 import { useMeQuery, useUserMatchActivityQuery } from "@/data/queries";
+import { CourtLinesSvg } from "./court-lines-svg";
+import { SectionHeading } from "./section-heading";
 
 function isoDaysAgo(days: number) {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -46,92 +47,99 @@ export function ProfileTeaser() {
   const achievementCount = achievements.length;
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 py-16">
-      <div className="grid items-center gap-10 lg:grid-cols-2">
-        <FadeContent>
-          <p className="font-display text-sm font-bold uppercase tracking-wide text-court">Tu perfil</p>
-          <h2 className="mt-2 font-display text-3xl font-black tracking-tight text-court-ink md:text-4xl">
-            Cada partido construye tu historial.
-          </h2>
-          <p className="mt-4 max-w-md text-zinc-600">
-            Gana y tu historial sube. Desbloquea logros, registra entrenamientos y raquetas, y sigue tu
-            estado de forma en cada torneo que juegas — todo en un perfil gamificado.
+    <section
+      aria-labelledby="ranking-heading"
+      className="relative overflow-hidden bg-linear-to-b from-court-night to-court-night-deep text-white"
+    >
+      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+      <div aria-hidden className="floodlight pointer-events-none absolute -top-20 right-1/4 h-80 w-80" />
+
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-24 md:py-32 lg:grid-cols-2">
+        <div>
+          <SectionHeading
+            id="ranking-heading"
+            tone="dark"
+            eyebrow="Tu ranking"
+            title="Cada partido te sube en el ranking."
+            accent="en el ranking."
+          />
+          <p className="mt-4 max-w-md text-white/80">
+            Cada resultado mueve tu ranking estilo Elo, desbloquea logros y construye tu historial.
+            Registra entrenamientos y raquetas, y llega a cada torneo sabiendo cómo estás de forma.
           </p>
           <Link
             href="/profile"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-court/20 bg-white px-5 py-3 font-semibold text-court-ink transition-colors hover:bg-court/5"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-ball-bright px-5 py-3 font-semibold text-court-ink transition-colors hover:bg-ball focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
           >
             {signedInUser ? "Abrir mi perfil" : "Ver mi perfil"}
           </Link>
-        </FadeContent>
+        </div>
 
-        <FadeContent delay={0.1}>
-          <div className="rounded-2xl border border-court/10 bg-white p-6 shadow-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {imageUrl ? (
-                  // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
-                  <img src={imageUrl} alt={name} className="h-12 w-12 rounded-xl object-cover" />
-                ) : (
-                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-court font-display text-lg font-black text-ball-bright">
-                    {initials(name)}
-                  </span>
-                )}
-                <div>
-                  <p className="font-semibold text-court-ink">{name}</p>
-                  <p className="text-sm text-zinc-500">@{handle}</p>
-                </div>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-lg backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {imageUrl ? (
+                // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
+                <img src={imageUrl} alt={name} className="h-12 w-12 rounded-xl object-cover" />
+              ) : (
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-court font-display text-lg font-black text-ball-bright">
+                  {initials(name)}
+                </span>
+              )}
+              <div>
+                <p className="font-semibold text-white">{name}</p>
+                <p className="text-sm text-white/60">@{handle}</p>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-lg bg-court/5 px-2 py-1 text-sm font-bold text-court">
-                <TrendingUp className="h-4 w-4" />
-                {winRate}%
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-sm font-bold text-ball-bright">
+              <TrendingUp className="h-4 w-4" />
+              {winRate}%
+            </span>
+          </div>
+
+          {/* Win-rate meter (real data when signed in) — glows like the floodlights. */}
+          <div className="mt-5">
+            <div className="mb-1 flex justify-between text-xs font-medium text-white/60">
+              <span>Ratio de victorias (90 días)</span>
+              <span className="text-ball-bright">
+                {wins}/{played} ganados
               </span>
             </div>
-
-            {/* Win-rate meter (real data when signed in). */}
-            <div className="mt-5">
-              <div className="mb-1 flex justify-between text-xs font-medium text-zinc-500">
-                <span>Ratio de victorias (90 días)</span>
-                <span className="text-court">
-                  {wins}/{played} ganados
-                </span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-court/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-court to-ball-bright"
-                  style={{ width: `${winRate}%` }}
-                />
-              </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-court to-ball-bright"
+                style={{ width: `${winRate}%`, boxShadow: "0 0 12px rgba(215, 255, 62, 0.45)" }}
+              />
             </div>
+          </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-              {[
-                { icon: Trophy, value: wins, label: "Victorias" },
-                { icon: Award, value: achievementCount, label: "Logros" },
-                { icon: TrendingUp, value: played, label: "Jugados" },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl bg-court/5 py-3">
-                  <s.icon className="mx-auto h-4 w-4 text-court" />
-                  <p className="mt-1 font-display text-lg font-black text-court-ink">{s.value}</p>
-                  <p className="text-[11px] text-zinc-500">{s.label}</p>
-                </div>
+          <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+            {[
+              { icon: Trophy, value: wins, label: "Victorias" },
+              { icon: Award, value: achievementCount, label: "Logros" },
+              { icon: TrendingUp, value: played, label: "Jugados" },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl border border-white/10 bg-white/[0.06] py-3">
+                <s.icon className="mx-auto h-4 w-4 text-ball-bright" />
+                <p className="mt-1 font-display text-lg font-black text-white">{s.value}</p>
+                <p className="text-[11px] text-white/70">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {achievements.length > 0 ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {achievements.slice(0, 4).map((a) => (
+                <span
+                  key={a}
+                  className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/80"
+                >
+                  {a}
+                </span>
               ))}
             </div>
-
-            {achievements.length > 0 ? (
-              <div className="mt-5 flex flex-wrap gap-2">
-                {achievements.slice(0, 4).map((a) => (
-                  <span
-                    key={a}
-                    className="rounded-full border border-court/15 bg-court/5 px-3 py-1 text-xs font-medium text-court"
-                  >
-                    {a}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </FadeContent>
+          ) : null}
+        </div>
       </div>
     </section>
   );

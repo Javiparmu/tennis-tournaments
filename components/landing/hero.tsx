@@ -1,64 +1,95 @@
 "use client";
 
 import { ArrowRight, Building2 } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { RotatingText } from "@/components/react-bits/RotatingText";
+import type { ReactNode } from "react";
+import { ClubContactCta } from "@/components/club-contact-modal";
+import { CourtLinesSvg } from "./court-lines-svg";
 import { TournamentTimeline } from "./tournament-timeline";
 
+const TITLE_WORDS = ["Cada", "partido", "cuenta."];
+
 export function Hero() {
+  const reduced = useReducedMotion();
+
+  // One-shot rise+fade for subhead, CTAs and calendar. Starts at opacity 0 but
+  // in layout from first paint — no layout shift when it animates in.
+  // `initial` must not depend on `reduced` (null during SSR) or the server and a
+  // reduced-motion client render different inline styles → hydration mismatch.
+  // Instead the transition collapses to 0s so reduced motion jumps to the final frame.
+  function Rise({ delay, className, children }: { delay: number; className?: string; children: ReactNode }) {
+    return (
+      <motion.div
+        className={className}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduced ? { duration: 0 } : { duration: 0.6, ease: "easeOut", delay }}
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
-    <section className="relative overflow-hidden">
-      {/* Court texture + glow blobs behind the content. */}
-      <div className="court-lines absolute inset-0 -z-10" />
-      <div className="glow absolute -left-24 -top-24 -z-10 h-72 w-72" />
-      <div className="glow-court absolute -right-32 top-20 -z-10 h-96 w-96" />
+    <section className="relative overflow-hidden bg-linear-to-b from-court-night to-court-night-deep text-white">
+      {/* Night-court signature: chalk lines draw themselves in behind the content. */}
+      <CourtLinesSvg animate strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.13]" />
+      <div aria-hidden className="floodlight pointer-events-none absolute -top-24 left-1/4 h-80 w-80" />
+      <div aria-hidden className="floodlight pointer-events-none absolute -right-20 top-1/3 h-96 w-96" />
 
-      <div className="mx-auto w-full max-w-6xl px-6 pb-10 pt-14 md:pt-20">
-        <span className="inline-flex items-center gap-2 rounded-full border border-court/20 bg-court/5 px-3 py-1 text-xs font-semibold text-court">
-          <span className="h-2 w-2 rounded-full bg-ball-bright ring-2 ring-court/30" />
-          Hecho para jugadores y clubes de tenis
-        </span>
+      <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
+          <div>
+            <h1 className="max-w-3xl font-display text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
+              {TITLE_WORDS.map((word, i) => (
+                <span key={word}>
+                  {/* Clip wrapper: word rises out of an overflow-hidden span; the
+                      pb/-mb pair gives descenders room inside the vertical clip.
+                      Spaces live outside the clip so words don't butt together. */}
+                  <span className="inline-block overflow-hidden pb-[0.12em] -mb-[0.12em] align-bottom">
+                    <motion.span
+                      className={`inline-block ${i === TITLE_WORDS.length - 1 ? "text-ball-bright" : "text-white"}`}
+                      initial={{ y: "110%", opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={
+                        reduced
+                          ? { duration: 0 }
+                          : { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.35 + i * 0.12 }
+                      }
+                    >
+                      {word}
+                    </motion.span>
+                  </span>
+                  {i < TITLE_WORDS.length - 1 ? " " : null}
+                </span>
+              ))}
+            </h1>
+            <Rise delay={0.75}>
+              <p className="mt-4 max-w-xl text-lg text-white/80">
+                Torneos reales de clubes reales. Inscríbete, compite y sube en el ranking.
+              </p>
+            </Rise>
+          </div>
 
-        <h1 className="mt-5 max-w-4xl font-display text-5xl font-black leading-[0.95] tracking-tight text-court-ink md:text-7xl">
-          Encuentra tu próximo partido en{" "}
-          <RotatingText
-            words={["tierra batida.", "pista dura.", "hierba.", "tu pista."]}
-            className="text-court"
-          />
-        </h1>
-
-        <p className="mt-5 max-w-2xl text-lg text-zinc-600">
-          Los clubes publican torneos, te inscribes en segundos y escalas en una clasificación estilo
-          Elo. Registra cada resultado en un perfil de jugador gamificado, hecho para quienes de verdad
-          juegan.
-        </p>
-
-        <div className="mt-7 flex flex-wrap items-center gap-3">
-          <Link
-            href="/tournaments"
-            className="group inline-flex items-center gap-2 rounded-xl bg-court px-6 py-3 font-semibold text-ball-bright shadow-sm transition-colors hover:bg-court-hover"
-          >
-            Explorar torneos
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-          <Link
-            href="/profile"
-            className="inline-flex items-center gap-2 rounded-xl border border-court/20 bg-white px-6 py-3 font-semibold text-court-ink transition-colors hover:bg-court/5"
-          >
-            Mi perfil
-          </Link>
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium text-zinc-500 transition-colors hover:text-court"
-          >
-            <Building2 className="h-4 w-4" />
-            Para clubes
-          </Link>
+          <Rise delay={0.9} className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/tournaments"
+              className="group inline-flex items-center gap-2 rounded-xl bg-ball-bright px-6 py-3 font-semibold text-court-ink shadow-sm transition-colors hover:bg-ball focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
+            >
+              Explorar torneos
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+            </Link>
+            <ClubContactCta className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-3 text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright">
+              <Building2 className="h-4 w-4" />
+              Para clubes
+            </ClubContactCta>
+          </Rise>
         </div>
 
-        <div className="mt-10">
+        <Rise delay={1.05} className="mt-10">
           <TournamentTimeline />
-        </div>
+        </Rise>
       </div>
     </section>
   );

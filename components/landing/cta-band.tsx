@@ -1,31 +1,33 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ClubContactCta } from "@/components/club-contact-modal";
+import { CourtLinesSvg } from "./court-lines-svg";
 
 export function CtaBand() {
   return (
-    <section className="mx-auto w-full max-w-6xl px-6 pb-20">
-      <div className="court-lines relative overflow-hidden rounded-3xl bg-court px-8 py-14 text-center shadow-lg">
-        <div className="glow absolute -right-16 -top-16 h-64 w-64" />
+    <section className="relative overflow-hidden bg-linear-to-b from-court-night to-court-night-deep text-white">
+      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+      <div aria-hidden className="floodlight pointer-events-none absolute -top-16 left-1/3 h-80 w-80" />
+
+      <div className="relative mx-auto w-full max-w-6xl px-6 py-24 md:py-32 text-center">
         <h2 className="mx-auto max-w-2xl font-display text-3xl font-black tracking-tight text-white md:text-5xl">
-          Tu próximo torneo te está esperando.
+          Deja de pelotear: <span className="text-ball-bright">compite.</span>
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-white/70">
-          Apúntate a jugar o crea una cuenta de club para organizar el tuyo. Solo te llevará un minuto.
+          Inscríbete en un torneo con cuadro, rivales y resultados que cuentan. ¿Gestionas un club? Escríbenos y
+          publica los tuyos.
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <Link
             href="/tournaments"
-            className="group inline-flex items-center gap-2 rounded-xl bg-ball-bright px-6 py-3 font-semibold text-court-ink transition-transform hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-2 rounded-xl bg-ball-bright px-6 py-3 font-semibold text-court-ink transition-colors hover:bg-ball focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
           >
             Explorar torneos
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
           </Link>
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Organizar un torneo
-          </Link>
+          <ClubContactCta className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 font-semibold text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright">
+            Contacta con nosotros
+          </ClubContactCta>
         </div>
       </div>
     </section>
