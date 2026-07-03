@@ -1,0 +1,17 @@
+---
+description: Spec-driven development workflow for product and code changes
+alwaysApply: true
+---
+
+# Spec-Driven Development
+
+Use SDD for non-trivial product, UX, data, auth, or architecture changes.
+
+1. Start from a spec in `docs/sdd/specs/<feature>/spec.md` before implementation.
+2. Keep each spec structured as context, problem, goals, non-goals, requirements, design notes, acceptance criteria, and verification.
+3. Resolve ambiguous requirements with the user before editing code.
+4. Implement from the accepted spec in small, reviewable changes that match the existing Next.js, HeroUI, Clerk, data, and model patterns.
+5. Update the spec when implementation decisions materially change behavior.
+6. Verify with the smallest meaningful checks, usually `pnpm check`, focused tests if present, and manual user-flow notes when UI behavior changes.
+
+Do not use SDD ceremony for tiny mechanical edits, typo fixes, or one-line bug fixes unless the user asks for it.
