@@ -1,29 +1,34 @@
 "use client";
 
-import { Show, SignInButton, SignUpButton, useClerk, useUser } from "@clerk/nextjs";
+import { Show, useClerk, useUser } from "@clerk/nextjs";
 import { Button, Modal } from "@heroui/react";
+import { buttonVariants } from "@heroui/styles";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoMark } from "@/components/logo-mark";
+import { useMeQuery } from "@/data/queries";
 
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/tournaments", label: "Torneos" },
   { href: "/host", label: "Organizar" },
-  { href: "/profile", label: "Jugador" },
+  { href: "/profile", label: "Jugadores" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const { user } = useUser();
+  const { data: me } = useMeQuery();
+  // The avatar goes to your own player profile; /profile is the ranking, so fall
+  // back to it only until the backend username resolves.
+  const myProfileHref = me ? `/users/${encodeURIComponent(me.username)}` : "/profile";
 
   return (
     <header className="sticky top-0 z-50 border-b border-court/10 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-court text-ball-bright">
-            <span className="font-display text-sm font-black">C</span>
-          </span>
+          <LogoMark className="h-8 w-8 bg-court" />
           <span className="font-display text-xl font-extrabold tracking-tight text-court-ink">
             Court<span className="text-court">Rank</span>
           </span>
@@ -57,27 +62,28 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:text-court-ink"
-              >
-                Iniciar sesión
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button
-                type="button"
-                className="rounded-lg bg-court px-4 py-2 text-sm font-semibold text-ball-bright shadow-sm transition-colors hover:bg-court-hover"
-              >
-                Empezar
-              </button>
-            </SignUpButton>
+            {/* Styled as a ghost button via buttonVariants — Button's render prop types
+                clash with next/link's anchor props. */}
+            <Link
+              href="/sign-in"
+              className={buttonVariants({
+                variant: "ghost",
+                className: "rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 hover:text-court-ink",
+              })}
+            >
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/sign-in"
+              className="rounded-lg bg-court px-4 py-2 text-sm font-semibold text-ball-bright shadow-sm transition-colors hover:bg-court-hover"
+            >
+              Empezar
+            </Link>
           </Show>
           <Show when="signed-in">
             {/* Own avatar + sign-out instead of Clerk's UserButton, so there is no
                 Clerk-hosted account/profile editing surface. Edits happen at /profile. */}
-            <Link href="/profile" aria-label="Mi perfil" className="shrink-0">
+            <Link href={myProfileHref} aria-label="Mi perfil" className="shrink-0">
               {user?.imageUrl ? (
                 // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset
                 <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-court/20" />
