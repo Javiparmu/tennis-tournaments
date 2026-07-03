@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Chip } from "@heroui/react";
-import { ArrowLeft, CalendarDays, Gauge, Pencil, Play, RotateCcw, Trophy, Users, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, Gauge, Layers, Pencil, Play, RotateCcw, Trophy, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -9,7 +9,9 @@ import { AddPlayersModal } from "@/components/host/add-players-modal";
 import { PhaseFormModal } from "@/components/host/phase-form-modal";
 import { ScoreModal } from "@/components/host/score-modal";
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
+import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
 import { Bracket } from "@/components/tournament/bracket";
+import { EmptyState } from "@/components/empty-state";
 import { JoinTournament } from "@/components/tournament/join-tournament";
 import { ManageJoinRequests } from "@/components/tournament/manage-join-requests";
 import { SiteFooter } from "@/components/site-footer";
@@ -36,18 +38,11 @@ import type {
   TournamentStatus,
   UpdateMatchScoreRequest,
 } from "@/models";
+import { computeStandings, type PlayerStatus } from "@/lib/standings";
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : null;
 }
-
-const STATUS_STYLE: Record<TournamentStatus, string> = {
-  DRAFT: "bg-zinc-100 text-zinc-600 border-zinc-200",
-  STARTED: "bg-ball/20 text-court border-court/30",
-  COMPLETED: "bg-court/10 text-court border-court/30",
-  CANCELLED: "bg-rose-50 text-rose-600 border-rose-200",
-  ABANDONED: "bg-rose-50 text-rose-600 border-rose-200",
-};
 
 const STATUS_LABEL: Record<TournamentStatus, string> = {
   DRAFT: "Borrador",
@@ -82,6 +77,20 @@ function describeConfig(config: PhaseConfiguration): string {
   }
 }
 
+const STANDING_STYLE: Record<PlayerStatus, string> = {
+  champion: "bg-ball/20 text-court border-court/30",
+  in: "bg-court/10 text-court border-court/30",
+  out: "bg-rose-50 text-rose-600 border-rose-200",
+  pending: "bg-zinc-100 text-zinc-500 border-zinc-200",
+};
+
+const STANDING_LABEL: Record<PlayerStatus, string> = {
+  champion: "Campeón",
+  in: "En el torneo",
+  out: "Eliminado",
+  pending: "Pendiente",
+};
+
 export default function TournamentDetailPage() {
   const params = useParams<{ id: string | string[] }>();
   const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -100,6 +109,18 @@ export default function TournamentDetailPage() {
   const removePlayer = useRemoveTournamentPlayerMutation();
   const createPhase = useCreatePhaseMutation();
   const updateScore = useUpdateMatchScoreMutation(isValid ? id : undefined);
+
+  // Once a tournament is under way, show live standings (W-L + in/out) derived
+  // from the bracket rather than a bare roster.
+  const inProgress = tournament != null && tournament.status !== "DRAFT";
+  const standings =
+    tournament && inProgress
+      ? computeStandings(
+          tournament.players ?? [],
+          bracketQuery.data?.phases.flatMap((phase) => phase.rounds.flatMap((round) => round.matches)) ?? [],
+          tournament.championPlayerId,
+        )
+      : [];
 
   const [editing, setEditing] = useState(false);
   const [addingPlayers, setAddingPlayers] = useState(false);
@@ -165,90 +186,107 @@ export default function TournamentDetailPage() {
 
         {tournament && (
           <>
-            <div className="relative overflow-hidden rounded-3xl border border-court/10 bg-white p-8 shadow-sm">
-              <div className="court-lines absolute inset-0 -z-10 opacity-60" />
-              <div className="glow absolute -right-16 -top-20 -z-10 h-56 w-56" />
-              <div className="flex flex-wrap items-center gap-2">
-                {tournament.surface && (
-                  <Chip
-                    size="sm"
-                    variant="soft"
-                    className={(() => {
-                      const s = surfaceStyle(tournament.surface);
-                      return `${s.bg} ${s.text} border ${s.border}`;
-                    })()}
-                  >
-                    {surfaceStyle(tournament.surface).label}
-                  </Chip>
-                )}
-                <Chip size="sm" variant="soft" className={`border ${STATUS_STYLE[tournament.status]}`}>
-                  {STATUS_LABEL[tournament.status]}
-                </Chip>
-              </div>
-              <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
-              {tournament.description && <p className="mt-3 max-w-2xl text-zinc-600">{tournament.description}</p>}
-              <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-600">
-                <span className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-court" />
-                  {formatDateRange(tournament.startDate, tournament.endDate)}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-court" />
-                  {(tournament.players ?? []).length} jugadores
-                </span>
-                <span className="flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-court" />
-                  {(tournament.phases ?? []).length} fases
-                </span>
-                <span className="flex items-center gap-2">Club #{tournament.clubId}</span>
-              </div>
-
-              {canManage ? (
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-court/10 pt-4">
-                  <Button className="bg-court text-ball-bright hover:bg-court-hover" onPress={() => setEditing(true)}>
-                    <Pencil className="mr-1 h-4 w-4" />
-                    Editar
-                  </Button>
-                  {tournament.status === "DRAFT" ? (
-                    <Button
-                      variant="outline"
-                      className="border-court/20 text-court-ink"
-                      onPress={() => startTournament.mutate(id)}
-                      isDisabled={startTournament.isPending}
-                    >
-                      <Play className="mr-1 h-4 w-4" />
-                      Empezar
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="border-court/20 text-court-ink"
-                      onPress={() => {
-                        if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
-                          resetTournament.mutate(id);
-                        }
-                      }}
-                      isDisabled={resetTournament.isPending}
-                    >
-                      <RotateCcw className="mr-1 h-4 w-4" />
-                      Reiniciar
-                    </Button>
+            <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
+              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+              <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
+              <div className="relative">
+                <div className="flex flex-wrap items-center gap-2">
+                  {tournament.surface && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
+                      <span
+                        aria-hidden
+                        className="h-2 w-2 rounded-full"
+                        style={{ background: surfaceStyle(tournament.surface).hex }}
+                      />
+                      {surfaceStyle(tournament.surface).label}
+                    </span>
                   )}
-                  <Button variant="ghost" className="text-zinc-700" onPress={() => setAddingPlayers(true)}>
-                    <Users className="mr-1 h-4 w-4" />
-                    Añadir jugadores
-                  </Button>
-                  <Button variant="ghost" className="text-zinc-700" onPress={() => setAddingPhase(true)}>
-                    <Gauge className="mr-1 h-4 w-4" />
-                    Añadir fase
-                  </Button>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      tournament.status === "STARTED"
+                        ? "bg-ball-bright/15 text-ball-bright"
+                        : "bg-white/10 text-white/80"
+                    }`}
+                  >
+                    {STATUS_LABEL[tournament.status]}
+                  </span>
                 </div>
-              ) : null}
-              {(startTournament.error || resetTournament.error) && (
-                <p className="mt-2 text-sm text-rose-600">
-                  {errorMessage(startTournament.error) ?? errorMessage(resetTournament.error)}
-                </p>
-              )}
+                <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
+                {tournament.description && <p className="mt-3 max-w-2xl text-white/70">{tournament.description}</p>}
+                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-white/50" />
+                    {formatDateRange(tournament.startDate, tournament.endDate)}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-white/50" />
+                    {(tournament.players ?? []).length} jugadores
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Gauge className="h-4 w-4 text-white/50" />
+                    {(tournament.phases ?? []).length} fases
+                  </span>
+                  <span className="flex items-center gap-2">Club anfitrión</span>
+                </div>
+
+                {canManage ? (
+                  <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                    <Button
+                      className="bg-ball-bright text-court-ink hover:bg-ball"
+                      onPress={() => setEditing(true)}
+                    >
+                      <Pencil className="mr-1 h-4 w-4" />
+                      Editar
+                    </Button>
+                    {tournament.status === "DRAFT" ? (
+                      <Button
+                        variant="outline"
+                        className="border-white/20 text-white/80 hover:bg-white/10"
+                        onPress={() => startTournament.mutate(id)}
+                        isDisabled={startTournament.isPending}
+                      >
+                        <Play className="mr-1 h-4 w-4" />
+                        Empezar
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="border-white/20 text-white/80 hover:bg-white/10"
+                        onPress={() => {
+                          if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
+                            resetTournament.mutate(id);
+                          }
+                        }}
+                        isDisabled={resetTournament.isPending}
+                      >
+                        <RotateCcw className="mr-1 h-4 w-4" />
+                        Reiniciar
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      className="text-white/70 hover:text-white"
+                      onPress={() => setAddingPlayers(true)}
+                    >
+                      <Users className="mr-1 h-4 w-4" />
+                      Añadir jugadores
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="text-white/70 hover:text-white"
+                      onPress={() => setAddingPhase(true)}
+                    >
+                      <Gauge className="mr-1 h-4 w-4" />
+                      Añadir fase
+                    </Button>
+                  </div>
+                ) : null}
+                {(startTournament.error || resetTournament.error) && (
+                  <p className="mt-2 text-sm text-rose-300">
+                    {errorMessage(startTournament.error) ?? errorMessage(resetTournament.error)}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
@@ -259,16 +297,52 @@ export default function TournamentDetailPage() {
                 {canManage && <ManageJoinRequests tournamentId={id} />}
                 <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
                   <h2 className="mb-3 font-display text-lg font-bold">Jugadores</h2>
-                  {(tournament.players ?? []).length === 0 ? (
-                    <p className="text-sm text-zinc-500">Aún no hay jugadores inscritos.</p>
+                  {inProgress ? (
+                    // Live standings: win-loss record and whether each player is
+                    // still in the running, eliminated, or crowned champion.
+                    standings.length === 0 ? (
+                      <EmptyState size="compact" icon={Users} title="Cuadro vacío" description="Aún no hay jugadores en el cuadro." />
+                    ) : (
+                      <ul className="space-y-2">
+                        {standings.map(({ player, wins, losses, status }) => (
+                          <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
+                            <span className="flex min-w-0 items-center gap-2">
+                              {status === "champion" && <Trophy className="h-4 w-4 shrink-0 text-court" />}
+                              {player.user ? (
+                                <Link
+                                  href={`/users/${encodeURIComponent(player.user.username)}`}
+                                  className="truncate hover:text-court"
+                                >
+                                  {player.name}
+                                </Link>
+                              ) : (
+                                <span className="truncate">{player.name}</span>
+                              )}
+                            </span>
+                            <span className="flex shrink-0 items-center gap-2">
+                              <span className="tabular-nums text-xs text-zinc-500">
+                                {wins}V · {losses}D
+                              </span>
+                              <Chip size="sm" variant="soft" className={`border ${STANDING_STYLE[status]}`}>
+                                {STANDING_LABEL[status]}
+                              </Chip>
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )
+                  ) : (tournament.players ?? []).length === 0 ? (
+                    <EmptyState
+                      size="compact"
+                      icon={Users}
+                      title="Sin jugadores"
+                      description="Aún no hay jugadores inscritos."
+                    />
                   ) : (
                     <ul className="space-y-2">
                       {(tournament.players ?? []).map((player) => (
                         <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
                           <span className="flex items-center gap-2">
-                            {tournament.championPlayerId === player.id && (
-                              <Trophy className="h-4 w-4 text-court" />
-                            )}
                             {player.user ? (
                               <Link href={`/users/${encodeURIComponent(player.user.username)}`} className="hover:text-court">
                                 {player.name}
@@ -299,7 +373,12 @@ export default function TournamentDetailPage() {
                 <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
                   <h2 className="mb-3 font-display text-lg font-bold">Fases</h2>
                   {(tournament.phases ?? []).length === 0 ? (
-                    <p className="text-sm text-zinc-500">Aún no hay fases configuradas.</p>
+                    <EmptyState
+                      size="compact"
+                      icon={Layers}
+                      title="Sin fases"
+                      description="Aún no hay fases configuradas."
+                    />
                   ) : (
                     <ol className="space-y-3">
                       {(tournament.phases ?? []).map((phase) => (
