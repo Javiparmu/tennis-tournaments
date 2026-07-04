@@ -19,12 +19,27 @@ type ModalShellProps = {
   onClose: () => void;
   disabled?: boolean;
   headerExtra?: ReactNode;
+  /** Card width: "xl" (default, forms) or "md" (compact dialogs). */
+  size?: "md" | "xl";
   children: ReactNode;
 };
 
-// Shared overlay + card chrome for the host forms (backdrop closes, click-through
+const SIZE_CLASS: Record<NonNullable<ModalShellProps["size"]>, string> = {
+  md: "max-w-md",
+  xl: "max-w-xl",
+};
+
+// Shared overlay + card chrome for form modals (backdrop closes, click-through
 // disabled while submitting). The form body and its buttons live in `children`.
-export function ModalShell({ title, subtitle, onClose, disabled, headerExtra, children }: ModalShellProps) {
+export function ModalShell({
+  title,
+  subtitle,
+  onClose,
+  disabled,
+  headerExtra,
+  size = "xl",
+  children,
+}: ModalShellProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8">
       <button
@@ -34,7 +49,9 @@ export function ModalShell({ title, subtitle, onClose, disabled, headerExtra, ch
         disabled={disabled}
         onClick={onClose}
       />
-      <Card className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-court/10 bg-white shadow-2xl">
+      <Card
+        className={`relative z-10 max-h-[90vh] w-full ${SIZE_CLASS[size]} overflow-y-auto rounded-2xl border border-court/10 bg-white shadow-2xl`}
+      >
         <Card.Header className="flex items-start justify-between gap-4 p-5 pb-0">
           <div>
             <p className="font-display text-lg font-bold text-court-ink">{title}</p>

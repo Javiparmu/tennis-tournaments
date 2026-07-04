@@ -1,10 +1,11 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Button, Card } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { ImageUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { FormError, inputClass, ModalShell } from "@/components/modal-shell";
 import { useUpdateMeMutation } from "@/data/queries";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
@@ -25,6 +26,10 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
   const [username, setUsername] = useState(initialUsername);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Local submitting flag: updateMe.isPending only covers the backend PATCH, but
+  // handleSubmit also awaits Clerk calls (user.update / setProfileImage / reload)
+  // before it — without this the form could be double-submitted in that window.
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Preview: the picked file (via a temporary object URL) if any, else the current image.
   const [preview, setPreview] = useState<string | null>(initialImageUrl);
@@ -39,7 +44,7 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
   }, [file, initialImageUrl]);
 
   const initial = (name.trim()[0] ?? "?").toUpperCase();
-  const isSubmitting = updateMe.isPending;
+  const isBusy = isSubmitting || updateMe.isPending;
 
   // Clerk hosts raster images only; SVG (and other vector/unknown types) are rejected by
   // its API, so reject them at selection time with a clear message instead.
@@ -57,6 +62,7 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (isBusy) return;
     setError(null);
 
     const trimmed = name.trim();
@@ -82,6 +88,7 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // Only touch the fields the user actually changed. Name and image live in Clerk
       // (source of truth; the webhook mirrors them to our DB); the username is ours only.
@@ -107,103 +114,93 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
       router.replace(`/players/${encodeURIComponent(updated.username)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo actualizar tu perfil.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8">
-      <button
-        type="button"
-        aria-label="Cerrar editor de perfil"
-        className="absolute inset-0 cursor-default disabled:cursor-not-allowed"
-        disabled={isSubmitting}
-        onClick={onClose}
-      />
-      <Card className="relative z-10 w-full max-w-md rounded-2xl border border-court/10 bg-white shadow-2xl">
-        <Card.Header className="p-5 pb-0">
-          <div>
-            <p className="font-display text-lg font-bold">Editar perfil</p>
-            <p className="text-sm text-zinc-500">Actualiza tu nombre y foto. Los cambios se sincronizan con tu cuenta.</p>
+    <ModalShell
+      title="Editar perfil"
+      subtitle="Actualiza tu nombre y foto. Los cambios se sincronizan con tu cuenta."
+      onClose={onClose}
+      disabled={isBusy}
+      size="md"
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+          <span>Nombre</span>
+          <input
+            required
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Tu nombre"
+            className={inputClass}
+          />
+        </label>
+
+        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+          <span>Nombre de usuario</span>
+          <input
+            required
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="tu-usuario"
+            className={inputClass}
+          />
+          <span className="block text-xs font-normal text-zinc-500">
+            Aparece en la URL de tu perfil. Se convierte a minúsculas y guiones (p. ej. &quot;Ana Díaz&quot; →
+            &quot;ana-diaz&quot;).
+          </span>
+        </label>
+
+        <div className="space-y-2 text-sm font-medium text-zinc-700">
+          <span>Foto de perfil</span>
+          <div className="flex items-center gap-4">
+            <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 text-lg font-bold text-zinc-500">
+              {preview ? (
+                // biome-ignore lint/performance/noImgElement: local object URL / Clerk CDN preview, not a static asset
+                <img src={preview} alt="Vista previa del perfil" className="size-full object-cover" />
+              ) : (
+                initial
+              )}
+            </span>
+            <div className="space-y-1">
+              <Button
+                type="button"
+                variant="ghost"
+                className="gap-2 border border-zinc-200 text-zinc-700"
+                onPress={() => fileInputRef.current?.click()}
+                isDisabled={isBusy}
+              >
+                <ImageUp className="size-4" />
+                {file ? "Cambiar foto" : "Subir foto"}
+              </Button>
+              <p className="text-xs font-normal text-zinc-500">{file ? file.name : "JPG, PNG o GIF."}</p>
+            </div>
           </div>
-        </Card.Header>
-        <Card.Content className="p-5">
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <label className="block space-y-2 text-sm font-medium text-zinc-700">
-              <span>Nombre</span>
-              <input
-                required
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Tu nombre"
-                className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-court"
-              />
-            </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
 
-            <label className="block space-y-2 text-sm font-medium text-zinc-700">
-              <span>Nombre de usuario</span>
-              <input
-                required
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                placeholder="tu-usuario"
-                className="w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-court"
-              />
-              <span className="block text-xs font-normal text-zinc-500">
-                Aparece en la URL de tu perfil. Se convierte a minúsculas y guiones (p. ej. &quot;Ana Díaz&quot; → &quot;ana-diaz&quot;).
-              </span>
-            </label>
+        <FormError message={error} />
 
-            <div className="space-y-2 text-sm font-medium text-zinc-700">
-              <span>Foto de perfil</span>
-              <div className="flex items-center gap-4">
-                <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 text-lg font-bold text-zinc-500">
-                  {preview ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- local object URL / Clerk CDN preview
-                    <img src={preview} alt="Vista previa del perfil" className="size-full object-cover" />
-                  ) : (
-                    initial
-                  )}
-                </span>
-                <div className="space-y-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="gap-2 border border-zinc-200 text-zinc-700"
-                    onPress={() => fileInputRef.current?.click()}
-                    isDisabled={isSubmitting}
-                  >
-                    <ImageUp className="size-4" />
-                    {file ? "Cambiar foto" : "Subir foto"}
-                  </Button>
-                  <p className="text-xs font-normal text-zinc-500">
-                    {file ? file.name : "JPG, PNG o GIF."}
-                  </p>
-                </div>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-
-            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar cambios"}
-              </Button>
-            </div>
-          </form>
-        </Card.Content>
-      </Card>
-    </div>
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isBusy}>
+            Cancelar
+          </Button>
+          <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isBusy}>
+            {isBusy ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        </div>
+      </form>
+    </ModalShell>
   );
 }
