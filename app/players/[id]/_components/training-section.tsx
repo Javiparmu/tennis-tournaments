@@ -29,7 +29,6 @@ export function TrainingSection({
   onEdit,
   onDelete,
   isDeleting,
-  deleteError,
 }: {
   isOwner: boolean;
   trainings: UserTrainingEntry[];
@@ -37,7 +36,6 @@ export function TrainingSection({
   onEdit: (training: UserTrainingEntry) => void;
   onDelete: (training: UserTrainingEntry) => void;
   isDeleting: boolean;
-  deleteError: string | null;
 }) {
   return (
     <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
@@ -57,7 +55,6 @@ export function TrainingSection({
         ) : null}
       </Card.Header>
       <Card.Content className="gap-3 pt-0">
-        {deleteError ? <p className="text-sm text-rose-600">{deleteError}</p> : null}
         {trainings.length === 0 ? (
           <EmptyState
             size="compact"

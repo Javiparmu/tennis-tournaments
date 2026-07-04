@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PageHeroFrame } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
 import { PageSkeleton } from "@/components/page-skeleton";
@@ -72,6 +73,9 @@ export default function UserPage() {
   const [editingRacket, setEditingRacket] = useState<RacketSummary | null | undefined>(undefined);
   const [stringingRacket, setStringingRacket] = useState<RacketSummary | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<
+    { type: "training"; training: UserTrainingEntry } | { type: "racket"; racket: RacketSummary } | null
+  >(null);
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", []);
   const range = useMemo(() => getVisibleRange(mode, anchorDate), [anchorDate, mode]);
@@ -178,8 +182,13 @@ export default function UserPage() {
 
   const trainingError = createTrainingMutation.error ?? updateTrainingMutation.error;
   const trainingSubmitError = trainingError ? errorMessage(trainingError) : null;
-  const trainingDeleteError = deleteTrainingMutation.error ? errorMessage(deleteTrainingMutation.error) : null;
   const racketError = createRacketMutation.error ?? updateRacketMutation.error;
+  const deleteError =
+    pendingDelete?.type === "training"
+      ? deleteTrainingMutation.error && errorMessage(deleteTrainingMutation.error)
+      : pendingDelete?.type === "racket"
+        ? deleteRacketMutation.error && errorMessage(deleteRacketMutation.error)
+        : null;
   const racketSubmitError = racketError ? errorMessage(racketError) : null;
   const stringingSubmitError = createStringingMutation.error ? errorMessage(createStringingMutation.error) : null;
 
@@ -231,17 +240,6 @@ export default function UserPage() {
     }
   }
 
-  async function handleTrainingDelete(training: UserTrainingEntry) {
-    const confirmed = window.confirm(`¿Eliminar la sesión de entrenamiento del ${training.trainingDate}?`);
-    if (!confirmed) return;
-
-    try {
-      await deleteTrainingMutation.mutateAsync(training.id);
-    } catch {
-      // Error state is surfaced through the mutation object.
-    }
-  }
-
   function closeTrainingModal() {
     createTrainingMutation.reset();
     updateTrainingMutation.reset();
@@ -261,13 +259,24 @@ export default function UserPage() {
     }
   }
 
-  async function handleRacketDelete(racket: RacketSummary) {
-    if (!window.confirm(`¿Eliminar la raqueta "${racket.displayName}"?`)) return;
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
     try {
-      await deleteRacketMutation.mutateAsync(racket.id);
+      if (pendingDelete.type === "training") {
+        await deleteTrainingMutation.mutateAsync(pendingDelete.training.id);
+      } else {
+        await deleteRacketMutation.mutateAsync(pendingDelete.racket.id);
+      }
+      setPendingDelete(null);
     } catch {
-      // Error surfaced via the mutation object.
+      // Error surfaced in the ConfirmDialog via the mutation object.
     }
+  }
+
+  function closeDeleteDialog() {
+    deleteTrainingMutation.reset();
+    deleteRacketMutation.reset();
+    setPendingDelete(null);
   }
 
   async function handleStringingSubmit(payload: CreateRacketStringingRequest) {
@@ -352,9 +361,8 @@ export default function UserPage() {
             trainings={trainingEvents}
             onCreate={() => setEditingTraining(null)}
             onEdit={setEditingTraining}
-            onDelete={handleTrainingDelete}
+            onDelete={(training) => setPendingDelete({ type: "training", training })}
             isDeleting={deleteTrainingMutation.isPending}
-            deleteError={trainingDeleteError}
           />
         </div>
       ) : null}
@@ -367,7 +375,7 @@ export default function UserPage() {
             isLoading={racketsLoading}
             onAdd={isOwner ? () => setEditingRacket(null) : undefined}
             onEdit={isOwner ? setEditingRacket : undefined}
-            onDelete={isOwner ? handleRacketDelete : undefined}
+            onDelete={isOwner ? (racket) => setPendingDelete({ type: "racket", racket }) : undefined}
             onAddStringing={isOwner ? setStringingRacket : undefined}
             isMutating={deleteRacketMutation.isPending}
           />
@@ -412,6 +420,23 @@ export default function UserPage() {
           submitError={stringingSubmitError}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDelete?.type === "racket" ? "Eliminar raqueta" : "Eliminar entrenamiento"}
+        description={
+          pendingDelete?.type === "racket"
+            ? `¿Eliminar la raqueta "${pendingDelete.racket.displayName}"?`
+            : pendingDelete?.type === "training"
+              ? `¿Eliminar la sesión de entrenamiento del ${pendingDelete.training.trainingDate}?`
+              : undefined
+        }
+        confirmLabel="Eliminar"
+        isPending={deleteTrainingMutation.isPending || deleteRacketMutation.isPending}
+        error={deleteError}
+        onConfirm={handleConfirmDelete}
+        onClose={closeDeleteDialog}
+      />
     </PageScaffold>
   );
 }

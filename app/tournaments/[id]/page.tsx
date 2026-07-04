@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, Gauge, Layers, Pencil, Play, RotateCcw, Trophy
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { AddPlayersModal } from "@/components/host/add-players-modal";
 import { PhaseFormModal } from "@/components/host/phase-form-modal";
@@ -118,6 +119,16 @@ export default function TournamentDetailPage() {
   const [addingPlayers, setAddingPlayers] = useState(false);
   const [addingPhase, setAddingPhase] = useState(false);
   const [scoringMatch, setScoringMatch] = useState<Match | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
+  async function handleResetTournament() {
+    try {
+      await resetTournament.mutateAsync(id);
+      setConfirmingReset(false);
+    } catch {
+      // surfaced in the dialog via resetTournament.error
+    }
+  }
 
   async function handleEdit(values: TournamentFormValues) {
     try {
@@ -234,11 +245,7 @@ export default function TournamentDetailPage() {
                   <Button
                     variant="outline"
                     className="border-white/20 text-white/80 hover:bg-white/10"
-                    onPress={() => {
-                      if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
-                        resetTournament.mutate(id);
-                      }
-                    }}
+                    onPress={() => setConfirmingReset(true)}
                     isDisabled={resetTournament.isPending}
                   >
                     <RotateCcw className="mr-1 h-4 w-4" />
@@ -259,10 +266,8 @@ export default function TournamentDetailPage() {
                 </Button>
               </div>
             ) : null}
-            {(startTournament.error || resetTournament.error) && (
-              <p className="mt-2 text-sm text-rose-300">
-                {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
-              </p>
+            {startTournament.error && (
+              <p className="mt-2 text-sm text-rose-300">{errorMessage(startTournament.error)}</p>
             )}
           </PageHeroFrame>
 
@@ -442,6 +447,20 @@ export default function TournamentDetailPage() {
           submitError={updateScore.error ? errorMessage(updateScore.error) : null}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={confirmingReset}
+        title="Reiniciar torneo"
+        description="¿Reiniciar este torneo? Se borrarán los partidos y el progreso."
+        confirmLabel="Reiniciar"
+        isPending={resetTournament.isPending}
+        error={resetTournament.error ? errorMessage(resetTournament.error) : null}
+        onConfirm={handleResetTournament}
+        onClose={() => {
+          resetTournament.reset();
+          setConfirmingReset(false);
+        }}
+      />
     </PageScaffold>
   );
 }
