@@ -23,6 +23,7 @@ export async function getTournaments(): Promise<TournamentBasic[]> {
 }
 
 export async function getUpcomingCalendar(limit = 4): Promise<TournamentBasic[]> {
+  // TODO(backend): add ?limit=/?from= to the tournaments endpoint and drop this client-side slice.
   const tournaments = await getTournaments();
   return tournaments.sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate)).slice(0, limit);
 }

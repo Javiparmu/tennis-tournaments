@@ -12,6 +12,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchOnWindowFocus: false,
             retry: 1,
           },
+          mutations: {
+            // Last-resort log so a mutation failure is never fully silent, even
+            // when a call site forgets to surface the error.
+            onError: (error) => console.error(error),
+          },
         },
       }),
   );

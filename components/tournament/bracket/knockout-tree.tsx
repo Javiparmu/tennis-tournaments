@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
 import { Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
+import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BracketPhase, Match } from "@/models";
 import { Connectors } from "./connectors";
@@ -111,13 +111,11 @@ export function KnockoutTree({
   const fitToView = useCallback(() => {
     const vp = viewportRef.current;
     const canvas = canvasRef.current;
-    if (!vp || !canvas || canvas.offsetWidth === 0) return;
+    // Bail if either dimension is 0 — the height divisor below is just as unsafe.
+    if (!vp || !canvas || canvas.offsetWidth === 0 || canvas.offsetHeight === 0) return;
     const pad = 16;
     const scale = clamp(
-      Math.min(
-        (vp.clientWidth - pad * 2) / canvas.offsetWidth,
-        (vp.clientHeight - pad * 2) / canvas.offsetHeight,
-      ),
+      Math.min((vp.clientWidth - pad * 2) / canvas.offsetWidth, (vp.clientHeight - pad * 2) / canvas.offsetHeight),
       MIN_SCALE,
       1,
     );
