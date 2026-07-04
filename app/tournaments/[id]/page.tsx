@@ -5,17 +5,16 @@ import { ArrowLeft, CalendarDays, Gauge, Layers, Pencil, Play, RotateCcw, Trophy
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { EmptyState } from "@/components/empty-state";
 import { AddPlayersModal } from "@/components/host/add-players-modal";
 import { PhaseFormModal } from "@/components/host/phase-form-modal";
 import { ScoreModal } from "@/components/host/score-modal";
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
 import { PageHeroFrame } from "@/components/page-hero";
+import { PageScaffold } from "@/components/page-scaffold";
 import { Bracket } from "@/components/tournament/bracket";
-import { EmptyState } from "@/components/empty-state";
 import { JoinTournament } from "@/components/tournament/join-tournament";
 import { ManageJoinRequests } from "@/components/tournament/manage-join-requests";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import {
   useAddTournamentPlayersMutation,
   useCanManageClub,
@@ -33,6 +32,7 @@ import {
 import { errorMessage } from "@/lib/errors";
 import { formatDateRange } from "@/lib/format";
 import { PHASE_FORMAT_LABEL, TOURNAMENT_STATUS_LABEL } from "@/lib/labels";
+import { computeStandings, type PlayerStatus } from "@/lib/standings";
 import { surfaceStyle } from "@/lib/surface";
 import type {
   AddPlayersRequest,
@@ -41,7 +41,6 @@ import type {
   PhaseConfiguration,
   UpdateMatchScoreRequest,
 } from "@/models";
-import { computeStandings, type PlayerStatus } from "@/lib/standings";
 
 const SEEDING_LABEL: Record<string, string> = {
   INPUT_ORDER: "orden de entrada",
@@ -158,253 +157,243 @@ export default function TournamentDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-court-ink">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <Link
-          href="/tournaments"
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-court"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Todos los torneos
-        </Link>
+    <PageScaffold>
+      <Link
+        href="/tournaments"
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-court"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Todos los torneos
+      </Link>
 
-        {!isValid && <p className="text-rose-600">Identificador de torneo no válido.</p>}
-        {isValid && tournamentQuery.isLoading && (
-          <div className="h-40 animate-pulse rounded-3xl border border-zinc-100 bg-zinc-100/70" />
-        )}
-        {isValid && (tournamentQuery.error || (!tournamentQuery.isLoading && !tournament)) && (
-          <p className="text-rose-600">No se pudo cargar este torneo.</p>
-        )}
+      {!isValid && <p className="text-rose-600">Identificador de torneo no válido.</p>}
+      {isValid && tournamentQuery.isLoading && (
+        <div className="h-40 animate-pulse rounded-3xl border border-zinc-100 bg-zinc-100/70" />
+      )}
+      {isValid && (tournamentQuery.error || (!tournamentQuery.isLoading && !tournament)) && (
+        <p className="text-rose-600">No se pudo cargar este torneo.</p>
+      )}
 
-        {tournament && (
-          <>
-            <PageHeroFrame className="p-8 md:p-10">
-              <div className="flex flex-wrap items-center gap-2">
-                {tournament.surface && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
-                    <span
-                      aria-hidden
-                      className="h-2 w-2 rounded-full"
-                      style={{ background: surfaceStyle(tournament.surface).hex }}
-                    />
-                    {surfaceStyle(tournament.surface).label}
-                  </span>
-                )}
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    tournament.status === "STARTED"
-                      ? "bg-ball-bright/15 text-ball-bright"
-                      : "bg-white/10 text-white/80"
-                  }`}
-                >
-                  {TOURNAMENT_STATUS_LABEL[tournament.status]}
+      {tournament && (
+        <>
+          <PageHeroFrame className="p-8 md:p-10">
+            <div className="flex flex-wrap items-center gap-2">
+              {tournament.surface && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
+                  <span
+                    aria-hidden
+                    className="h-2 w-2 rounded-full"
+                    style={{ background: surfaceStyle(tournament.surface).hex }}
+                  />
+                  {surfaceStyle(tournament.surface).label}
                 </span>
-              </div>
-              <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
-              {tournament.description && <p className="mt-3 max-w-2xl text-white/70">{tournament.description}</p>}
-              <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
-                <span className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-white/50" />
-                  {formatDateRange(tournament.startDate, tournament.endDate)}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-white/50" />
-                  {players.length} jugadores
-                </span>
-                <span className="flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-white/50" />
-                  {phases.length} fases
-                </span>
-                <span className="flex items-center gap-2">Club anfitrión</span>
-              </div>
-
-              {canManage ? (
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                  <Button
-                    className="bg-ball-bright text-court-ink hover:bg-ball"
-                    onPress={() => setEditing(true)}
-                  >
-                    <Pencil className="mr-1 h-4 w-4" />
-                    Editar
-                  </Button>
-                  {tournament.status === "DRAFT" ? (
-                    <Button
-                      variant="outline"
-                      className="border-white/20 text-white/80 hover:bg-white/10"
-                      onPress={() => startTournament.mutate(id)}
-                      isDisabled={startTournament.isPending}
-                    >
-                      <Play className="mr-1 h-4 w-4" />
-                      Empezar
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      className="border-white/20 text-white/80 hover:bg-white/10"
-                      onPress={() => {
-                        if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
-                          resetTournament.mutate(id);
-                        }
-                      }}
-                      isDisabled={resetTournament.isPending}
-                    >
-                      <RotateCcw className="mr-1 h-4 w-4" />
-                      Reiniciar
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    className="text-white/70 hover:text-white"
-                    onPress={() => setAddingPlayers(true)}
-                  >
-                    <Users className="mr-1 h-4 w-4" />
-                    Añadir jugadores
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-white/70 hover:text-white"
-                    onPress={() => setAddingPhase(true)}
-                  >
-                    <Gauge className="mr-1 h-4 w-4" />
-                    Añadir fase
-                  </Button>
-                </div>
-              ) : null}
-              {(startTournament.error || resetTournament.error) && (
-                <p className="mt-2 text-sm text-rose-300">
-                  {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
-                </p>
               )}
-            </PageHeroFrame>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  tournament.status === "STARTED" ? "bg-ball-bright/15 text-ball-bright" : "bg-white/10 text-white/80"
+                }`}
+              >
+                {TOURNAMENT_STATUS_LABEL[tournament.status]}
+              </span>
+            </div>
+            <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
+            {tournament.description && <p className="mt-3 max-w-2xl text-white/70">{tournament.description}</p>}
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
+              <span className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-white/50" />
+                {formatDateRange(tournament.startDate, tournament.endDate)}
+              </span>
+              <span className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-white/50" />
+                {players.length} jugadores
+              </span>
+              <span className="flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-white/50" />
+                {phases.length} fases
+              </span>
+              <span className="flex items-center gap-2">Club anfitrión</span>
+            </div>
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
-              <aside className="space-y-6">
-                {!canManage && (
-                  <JoinTournament tournamentId={id} tournamentStatus={tournament.status} />
+            {canManage ? (
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                <Button className="bg-ball-bright text-court-ink hover:bg-ball" onPress={() => setEditing(true)}>
+                  <Pencil className="mr-1 h-4 w-4" />
+                  Editar
+                </Button>
+                {tournament.status === "DRAFT" ? (
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white/80 hover:bg-white/10"
+                    onPress={() => startTournament.mutate(id)}
+                    isDisabled={startTournament.isPending}
+                  >
+                    <Play className="mr-1 h-4 w-4" />
+                    Empezar
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white/80 hover:bg-white/10"
+                    onPress={() => {
+                      if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
+                        resetTournament.mutate(id);
+                      }
+                    }}
+                    isDisabled={resetTournament.isPending}
+                  >
+                    <RotateCcw className="mr-1 h-4 w-4" />
+                    Reiniciar
+                  </Button>
                 )}
-                {canManage && <ManageJoinRequests tournamentId={id} />}
-                <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
-                  <h2 className="mb-3 font-display text-lg font-bold">Jugadores</h2>
-                  {inProgress ? (
-                    // Live standings: win-loss record and whether each player is
-                    // still in the running, eliminated, or crowned champion.
-                    standings.length === 0 ? (
-                      <EmptyState size="compact" icon={Users} title="Cuadro vacío" description="Aún no hay jugadores en el cuadro." />
-                    ) : (
-                      <ul className="space-y-2">
-                        {standings.map(({ player, wins, losses, status }) => (
-                          <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
-                            <span className="flex min-w-0 items-center gap-2">
-                              {status === "champion" && <Trophy className="h-4 w-4 shrink-0 text-court" />}
-                              {player.user ? (
-                                <Link
-                                  href={`/players/${encodeURIComponent(player.user.username)}`}
-                                  className="truncate hover:text-court"
-                                >
-                                  {player.name}
-                                </Link>
-                              ) : (
-                                <span className="truncate">{player.name}</span>
-                              )}
-                            </span>
-                            <span className="flex shrink-0 items-center gap-2">
-                              <span className="tabular-nums text-xs text-zinc-500">
-                                {wins}V · {losses}D
-                              </span>
-                              <Chip size="sm" variant="soft" className={`border ${STANDING_STYLE[status]}`}>
-                                {STANDING_LABEL[status]}
-                              </Chip>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )
-                  ) : players.length === 0 ? (
+                <Button
+                  variant="ghost"
+                  className="text-white/70 hover:text-white"
+                  onPress={() => setAddingPlayers(true)}
+                >
+                  <Users className="mr-1 h-4 w-4" />
+                  Añadir jugadores
+                </Button>
+                <Button variant="ghost" className="text-white/70 hover:text-white" onPress={() => setAddingPhase(true)}>
+                  <Gauge className="mr-1 h-4 w-4" />
+                  Añadir fase
+                </Button>
+              </div>
+            ) : null}
+            {(startTournament.error || resetTournament.error) && (
+              <p className="mt-2 text-sm text-rose-300">
+                {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
+              </p>
+            )}
+          </PageHeroFrame>
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
+            <aside className="space-y-6">
+              {!canManage && <JoinTournament tournamentId={id} tournamentStatus={tournament.status} />}
+              {canManage && <ManageJoinRequests tournamentId={id} />}
+              <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 font-display text-lg font-bold">Jugadores</h2>
+                {inProgress ? (
+                  // Live standings: win-loss record and whether each player is
+                  // still in the running, eliminated, or crowned champion.
+                  standings.length === 0 ? (
                     <EmptyState
                       size="compact"
                       icon={Users}
-                      title="Sin jugadores"
-                      description="Aún no hay jugadores inscritos."
+                      title="Cuadro vacío"
+                      description="Aún no hay jugadores en el cuadro."
                     />
                   ) : (
                     <ul className="space-y-2">
-                      {players.map((player) => (
+                      {standings.map(({ player, wins, losses, status }) => (
                         <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
-                          <span className="flex items-center gap-2">
+                          <span className="flex min-w-0 items-center gap-2">
+                            {status === "champion" && <Trophy className="h-4 w-4 shrink-0 text-court" />}
                             {player.user ? (
-                              <Link href={`/players/${encodeURIComponent(player.user.username)}`} className="hover:text-court">
+                              <Link
+                                href={`/players/${encodeURIComponent(player.user.username)}`}
+                                className="truncate hover:text-court"
+                              >
                                 {player.name}
                               </Link>
                             ) : (
-                              player.name
+                              <span className="truncate">{player.name}</span>
                             )}
                           </span>
-                          <span className="flex items-center gap-2">
-                            {player.seed != null && <span className="text-xs text-zinc-400">#{player.seed}</span>}
-                            {canManage ? (
-                              <button
-                                type="button"
-                                aria-label={`Eliminar ${player.name}`}
-                                onClick={() => removePlayer.mutate({ id, playerId: player.id })}
-                                className="text-zinc-300 hover:text-rose-600"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            ) : null}
+                          <span className="flex shrink-0 items-center gap-2">
+                            <span className="tabular-nums text-xs text-zinc-500">
+                              {wins}V · {losses}D
+                            </span>
+                            <Chip size="sm" variant="soft" className={`border ${STANDING_STYLE[status]}`}>
+                              {STANDING_LABEL[status]}
+                            </Chip>
                           </span>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </section>
-
-                <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
-                  <h2 className="mb-3 font-display text-lg font-bold">Fases</h2>
-                  {phases.length === 0 ? (
-                    <EmptyState
-                      size="compact"
-                      icon={Layers}
-                      title="Sin fases"
-                      description="Aún no hay fases configuradas."
-                    />
-                  ) : (
-                    <ol className="space-y-3">
-                      {phases.map((phase) => (
-                        <li key={phase.id} className="rounded-xl bg-court/5 p-3">
-                          <p className="text-sm font-semibold text-court-ink">
-                            {phase.phaseOrder}. {PHASE_FORMAT_LABEL[phase.format] ?? phase.format}
-                          </p>
-                          <p className="mt-0.5 text-xs text-zinc-500">{describeConfig(phase.configuration)}</p>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </section>
-              </aside>
-
-              <section>
-                <h2 className="mb-4 font-display text-2xl font-black tracking-tight">Cuadro</h2>
-                {bracketQuery.isLoading && (
-                  <div className="h-48 animate-pulse rounded-2xl border border-zinc-100 bg-zinc-100/70" />
-                )}
-                {bracketQuery.error && <p className="text-sm text-rose-600">No se pudo cargar el cuadro.</p>}
-                {canManage && (
-                  <p className="mb-3 text-sm text-zinc-500">Toca un partido para introducir o editar su resultado.</p>
-                )}
-                {bracketQuery.data && (
-                  <Bracket
-                    bracket={bracketQuery.data}
-                    onSelectMatch={canManage ? setScoringMatch : undefined}
+                  )
+                ) : players.length === 0 ? (
+                  <EmptyState
+                    size="compact"
+                    icon={Users}
+                    title="Sin jugadores"
+                    description="Aún no hay jugadores inscritos."
                   />
+                ) : (
+                  <ul className="space-y-2">
+                    {players.map((player) => (
+                      <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
+                        <span className="flex items-center gap-2">
+                          {player.user ? (
+                            <Link
+                              href={`/players/${encodeURIComponent(player.user.username)}`}
+                              className="hover:text-court"
+                            >
+                              {player.name}
+                            </Link>
+                          ) : (
+                            player.name
+                          )}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          {player.seed != null && <span className="text-xs text-zinc-400">#{player.seed}</span>}
+                          {canManage ? (
+                            <button
+                              type="button"
+                              aria-label={`Eliminar ${player.name}`}
+                              onClick={() => removePlayer.mutate({ id, playerId: player.id })}
+                              className="text-zinc-300 hover:text-rose-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          ) : null}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                {updateScore.error && <p className="mt-2 text-sm text-rose-600">{errorMessage(updateScore.error)}</p>}
               </section>
-            </div>
-          </>
-        )}
-      </main>
-      <SiteFooter />
+
+              <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 font-display text-lg font-bold">Fases</h2>
+                {phases.length === 0 ? (
+                  <EmptyState
+                    size="compact"
+                    icon={Layers}
+                    title="Sin fases"
+                    description="Aún no hay fases configuradas."
+                  />
+                ) : (
+                  <ol className="space-y-3">
+                    {phases.map((phase) => (
+                      <li key={phase.id} className="rounded-xl bg-court/5 p-3">
+                        <p className="text-sm font-semibold text-court-ink">
+                          {phase.phaseOrder}. {PHASE_FORMAT_LABEL[phase.format] ?? phase.format}
+                        </p>
+                        <p className="mt-0.5 text-xs text-zinc-500">{describeConfig(phase.configuration)}</p>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+            </aside>
+
+            <section>
+              <h2 className="mb-4 font-display text-2xl font-black tracking-tight">Cuadro</h2>
+              {bracketQuery.isLoading && (
+                <div className="h-48 animate-pulse rounded-2xl border border-zinc-100 bg-zinc-100/70" />
+              )}
+              {bracketQuery.error && <p className="text-sm text-rose-600">No se pudo cargar el cuadro.</p>}
+              {canManage && (
+                <p className="mb-3 text-sm text-zinc-500">Toca un partido para introducir o editar su resultado.</p>
+              )}
+              {bracketQuery.data && (
+                <Bracket bracket={bracketQuery.data} onSelectMatch={canManage ? setScoringMatch : undefined} />
+              )}
+              {updateScore.error && <p className="mt-2 text-sm text-rose-600">{errorMessage(updateScore.error)}</p>}
+            </section>
+          </div>
+        </>
+      )}
 
       {editing && tournament ? (
         <TournamentFormModal
@@ -453,6 +442,6 @@ export default function TournamentDetailPage() {
           submitError={updateScore.error ? errorMessage(updateScore.error) : null}
         />
       ) : null}
-    </div>
+    </PageScaffold>
   );
 }

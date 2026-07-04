@@ -3,9 +3,8 @@
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { PageHero } from "@/components/page-hero";
+import { PageScaffold } from "@/components/page-scaffold";
 import { PlayersRanking } from "@/components/players/players-ranking";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { useMeQuery } from "@/data/queries";
 
 /* The CTA shell always renders at full height and swaps its content once Clerk /
@@ -52,23 +51,19 @@ function RankingCta() {
 
 export default function ProfilePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-court-ink">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="mb-8">
-          <PageHero
-            eyebrow="Jugadores"
-            title="Ranking de jugadores"
-            accent=" jugadores"
-            subtitle="Los mejores jugadores de la plataforma. Abre un perfil para ver su historial."
-          >
-            <RankingCta />
-          </PageHero>
-        </div>
+    <PageScaffold>
+      <div className="mb-8">
+        <PageHero
+          eyebrow="Jugadores"
+          title="Ranking de jugadores"
+          accent=" jugadores"
+          subtitle="Los mejores jugadores de la plataforma. Abre un perfil para ver su historial."
+        >
+          <RankingCta />
+        </PageHero>
+      </div>
 
-        <PlayersRanking />
-      </main>
-      <SiteFooter />
-    </div>
+      <PlayersRanking />
+    </PageScaffold>
   );
 }
