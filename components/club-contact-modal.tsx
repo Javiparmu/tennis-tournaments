@@ -3,7 +3,7 @@
 import { Button, Form } from "@heroui/react";
 import { CheckCircle2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { ModalShell, inputClass } from "@/components/host/modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 import { useClubContactRequestMutation } from "@/data/queries";
 import { CLUB_CONTACT_EMAIL } from "@/lib/contact";
 

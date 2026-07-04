@@ -4,7 +4,7 @@ import { Button, Form } from "@heroui/react";
 import { Show } from "@clerk/nextjs";
 import { Building2, Inbox, Mail, Phone, Trash2, UserCheck } from "lucide-react";
 import { useState } from "react";
-import { ModalShell, inputClass } from "@/components/host/modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getUserByUsername } from "@/data/api/users";

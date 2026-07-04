@@ -4,7 +4,7 @@ import { useSignIn } from "@clerk/nextjs";
 import { Button, Form } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, type ReactNode, useState } from "react";
-import { inputClass } from "@/components/host/modal-shell";
+import { inputClass } from "@/components/modal-shell";
 import { clerkErrorMessage } from "./clerk-errors";
 import { makeNavigate } from "./finalize-navigate";
 import { AuthDivider, GoogleButton } from "./social-buttons";

@@ -4,7 +4,7 @@ import { Button, Form } from "@heroui/react";
 import { useState } from "react";
 import { SURFACE_LABEL } from "@/lib/surface";
 import type { SurfaceType, TournamentBasic } from "@/models";
-import { ModalShell, inputClass } from "./modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 
 export type TournamentFormValues = {
   name: string;

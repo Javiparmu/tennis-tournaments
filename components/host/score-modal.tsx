@@ -4,7 +4,7 @@ import { Button, Form } from "@heroui/react";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { Match, UpdateMatchScoreRequest } from "@/models";
-import { ModalShell, inputClass } from "./modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 
 type ScoreModalProps = {
   match: Match;

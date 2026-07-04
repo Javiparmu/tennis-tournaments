@@ -3,7 +3,7 @@
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
 import type { Club } from "@/models";
-import { ModalShell, inputClass } from "./modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 
 // Clubs are provisioned by the platform operator, so this modal only edits.
 export type ClubFormValues = {

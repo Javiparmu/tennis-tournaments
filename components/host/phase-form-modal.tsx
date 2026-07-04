@@ -3,7 +3,7 @@
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
 import type { CreatePhaseRequest, PhaseConfiguration, PhaseFormat, SeedingStrategy } from "@/models";
-import { ModalShell, inputClass } from "./modal-shell";
+import { ModalShell, inputClass } from "@/components/modal-shell";
 
 type PhaseFormModalProps = {
   defaultOrder: number;

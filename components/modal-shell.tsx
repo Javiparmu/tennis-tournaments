@@ -6,6 +6,13 @@ import type { ReactNode } from "react";
 export const inputClass =
   "w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-court";
 
+// Shared inline validation/submit error line. Renders nothing when empty so
+// call sites can pass an error directly without their own guard.
+export function FormError({ message }: { message: string | null | undefined }) {
+  if (!message) return null;
+  return <p className="text-sm text-rose-600">{message}</p>;
+}
+
 type ModalShellProps = {
   title: string;
   subtitle?: string;
