@@ -10,6 +10,7 @@
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
     "check": "biome check .",
+    "test": "vitest run",
     "prepare": "husky"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "@types/react-dom": "^19",
     "husky": "^9.1.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
