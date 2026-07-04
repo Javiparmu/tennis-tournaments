@@ -1,9 +1,14 @@
-import type { CreateTrainingRequest, UpdateTrainingRequest, UserTrainingEntry, UserTrainingRangeResponse } from "@/models";
-import { buildRequestInit, request, requireToken } from "./client";
+import type {
+  CreateTrainingRequest,
+  UpdateTrainingRequest,
+  UserTrainingEntry,
+  UserTrainingRangeResponse,
+} from "@/models";
+import { apiDelete, apiGet, apiPost, apiPut, requireToken } from "./client";
 
 export async function getPublicTrainings(userId: number, from: string, to: string): Promise<UserTrainingRangeResponse> {
   const query = new URLSearchParams({ from, to }).toString();
-  return request<UserTrainingRangeResponse>(`/users/${userId}/trainings?${query}`);
+  return apiGet<UserTrainingRangeResponse>(`/users/${userId}/trainings?${query}`);
 }
 
 export async function getMyTrainings(
@@ -12,20 +17,14 @@ export async function getMyTrainings(
   to: string,
 ): Promise<UserTrainingRangeResponse> {
   const query = new URLSearchParams({ from, to }).toString();
-  return request<UserTrainingRangeResponse>(
-    `/users/me/trainings?${query}`,
-    buildRequestInit(undefined, requireToken(token)),
-  );
+  return apiGet<UserTrainingRangeResponse>(`/users/me/trainings?${query}`, requireToken(token));
 }
 
 export async function createTraining(
   token: string | null | undefined,
   payload: CreateTrainingRequest,
 ): Promise<UserTrainingEntry> {
-  return request<UserTrainingEntry>(
-    "/users/me/trainings",
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<UserTrainingEntry>("/users/me/trainings", payload, requireToken(token));
 }
 
 export async function updateTraining(
@@ -33,15 +32,9 @@ export async function updateTraining(
   trainingId: number,
   payload: UpdateTrainingRequest,
 ): Promise<UserTrainingEntry> {
-  return request<UserTrainingEntry>(
-    `/users/me/trainings/${trainingId}`,
-    buildRequestInit({ method: "PUT", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPut<UserTrainingEntry>(`/users/me/trainings/${trainingId}`, payload, requireToken(token));
 }
 
 export async function deleteTraining(token: string | null | undefined, trainingId: number): Promise<void> {
-  return request<void>(
-    `/users/me/trainings/${trainingId}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+  return apiDelete<void>(`/users/me/trainings/${trainingId}`, requireToken(token));
 }

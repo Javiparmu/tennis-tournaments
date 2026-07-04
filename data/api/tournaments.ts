@@ -16,10 +16,10 @@ import type {
   TournamentPhaseSummary,
   UpdateTournamentRequest,
 } from "@/models";
-import { buildRequestInit, request, requireToken } from "./client";
+import { apiDelete, apiGet, apiPost, apiPut, requireToken } from "./client";
 
 export async function getTournaments(): Promise<TournamentBasic[]> {
-  return request<TournamentBasic[]>("/tournaments");
+  return apiGet<TournamentBasic[]>("/tournaments");
 }
 
 export async function getUpcomingCalendar(limit = 4): Promise<TournamentBasic[]> {
@@ -28,43 +28,37 @@ export async function getUpcomingCalendar(limit = 4): Promise<TournamentBasic[]>
 }
 
 export async function getTournament(id: number): Promise<Tournament> {
-  return request<Tournament>(`/tournaments/${id}`);
+  return apiGet<Tournament>(`/tournaments/${id}`);
 }
 
 export async function createTournament(
   token: string | null | undefined,
   payload: CreateTournamentRequest,
 ): Promise<Tournament> {
-  return request<Tournament>(
-    "/tournaments",
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<Tournament>("/tournaments", payload, requireToken(token));
 }
 
 export async function updateTournament(
   token: string | null | undefined,
   payload: UpdateTournamentRequest,
 ): Promise<Tournament> {
-  return request<Tournament>(
-    "/tournaments",
-    buildRequestInit({ method: "PUT", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPut<Tournament>("/tournaments", payload, requireToken(token));
 }
 
 export async function deleteTournament(token: string | null | undefined, id: number): Promise<void> {
-  return request<void>(`/tournaments/${id}`, buildRequestInit({ method: "DELETE" }, requireToken(token)));
+  return apiDelete<void>(`/tournaments/${id}`, requireToken(token));
 }
 
 export async function startTournament(token: string | null | undefined, id: number): Promise<Tournament> {
-  return request<Tournament>(`/tournaments/${id}/start`, buildRequestInit({ method: "POST" }, requireToken(token)));
+  return apiPost<Tournament>(`/tournaments/${id}/start`, undefined, requireToken(token));
 }
 
 export async function resetTournament(token: string | null | undefined, id: number): Promise<Tournament> {
-  return request<Tournament>(`/tournaments/${id}/reset`, buildRequestInit({ method: "POST" }, requireToken(token)));
+  return apiPost<Tournament>(`/tournaments/${id}/reset`, undefined, requireToken(token));
 }
 
 export async function getTournamentPhases(id: number): Promise<TournamentPhaseSummary[]> {
-  return request<TournamentPhaseSummary[]>(`/tournaments/${id}/phases`);
+  return apiGet<TournamentPhaseSummary[]>(`/tournaments/${id}/phases`);
 }
 
 export async function createPhase(
@@ -72,14 +66,11 @@ export async function createPhase(
   id: number,
   payload: CreatePhaseRequest,
 ): Promise<TournamentPhase> {
-  return request<TournamentPhase>(
-    `/tournaments/${id}/phases`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<TournamentPhase>(`/tournaments/${id}/phases`, payload, requireToken(token));
 }
 
 export async function getTournamentPlayers(id: number): Promise<Player[]> {
-  return request<Player[]>(`/tournaments/${id}/players`);
+  return apiGet<Player[]>(`/tournaments/${id}/players`);
 }
 
 export async function addTournamentPlayers(
@@ -87,10 +78,7 @@ export async function addTournamentPlayers(
   id: number,
   payload: AddPlayersRequest,
 ): Promise<Tournament> {
-  return request<Tournament>(
-    `/tournaments/${id}/players`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<Tournament>(`/tournaments/${id}/players`, payload, requireToken(token));
 }
 
 export async function removeTournamentPlayer(
@@ -98,25 +86,19 @@ export async function removeTournamentPlayer(
   id: number,
   playerId: number,
 ): Promise<void> {
-  return request<void>(
-    `/tournaments/${id}/players/${playerId}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+  return apiDelete<void>(`/tournaments/${id}/players/${playerId}`, requireToken(token));
 }
 
 export async function getTournamentMatches(id: number): Promise<Match[]> {
-  return request<Match[]>(`/tournaments/${id}/matches`);
+  return apiGet<Match[]>(`/tournaments/${id}/matches`);
 }
 
 export async function getTournamentBracket(id: number): Promise<TournamentBracket> {
-  return request<TournamentBracket>(`/tournaments/${id}/bracket`);
+  return apiGet<TournamentBracket>(`/tournaments/${id}/bracket`);
 }
 
 export async function getMyJoinRequests(token: string | null | undefined): Promise<TournamentJoinRequest[]> {
-  return request<TournamentJoinRequest[]>(
-    "/users/me/tournament-join-requests",
-    buildRequestInit(undefined, requireToken(token)),
-  );
+  return apiGet<TournamentJoinRequest[]>("/users/me/tournament-join-requests", requireToken(token));
 }
 
 export async function createJoinRequest(
@@ -124,10 +106,7 @@ export async function createJoinRequest(
   id: number,
   payload: CreateTournamentJoinRequest,
 ): Promise<TournamentJoinRequest> {
-  return request<TournamentJoinRequest>(
-    `/tournaments/${id}/join-requests`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<TournamentJoinRequest>(`/tournaments/${id}/join-requests`, payload, requireToken(token));
 }
 
 export async function withdrawJoinRequest(
@@ -135,9 +114,10 @@ export async function withdrawJoinRequest(
   id: number,
   requestId: number,
 ): Promise<TournamentJoinRequest> {
-  return request<TournamentJoinRequest>(
+  return apiPost<TournamentJoinRequest>(
     `/tournaments/${id}/join-requests/${requestId}/withdraw`,
-    buildRequestInit({ method: "POST" }, requireToken(token)),
+    undefined,
+    requireToken(token),
   );
 }
 
@@ -147,10 +127,7 @@ export async function getTournamentJoinRequests(
   status?: TournamentJoinRequestStatus,
 ): Promise<TournamentJoinRequest[]> {
   const query = status ? `?status=${status}` : "";
-  return request<TournamentJoinRequest[]>(
-    `/tournaments/${id}/join-requests${query}`,
-    buildRequestInit(undefined, requireToken(token)),
-  );
+  return apiGet<TournamentJoinRequest[]>(`/tournaments/${id}/join-requests${query}`, requireToken(token));
 }
 
 export async function acceptJoinRequest(
@@ -159,9 +136,10 @@ export async function acceptJoinRequest(
   requestId: number,
   payload: AcceptTournamentJoinRequest,
 ): Promise<TournamentJoinRequest> {
-  return request<TournamentJoinRequest>(
+  return apiPost<TournamentJoinRequest>(
     `/tournaments/${id}/join-requests/${requestId}/accept`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
+    payload,
+    requireToken(token),
   );
 }
 
@@ -171,9 +149,10 @@ export async function rejectJoinRequest(
   requestId: number,
   payload: DecideTournamentJoinRequest,
 ): Promise<TournamentJoinRequest> {
-  return request<TournamentJoinRequest>(
+  return apiPost<TournamentJoinRequest>(
     `/tournaments/${id}/join-requests/${requestId}/reject`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
+    payload,
+    requireToken(token),
   );
 }
 
@@ -182,8 +161,9 @@ export async function allowResubmitJoinRequest(
   id: number,
   requestId: number,
 ): Promise<TournamentJoinRequest> {
-  return request<TournamentJoinRequest>(
+  return apiPost<TournamentJoinRequest>(
     `/tournaments/${id}/join-requests/${requestId}/allow-resubmit`,
-    buildRequestInit({ method: "POST" }, requireToken(token)),
+    undefined,
+    requireToken(token),
   );
 }

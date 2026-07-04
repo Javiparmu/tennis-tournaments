@@ -115,3 +115,30 @@ export function requireToken(token: string | null | undefined) {
 
   return token;
 }
+
+// Thin per-method wrappers so the domain modules stay one-liners. Authed call
+// sites keep `requireToken(token)` at the boundary and pass the validated
+// string; public calls simply omit the token (no Authorization header).
+function methodInit(method: string, body?: unknown, token?: string): RequestInit {
+  return buildRequestInit({ method, ...(body !== undefined && { body: JSON.stringify(body) }) }, token);
+}
+
+export function apiGet<T>(path: string, token?: string): Promise<T> {
+  return token ? request<T>(path, buildRequestInit(undefined, token)) : request<T>(path);
+}
+
+export function apiPost<T>(path: string, body?: unknown, token?: string): Promise<T> {
+  return request<T>(path, methodInit("POST", body, token));
+}
+
+export function apiPut<T>(path: string, body?: unknown, token?: string): Promise<T> {
+  return request<T>(path, methodInit("PUT", body, token));
+}
+
+export function apiPatch<T>(path: string, body?: unknown, token?: string): Promise<T> {
+  return request<T>(path, methodInit("PATCH", body, token));
+}
+
+export function apiDelete<T>(path: string, token?: string): Promise<T> {
+  return request<T>(path, methodInit("DELETE", undefined, token));
+}

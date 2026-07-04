@@ -1,33 +1,36 @@
-import type { ProfileCalendarResponse, TournamentBasic, UpdateUserRequest, User, UserMatchActivityResponse } from "@/models";
-import { buildRequestInit, request, requireToken } from "./client";
+import type {
+  ProfileCalendarResponse,
+  TournamentBasic,
+  UpdateUserRequest,
+  User,
+  UserMatchActivityResponse,
+} from "@/models";
+import { apiGet, apiPatch, requireToken } from "./client";
 
 export async function getUsers(): Promise<User[]> {
-  return request<User[]>("/users");
+  return apiGet<User[]>("/users");
 }
 
 // Tournaments this user is registered in. Backend filters to the player's accepted
 // registrations; the carousel narrows to upcoming ones client-side.
 export async function getUserTournaments(userId: number): Promise<TournamentBasic[]> {
-  return request<TournamentBasic[]>(`/users/${userId}/tournaments`);
+  return apiGet<TournamentBasic[]>(`/users/${userId}/tournaments`);
 }
 
 export async function getUser(userId: number): Promise<User> {
-  return request<User>(`/users/${userId}`);
+  return apiGet<User>(`/users/${userId}`);
 }
 
 export async function getUserByUsername(username: string): Promise<User> {
-  return request<User>(`/users/by-username/${encodeURIComponent(username)}`);
+  return apiGet<User>(`/users/by-username/${encodeURIComponent(username)}`);
 }
 
 export async function getMe(token: string | null | undefined): Promise<User> {
-  return request<User>("/users/me", buildRequestInit(undefined, requireToken(token)));
+  return apiGet<User>("/users/me", requireToken(token));
 }
 
 export async function updateMe(token: string | null | undefined, payload: UpdateUserRequest): Promise<User> {
-  return request<User>(
-    "/users/me",
-    buildRequestInit({ method: "PATCH", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPatch<User>("/users/me", payload, requireToken(token));
 }
 
 export async function getUserMatchActivity(
@@ -36,7 +39,7 @@ export async function getUserMatchActivity(
   to: string,
 ): Promise<UserMatchActivityResponse> {
   const query = new URLSearchParams({ from, to }).toString();
-  return request<UserMatchActivityResponse>(`/users/${userId}/matches?${query}`);
+  return apiGet<UserMatchActivityResponse>(`/users/${userId}/matches?${query}`);
 }
 
 export async function getUserProfileCalendar(
@@ -46,7 +49,7 @@ export async function getUserProfileCalendar(
   timezone: string,
 ): Promise<ProfileCalendarResponse> {
   const query = new URLSearchParams({ from, to, timezone }).toString();
-  return request<ProfileCalendarResponse>(`/users/${userId}/profile-calendar?${query}`);
+  return apiGet<ProfileCalendarResponse>(`/users/${userId}/profile-calendar?${query}`);
 }
 
 export async function getMyProfileCalendar(
@@ -56,8 +59,5 @@ export async function getMyProfileCalendar(
   timezone: string,
 ): Promise<ProfileCalendarResponse> {
   const query = new URLSearchParams({ from, to, timezone }).toString();
-  return request<ProfileCalendarResponse>(
-    `/users/me/profile-calendar?${query}`,
-    buildRequestInit(undefined, requireToken(token)),
-  );
+  return apiGet<ProfileCalendarResponse>(`/users/me/profile-calendar?${query}`, requireToken(token));
 }

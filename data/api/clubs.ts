@@ -6,76 +6,47 @@ import type {
   PublicUser,
   UpdateClubRequest,
 } from "@/models";
-import { buildRequestInit, request, requireToken } from "./client";
+import { apiDelete, apiGet, apiPost, apiPut, requireToken } from "./client";
 
 export async function getClubs(): Promise<Club[]> {
-  return request<Club[]>("/clubs");
+  return apiGet<Club[]>("/clubs");
 }
 
 export async function getClub(id: number): Promise<Club> {
-  return request<Club>(`/clubs/${id}`);
+  return apiGet<Club>(`/clubs/${id}`);
 }
 
 export async function getClubAdmins(id: number): Promise<PublicUser[]> {
-  return request<PublicUser[]>(`/clubs/${id}/admins`);
+  return apiGet<PublicUser[]>(`/clubs/${id}/admins`);
 }
 
 // Clubs are provisioned manually: they ask to join through this public contact
 // request, and the platform admin reviews the queue and creates the club from /admin.
 export async function sendClubContactRequest(payload: ClubContactRequestPayload): Promise<void> {
-  await request("/club-contact-requests", { method: "POST", body: JSON.stringify(payload) });
+  await apiPost("/club-contact-requests", payload);
 }
 
 export async function getClubContactRequests(token: string | null | undefined): Promise<ClubContactRequest[]> {
-  return request<ClubContactRequest[]>(
-    "/club-contact-requests",
-    buildRequestInit(undefined, requireToken(token)),
-  );
+  return apiGet<ClubContactRequest[]>("/club-contact-requests", requireToken(token));
 }
 
 export async function deleteClubContactRequest(token: string | null | undefined, id: number): Promise<void> {
-  return request<void>(
-    `/club-contact-requests/${id}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+  return apiDelete<void>(`/club-contact-requests/${id}`, requireToken(token));
 }
 
 // Platform admin only: creates the club on behalf of its owner user.
 export async function createClub(token: string | null | undefined, payload: CreateClubRequest): Promise<Club> {
-  return request<Club>(
-    "/clubs",
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<Club>("/clubs", payload, requireToken(token));
 }
 
-export async function updateClub(
-  token: string | null | undefined,
-  payload: UpdateClubRequest,
-): Promise<Club> {
-  return request<Club>(
-    "/clubs",
-    buildRequestInit({ method: "PUT", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+export async function updateClub(token: string | null | undefined, payload: UpdateClubRequest): Promise<Club> {
+  return apiPut<Club>("/clubs", payload, requireToken(token));
 }
 
-export async function addClubAdmin(
-  token: string | null | undefined,
-  clubId: number,
-  userId: number,
-): Promise<void> {
-  return request<void>(
-    `/clubs/${clubId}/admins/${userId}`,
-    buildRequestInit({ method: "POST" }, requireToken(token)),
-  );
+export async function addClubAdmin(token: string | null | undefined, clubId: number, userId: number): Promise<void> {
+  return apiPost<void>(`/clubs/${clubId}/admins/${userId}`, undefined, requireToken(token));
 }
 
-export async function removeClubAdmin(
-  token: string | null | undefined,
-  clubId: number,
-  userId: number,
-): Promise<void> {
-  return request<void>(
-    `/clubs/${clubId}/admins/${userId}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+export async function removeClubAdmin(token: string | null | undefined, clubId: number, userId: number): Promise<void> {
+  return apiDelete<void>(`/clubs/${clubId}/admins/${userId}`, requireToken(token));
 }

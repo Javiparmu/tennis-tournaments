@@ -7,38 +7,29 @@ import type {
   UpdateRacketRequest,
   UpdateRacketStringingRequest,
 } from "@/models";
-import { buildRequestInit, request, requireToken } from "./client";
+import { apiDelete, apiGet, apiPost, apiPut, requireToken } from "./client";
 
 export async function getPublicRackets(userId: number): Promise<RacketSummary[]> {
-  return request<RacketSummary[]>(`/users/${userId}/rackets`);
+  return apiGet<RacketSummary[]>(`/users/${userId}/rackets`);
 }
 
 export async function getMyRackets(token: string | null | undefined): Promise<RacketSummary[]> {
-  return request<RacketSummary[]>("/users/me/rackets", buildRequestInit(undefined, requireToken(token)));
+  return apiGet<RacketSummary[]>("/users/me/rackets", requireToken(token));
 }
 
 export async function getPublicRacketDetails(userId: number, racketId: number): Promise<RacketDetails> {
-  return request<RacketDetails>(`/users/${userId}/rackets/${racketId}`);
+  return apiGet<RacketDetails>(`/users/${userId}/rackets/${racketId}`);
 }
 
-export async function getMyRacketDetails(
-  token: string | null | undefined,
-  racketId: number,
-): Promise<RacketDetails> {
-  return request<RacketDetails>(
-    `/users/me/rackets/${racketId}`,
-    buildRequestInit(undefined, requireToken(token)),
-  );
+export async function getMyRacketDetails(token: string | null | undefined, racketId: number): Promise<RacketDetails> {
+  return apiGet<RacketDetails>(`/users/me/rackets/${racketId}`, requireToken(token));
 }
 
 export async function createRacket(
   token: string | null | undefined,
   payload: CreateRacketRequest,
 ): Promise<RacketSummary> {
-  return request<RacketSummary>(
-    "/users/me/rackets",
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<RacketSummary>("/users/me/rackets", payload, requireToken(token));
 }
 
 export async function updateRacket(
@@ -46,17 +37,11 @@ export async function updateRacket(
   racketId: number,
   payload: UpdateRacketRequest,
 ): Promise<RacketSummary> {
-  return request<RacketSummary>(
-    `/users/me/rackets/${racketId}`,
-    buildRequestInit({ method: "PUT", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPut<RacketSummary>(`/users/me/rackets/${racketId}`, payload, requireToken(token));
 }
 
 export async function deleteRacket(token: string | null | undefined, racketId: number): Promise<void> {
-  return request<void>(
-    `/users/me/rackets/${racketId}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+  return apiDelete<void>(`/users/me/rackets/${racketId}`, requireToken(token));
 }
 
 export async function createStringing(
@@ -64,10 +49,7 @@ export async function createStringing(
   racketId: number,
   payload: CreateRacketStringingRequest,
 ): Promise<RacketStringingHistoryEntry> {
-  return request<RacketStringingHistoryEntry>(
-    `/users/me/rackets/${racketId}/stringings`,
-    buildRequestInit({ method: "POST", body: JSON.stringify(payload) }, requireToken(token)),
-  );
+  return apiPost<RacketStringingHistoryEntry>(`/users/me/rackets/${racketId}/stringings`, payload, requireToken(token));
 }
 
 export async function updateStringing(
@@ -76,9 +58,10 @@ export async function updateStringing(
   stringingId: number,
   payload: UpdateRacketStringingRequest,
 ): Promise<RacketStringingHistoryEntry> {
-  return request<RacketStringingHistoryEntry>(
+  return apiPut<RacketStringingHistoryEntry>(
     `/users/me/rackets/${racketId}/stringings/${stringingId}`,
-    buildRequestInit({ method: "PUT", body: JSON.stringify(payload) }, requireToken(token)),
+    payload,
+    requireToken(token),
   );
 }
 
@@ -87,8 +70,5 @@ export async function deleteStringing(
   racketId: number,
   stringingId: number,
 ): Promise<void> {
-  return request<void>(
-    `/users/me/rackets/${racketId}/stringings/${stringingId}`,
-    buildRequestInit({ method: "DELETE" }, requireToken(token)),
-  );
+  return apiDelete<void>(`/users/me/rackets/${racketId}/stringings/${stringingId}`, requireToken(token));
 }
