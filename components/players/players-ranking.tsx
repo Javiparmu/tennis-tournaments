@@ -16,7 +16,7 @@ function initials(value: string) {
 
 // Interim rank score. There is no elo/rating in the backend yet (see plan), so we rank by match
 // wins (the backend aggregates them onto GET /users). Tie-broken by username so the order is stable.
-export function rankUsers(users: User[]): User[] {
+function rankUsers(users: User[]): User[] {
   return [...users].sort((a, b) => {
     const byWins = (b.matchWins ?? 0) - (a.matchWins ?? 0);
     if (byWins !== 0) return byWins;
