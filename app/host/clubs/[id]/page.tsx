@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ClubFormModal, type ClubFormValues } from "@/components/host/club-form-modal";
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
-import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
+import { PageHeroFrame } from "@/components/page-hero";
 import { EmptyState } from "@/components/empty-state";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -94,28 +94,24 @@ export default function ClubManagePage() {
 
         {club && (
           <>
-            <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
-              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
-              <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
-              <div className="relative flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-display text-sm font-bold uppercase tracking-wide text-ball-bright/90">Club</p>
-                  <h1 className="mt-1 font-display text-3xl font-black tracking-tight md:text-4xl">{club.name}</h1>
-                  <p className="mt-2 text-white/70">{club.address ?? "Sin dirección"}</p>
-                  {club.phoneNumber ? <p className="text-white/70">{club.phoneNumber}</p> : null}
-                  <p className="mt-1 text-sm text-white/50">Propietario: @{club.user.username}</p>
-                </div>
-                {canManage ? (
-                  <button
-                    type="button"
-                    onClick={() => setEditingClub(true)}
-                    className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
-                  >
-                    Editar club
-                  </button>
-                ) : null}
+            <PageHeroFrame className="p-8 md:p-10" contentClassName="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-display text-sm font-bold uppercase tracking-wide text-ball-bright/90">Club</p>
+                <h1 className="mt-1 font-display text-3xl font-black tracking-tight md:text-4xl">{club.name}</h1>
+                <p className="mt-2 text-white/70">{club.address ?? "Sin dirección"}</p>
+                {club.phoneNumber ? <p className="text-white/70">{club.phoneNumber}</p> : null}
+                <p className="mt-1 text-sm text-white/50">Propietario: @{club.user.username}</p>
               </div>
-            </div>
+              {canManage ? (
+                <button
+                  type="button"
+                  onClick={() => setEditingClub(true)}
+                  className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
+                >
+                  Editar club
+                </button>
+              ) : null}
+            </PageHeroFrame>
 
             {!canManage ? (
               <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">

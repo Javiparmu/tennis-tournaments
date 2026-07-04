@@ -9,7 +9,7 @@ import { AddPlayersModal } from "@/components/host/add-players-modal";
 import { PhaseFormModal } from "@/components/host/phase-form-modal";
 import { ScoreModal } from "@/components/host/score-modal";
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
-import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
+import { PageHeroFrame } from "@/components/page-hero";
 import { Bracket } from "@/components/tournament/bracket";
 import { EmptyState } from "@/components/empty-state";
 import { JoinTournament } from "@/components/tournament/join-tournament";
@@ -179,108 +179,104 @@ export default function TournamentDetailPage() {
 
         {tournament && (
           <>
-            <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
-              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
-              <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
-              <div className="relative">
-                <div className="flex flex-wrap items-center gap-2">
-                  {tournament.surface && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
-                      <span
-                        aria-hidden
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: surfaceStyle(tournament.surface).hex }}
-                      />
-                      {surfaceStyle(tournament.surface).label}
-                    </span>
-                  )}
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      tournament.status === "STARTED"
-                        ? "bg-ball-bright/15 text-ball-bright"
-                        : "bg-white/10 text-white/80"
-                    }`}
-                  >
-                    {TOURNAMENT_STATUS_LABEL[tournament.status]}
+            <PageHeroFrame className="p-8 md:p-10">
+              <div className="flex flex-wrap items-center gap-2">
+                {tournament.surface && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white">
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 rounded-full"
+                      style={{ background: surfaceStyle(tournament.surface).hex }}
+                    />
+                    {surfaceStyle(tournament.surface).label}
                   </span>
-                </div>
-                <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
-                {tournament.description && <p className="mt-3 max-w-2xl text-white/70">{tournament.description}</p>}
-                <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
-                  <span className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-white/50" />
-                    {formatDateRange(tournament.startDate, tournament.endDate)}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-white/50" />
-                    {players.length} jugadores
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Gauge className="h-4 w-4 text-white/50" />
-                    {phases.length} fases
-                  </span>
-                  <span className="flex items-center gap-2">Club anfitrión</span>
-                </div>
-
-                {canManage ? (
-                  <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-                    <Button
-                      className="bg-ball-bright text-court-ink hover:bg-ball"
-                      onPress={() => setEditing(true)}
-                    >
-                      <Pencil className="mr-1 h-4 w-4" />
-                      Editar
-                    </Button>
-                    {tournament.status === "DRAFT" ? (
-                      <Button
-                        variant="outline"
-                        className="border-white/20 text-white/80 hover:bg-white/10"
-                        onPress={() => startTournament.mutate(id)}
-                        isDisabled={startTournament.isPending}
-                      >
-                        <Play className="mr-1 h-4 w-4" />
-                        Empezar
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="border-white/20 text-white/80 hover:bg-white/10"
-                        onPress={() => {
-                          if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
-                            resetTournament.mutate(id);
-                          }
-                        }}
-                        isDisabled={resetTournament.isPending}
-                      >
-                        <RotateCcw className="mr-1 h-4 w-4" />
-                        Reiniciar
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      className="text-white/70 hover:text-white"
-                      onPress={() => setAddingPlayers(true)}
-                    >
-                      <Users className="mr-1 h-4 w-4" />
-                      Añadir jugadores
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="text-white/70 hover:text-white"
-                      onPress={() => setAddingPhase(true)}
-                    >
-                      <Gauge className="mr-1 h-4 w-4" />
-                      Añadir fase
-                    </Button>
-                  </div>
-                ) : null}
-                {(startTournament.error || resetTournament.error) && (
-                  <p className="mt-2 text-sm text-rose-300">
-                    {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
-                  </p>
                 )}
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    tournament.status === "STARTED"
+                      ? "bg-ball-bright/15 text-ball-bright"
+                      : "bg-white/10 text-white/80"
+                  }`}
+                >
+                  {TOURNAMENT_STATUS_LABEL[tournament.status]}
+                </span>
               </div>
-            </div>
+              <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>
+              {tournament.description && <p className="mt-3 max-w-2xl text-white/70">{tournament.description}</p>}
+              <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
+                <span className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-white/50" />
+                  {formatDateRange(tournament.startDate, tournament.endDate)}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-white/50" />
+                  {players.length} jugadores
+                </span>
+                <span className="flex items-center gap-2">
+                  <Gauge className="h-4 w-4 text-white/50" />
+                  {phases.length} fases
+                </span>
+                <span className="flex items-center gap-2">Club anfitrión</span>
+              </div>
+
+              {canManage ? (
+                <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                  <Button
+                    className="bg-ball-bright text-court-ink hover:bg-ball"
+                    onPress={() => setEditing(true)}
+                  >
+                    <Pencil className="mr-1 h-4 w-4" />
+                    Editar
+                  </Button>
+                  {tournament.status === "DRAFT" ? (
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white/80 hover:bg-white/10"
+                      onPress={() => startTournament.mutate(id)}
+                      isDisabled={startTournament.isPending}
+                    >
+                      <Play className="mr-1 h-4 w-4" />
+                      Empezar
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white/80 hover:bg-white/10"
+                      onPress={() => {
+                        if (window.confirm("¿Reiniciar este torneo? Se borrarán los partidos y el progreso.")) {
+                          resetTournament.mutate(id);
+                        }
+                      }}
+                      isDisabled={resetTournament.isPending}
+                    >
+                      <RotateCcw className="mr-1 h-4 w-4" />
+                      Reiniciar
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    className="text-white/70 hover:text-white"
+                    onPress={() => setAddingPlayers(true)}
+                  >
+                    <Users className="mr-1 h-4 w-4" />
+                    Añadir jugadores
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-white/70 hover:text-white"
+                    onPress={() => setAddingPhase(true)}
+                  >
+                    <Gauge className="mr-1 h-4 w-4" />
+                    Añadir fase
+                  </Button>
+                </div>
+              ) : null}
+              {(startTournament.error || resetTournament.error) && (
+                <p className="mt-2 text-sm text-rose-300">
+                  {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
+                </p>
+              )}
+            </PageHeroFrame>
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_2fr]">
               <aside className="space-y-6">

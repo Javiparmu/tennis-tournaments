@@ -5,7 +5,7 @@ import { CalendarDays, CalendarX, Dumbbell, Lock, Medal, Target, Trophy } from "
 import { useParams } from "next/navigation";
 import { startTransition, useMemo, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { CourtLinesSvg } from "@/components/landing/court-lines-svg";
+import { PageHeroFrame } from "@/components/page-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -842,29 +842,25 @@ export default function UserPage() {
     <div className="flex min-h-screen flex-col bg-background text-court-ink">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-        <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-6 text-white shadow-lg md:p-8">
-          <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
-          <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
-          <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
-            <UserSummaryCard
-              displayName={displayName}
-              username={handle}
-              imageUrl={user.imageUrl}
-              createdAt={user.createdAt}
-              achievements={user.achievements ?? []}
-              isOwner={isOwner}
-              onEdit={() => setIsEditingProfile(true)}
-            />
-            <StatsCard
-              totalEvents={events.length}
-              scheduledMatches={scheduledMatches}
-              playedMatches={playedMatches}
-              trainings={trainingCount}
-              racketsCount={rackets.length}
-              isOwner={isOwner}
-            />
-          </div>
-        </div>
+        <PageHeroFrame className="p-6 md:p-8" contentClassName="grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
+          <UserSummaryCard
+            displayName={displayName}
+            username={handle}
+            imageUrl={user.imageUrl}
+            createdAt={user.createdAt}
+            achievements={user.achievements ?? []}
+            isOwner={isOwner}
+            onEdit={() => setIsEditingProfile(true)}
+          />
+          <StatsCard
+            totalEvents={events.length}
+            scheduledMatches={scheduledMatches}
+            playedMatches={playedMatches}
+            trainings={trainingCount}
+            racketsCount={rackets.length}
+            isOwner={isOwner}
+          />
+        </PageHeroFrame>
 
         <SectionNavigation activeSection={activeSection} onChange={setActiveSection} isOwner={isOwner} />
 
