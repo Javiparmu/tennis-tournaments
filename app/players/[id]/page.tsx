@@ -26,13 +26,7 @@ import {
   useUserProfileCalendarQuery,
 } from "@/data/queries";
 import { errorMessage } from "@/lib/errors";
-import {
-  JOIN_STATUS_LABEL,
-  MATCH_STATUS_LABEL,
-  PHASE_FORMAT_LABEL,
-  RESULT_LABEL,
-  VISIBILITY_LABEL,
-} from "@/lib/labels";
+import { JOIN_STATUS_LABEL, MATCH_STATUS_LABEL, VISIBILITY_LABEL } from "@/lib/labels";
 import type {
   CreateRacketRequest,
   CreateRacketStringingRequest,
@@ -43,14 +37,11 @@ import type {
   UserTrainingEntry,
 } from "@/models";
 import {
-  type AgendaFilter,
   type CalendarMode,
   buildEventsByDay,
   countMatchOutcomes,
   countTrainingSessions,
-  filterAgendaEvents,
   formatDateTime,
-  formatDayHeading,
   formatTime,
   getInitialSelectedDayKey,
   getMatchDisplayTime,
@@ -66,7 +57,7 @@ import { RegisteredTournamentsCarousel } from "./_components/registered-tourname
 import { StringingFormModal } from "./_components/stringing-form-modal";
 import { TrainingFormModal } from "./_components/training-form-modal";
 
-type ProfileSection = "overview" | "calendar" | "training" | "rackets";
+type ProfileSection = "overview" | "training" | "rackets";
 
 const EMPTY_EVENTS: ProfileCalendarEvent[] = [];
 
@@ -374,139 +365,6 @@ function StatusChip({ status }: { status: UserProfileMatchEntry["status"] }) {
   );
 }
 
-function AgendaCard({
-  selectedDayKey,
-  allEvents,
-  filteredEvents,
-  agendaFilter,
-  onAgendaFilterChange,
-  onMatchSelect,
-}: {
-  selectedDayKey: string;
-  allEvents: ProfileCalendarEvent[];
-  filteredEvents: ProfileCalendarEvent[];
-  agendaFilter: AgendaFilter;
-  onAgendaFilterChange: (filter: AgendaFilter) => void;
-  onMatchSelect: (match: UserProfileMatchEntry) => void;
-}) {
-  const filters: Array<{ key: AgendaFilter; label: string }> = [
-    { key: "ALL", label: "Todo" },
-    { key: "MATCH", label: "Partidos" },
-    { key: "TRAINING", label: "Entrenamientos" },
-    { key: "TOURNAMENT", label: "Torneos" },
-  ];
-
-  return (
-    <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
-      <Card.Header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="font-display text-lg font-bold">{formatDayHeading(selectedDayKey)}</p>
-          <p className="text-sm text-zinc-500">
-            {allEvents.length} {allEvents.length === 1 ? "evento programado" : "eventos programados"} para este día.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {filters.map((filter) => (
-            <Button
-              key={filter.key}
-              size="sm"
-              variant={agendaFilter === filter.key ? "primary" : "ghost"}
-              className={agendaFilter === filter.key ? "bg-court text-ball-bright" : "text-zinc-700"}
-              onPress={() => onAgendaFilterChange(filter.key)}
-            >
-              {filter.label}
-            </Button>
-          ))}
-        </div>
-      </Card.Header>
-      <Card.Content className="gap-3 pt-0">
-        {filteredEvents.length === 0 ? (
-          <EmptyState
-            size="compact"
-            icon={CalendarX}
-            title="Nada por aquí"
-            description="Ningún evento coincide con el filtro actual."
-          />
-        ) : null}
-        {filteredEvents.map((event) => {
-          if (event.eventType === "MATCH" && event.match) {
-            const match = event.match;
-            const referenceTime = getMatchDisplayTime(match);
-            return (
-              <button
-                key={event.eventId}
-                type="button"
-                onClick={() => onMatchSelect(match)}
-                className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:border-court/40 hover:bg-white"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-zinc-900">vs {match.opponent?.name ?? "Rival desconocido"}</p>
-                      {match.result ? (
-                        <Chip color={match.result === "WIN" ? "success" : "danger"} variant="soft">
-                          {RESULT_LABEL[match.result] ?? match.result}
-                        </Chip>
-                      ) : null}
-                      <StatusChip status={match.status} />
-                    </div>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {match.tournament.name} · {PHASE_FORMAT_LABEL[match.phase.format] ?? match.phase.format} ronda {match.phase.round}
-                    </p>
-                  </div>
-                  <div className="text-right text-sm text-zinc-500">
-                    <p>{referenceTime ? formatTime(referenceTime) : "Hora por definir"}</p>
-                    <p>{match.court ?? "Sin pista"}</p>
-                  </div>
-                </div>
-              </button>
-            );
-          }
-
-          if (event.eventType === "TOURNAMENT" && event.tournament) {
-            const tournament = event.tournament;
-            return (
-              <div key={event.eventId} className="rounded-2xl border border-rose-200 bg-rose-50/60 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-zinc-900">{tournament.name}</p>
-                    <p className="mt-1 text-sm text-zinc-500">Torneo · empieza hoy</p>
-                  </div>
-                  <Chip color={tournament.status === "ACCEPTED" ? "success" : "warning"} variant="soft">
-                    {JOIN_STATUS_LABEL[tournament.status] ?? tournament.status}
-                  </Chip>
-                </div>
-              </div>
-            );
-          }
-
-          const training = event.training;
-          if (!training) return null;
-
-          return (
-            <div key={event.eventId} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-zinc-900">Sesión de entrenamiento</p>
-                    <Chip color="default" variant="soft">
-                      {getTrainingDurationLabel(training.durationMinutes)}
-                    </Chip>
-                    <Chip color={training.visibility === "PUBLIC" ? "success" : "default"} variant="soft">
-                      {VISIBILITY_LABEL[training.visibility] ?? training.visibility}
-                    </Chip>
-                  </div>
-                  <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No hay notas para esta sesión."}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </Card.Content>
-    </Card>
-  );
-}
-
 function TrainingSection({
   isOwner,
   trainings,
@@ -605,7 +463,6 @@ export default function UserPage() {
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [manualSelectedDayKey, setManualSelectedDayKey] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<UserProfileMatchEntry | null>(null);
-  const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("ALL");
   const [editingTraining, setEditingTraining] = useState<UserTrainingEntry | null | undefined>(undefined);
   const [editingRacket, setEditingRacket] = useState<RacketSummary | null | undefined>(undefined);
   const [stringingRacket, setStringingRacket] = useState<RacketSummary | null>(null);
@@ -690,10 +547,6 @@ export default function UserPage() {
     [anchorDate, eventsByDay, manualSelectedDayKey, range.from, range.to],
   );
   const allSelectedDayEvents = eventsByDay[selectedDayKey] ?? EMPTY_EVENTS;
-  const selectedDayEvents = useMemo(
-    () => filterAgendaEvents(allSelectedDayEvents, agendaFilter),
-    [agendaFilter, allSelectedDayEvents],
-  );
 
   const trainingEvents = useMemo(
     () =>
@@ -975,62 +828,6 @@ export default function UserPage() {
                     : "Las notas de entrenamiento solo aparecen cuando el jugador marca esa sesión como pública."}
                 </Card.Content>
               </Card>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {activeSection === "calendar" ? (
-          <div className="mt-8 space-y-6">
-            <MiniCalendar
-              mode={mode}
-              anchorDate={anchorDate}
-              selectedDayKey={selectedDayKey}
-              calendarDays={calendarDays}
-              events={events}
-              onModeChange={(nextMode) => {
-                startTransition(() => {
-                  setMode(nextMode);
-                });
-              }}
-              onDaySelect={setManualSelectedDayKey}
-              onAnchorDateChange={(date) => {
-                startTransition(() => {
-                  setAnchorDate(date);
-                });
-              }}
-            />
-
-            {calendarLoading ? <p className="text-sm text-zinc-500">Cargando calendario...</p> : null}
-            {calendarQuery.error ? <p className="text-sm text-rose-600">No se pudo cargar la actividad del calendario para este rango.</p> : null}
-
-            <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-              <AgendaCard
-                selectedDayKey={selectedDayKey}
-                allEvents={allSelectedDayEvents}
-                filteredEvents={selectedDayEvents}
-                agendaFilter={agendaFilter}
-                onAgendaFilterChange={setAgendaFilter}
-                onMatchSelect={setSelectedMatch}
-              />
-
-              <div className="space-y-6">
-                <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
-                  <Card.Header>
-                    <div>
-                      <p className="font-display text-lg font-bold">Resumen del rango</p>
-                      <p className="text-sm text-zinc-500">Usa el calendario para alternar entre planificación mensual y semanal.</p>
-                    </div>
-                  </Card.Header>
-                  <Card.Content className="space-y-3 pt-0 text-sm text-zinc-600">
-                    <p>Partidos programados: {matchCounts.scheduled}</p>
-                    <p>Partidos en juego: {matchCounts.live}</p>
-                    <p>Partidos finalizados / W.O.: {playedMatches}</p>
-                    <p>Sesiones de entrenamiento: {trainingCount}</p>
-                    <p>Victorias en el rango: {matchCounts.wins}</p>
-                  </Card.Content>
-                </Card>
-                <RacketsCard rackets={rackets} isOwner={isOwner} isLoading={racketsLoading} />
               </div>
             </div>
           </div>
