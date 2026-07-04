@@ -25,6 +25,7 @@ import {
   useUserByUsernameQuery,
   useUserProfileCalendarQuery,
 } from "@/data/queries";
+import { errorMessage } from "@/lib/errors";
 import type {
   CreateRacketRequest,
   CreateRacketStringingRequest,
@@ -94,10 +95,6 @@ function getTrainingDurationLabel(durationMinutes: number | null) {
   const hours = Math.floor(durationMinutes / 60);
   const minutes = durationMinutes % 60;
   return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
 }
 
 const MATCH_STATUS_LABEL: Record<string, string> = {
@@ -742,10 +739,12 @@ export default function UserPage() {
   const racketsLoading = isOwner ? myRacketsQuery.isLoading : publicRacketsQuery.isLoading;
   const calendarLoading = calendarQuery.isLoading;
 
-  const trainingSubmitError = getErrorMessage(createTrainingMutation.error) ?? getErrorMessage(updateTrainingMutation.error);
-  const trainingDeleteError = getErrorMessage(deleteTrainingMutation.error);
-  const racketSubmitError = getErrorMessage(createRacketMutation.error) ?? getErrorMessage(updateRacketMutation.error);
-  const stringingSubmitError = getErrorMessage(createStringingMutation.error);
+  const trainingError = createTrainingMutation.error ?? updateTrainingMutation.error;
+  const trainingSubmitError = trainingError ? errorMessage(trainingError) : null;
+  const trainingDeleteError = deleteTrainingMutation.error ? errorMessage(deleteTrainingMutation.error) : null;
+  const racketError = createRacketMutation.error ?? updateRacketMutation.error;
+  const racketSubmitError = racketError ? errorMessage(racketError) : null;
+  const stringingSubmitError = createStringingMutation.error ? errorMessage(createStringingMutation.error) : null;
 
   if (!username) {
     return (

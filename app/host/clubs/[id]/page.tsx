@@ -21,12 +21,9 @@ import {
   useTournamentsQuery,
   useUpdateClubMutation,
 } from "@/data/queries";
+import { errorMessage } from "@/lib/errors";
 import { formatDateRange } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
-}
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Borrador",
@@ -251,7 +248,7 @@ export default function ClubManagePage() {
           }}
           onSubmit={handleClubUpdate}
           isSubmitting={updateClub.isPending}
-          submitError={errorMessage(updateClub.error)}
+          submitError={updateClub.error ? errorMessage(updateClub.error) : null}
         />
       ) : null}
 
@@ -264,7 +261,7 @@ export default function ClubManagePage() {
           }}
           onSubmit={handleCreateTournament}
           isSubmitting={createTournament.isPending}
-          submitError={errorMessage(createTournament.error)}
+          submitError={createTournament.error ? errorMessage(createTournament.error) : null}
         />
       ) : null}
     </div>

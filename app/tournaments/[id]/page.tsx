@@ -30,6 +30,7 @@ import {
   useUpdateMatchScoreMutation,
   useUpdateTournamentMutation,
 } from "@/data/queries";
+import { errorMessage } from "@/lib/errors";
 import { formatDateRange } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
 import type {
@@ -41,10 +42,6 @@ import type {
   UpdateMatchScoreRequest,
 } from "@/models";
 import { computeStandings, type PlayerStatus } from "@/lib/standings";
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
-}
 
 const STATUS_LABEL: Record<TournamentStatus, string> = {
   DRAFT: "Borrador",
@@ -293,7 +290,7 @@ export default function TournamentDetailPage() {
                 ) : null}
                 {(startTournament.error || resetTournament.error) && (
                   <p className="mt-2 text-sm text-rose-300">
-                    {errorMessage(startTournament.error) ?? errorMessage(resetTournament.error)}
+                    {startTournament.error ? errorMessage(startTournament.error) : errorMessage(resetTournament.error)}
                   </p>
                 )}
               </div>
@@ -436,7 +433,7 @@ export default function TournamentDetailPage() {
           }}
           onSubmit={handleEdit}
           isSubmitting={updateTournament.isPending}
-          submitError={errorMessage(updateTournament.error)}
+          submitError={updateTournament.error ? errorMessage(updateTournament.error) : null}
         />
       ) : null}
       {addingPlayers ? (
@@ -447,7 +444,7 @@ export default function TournamentDetailPage() {
           }}
           onSubmit={handleAddPlayers}
           isSubmitting={addPlayers.isPending}
-          submitError={errorMessage(addPlayers.error)}
+          submitError={addPlayers.error ? errorMessage(addPlayers.error) : null}
         />
       ) : null}
       {addingPhase && tournament ? (
@@ -459,7 +456,7 @@ export default function TournamentDetailPage() {
           }}
           onSubmit={handleCreatePhase}
           isSubmitting={createPhase.isPending}
-          submitError={errorMessage(createPhase.error)}
+          submitError={createPhase.error ? errorMessage(createPhase.error) : null}
         />
       ) : null}
       {scoringMatch ? (
@@ -471,7 +468,7 @@ export default function TournamentDetailPage() {
           }}
           onSubmit={handleScore}
           isSubmitting={updateScore.isPending}
-          submitError={errorMessage(updateScore.error)}
+          submitError={updateScore.error ? errorMessage(updateScore.error) : null}
         />
       ) : null}
     </div>

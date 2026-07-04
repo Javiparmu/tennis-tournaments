@@ -14,13 +14,10 @@ import {
   useDeleteClubContactRequestMutation,
   useMeQuery,
 } from "@/data/queries";
+import { errorMessage } from "@/lib/errors";
 import type { ClubContactRequest } from "@/models";
 
 const dateFormatter = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", year: "numeric" });
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
-}
 
 export default function AdminPage() {
   const me = useMeQuery();

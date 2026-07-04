@@ -10,11 +10,8 @@ import { PageHero } from "@/components/page-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useClubsQuery, useMeQuery, useUpdateClubMutation } from "@/data/queries";
+import { errorMessage } from "@/lib/errors";
 import type { Club } from "@/models";
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
-}
 
 export default function HostDashboardPage() {
   const me = useMeQuery();
@@ -25,7 +22,7 @@ export default function HostDashboardPage() {
   const managedClubIds = me.data?.managedClubIds ?? [];
   const myClubs = (clubsQuery.data ?? []).filter((club) => managedClubIds.includes(club.id));
   const isLoading = me.isLoading || clubsQuery.isLoading;
-  const submitError = errorMessage(updateClub.error);
+  const submitError = updateClub.error ? errorMessage(updateClub.error) : null;
 
   async function handleSubmit(payload: ClubFormValues) {
     if (!editingClub) return;
