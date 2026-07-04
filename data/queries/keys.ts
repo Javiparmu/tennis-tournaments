@@ -1,5 +1,14 @@
+// Broad prefix roots for invalidation. Each matches every key that starts with
+// the same segment(s) (e.g. userRoot covers ["user", id], ["user", "me"] and
+// ["user", "by-username", ...]) — they are intentionally broad; do not narrow.
 export const queryKeys = {
   tournaments: ["tournaments"] as const,
+  userRoot: ["user"] as const,
+  profileCalendarRoot: ["profile-calendar"] as const,
+  myTrainingsRoot: ["my-trainings"] as const,
+  publicTrainingsRoot: ["public-trainings"] as const,
+  publicRacketsRoot: ["public-rackets"] as const,
+  tournamentJoinRequestsForTournament: (id: number) => ["tournament-join-requests", id] as const,
   upcomingCalendar: (limit: number) => ["upcoming-calendar", limit] as const,
   tournament: (id?: number) => ["tournament", id ?? "unknown"] as const,
   tournamentPhases: (id?: number) => ["tournament-phases", id ?? "unknown"] as const,

@@ -67,7 +67,7 @@ async function invalidateRackets(
   racketId?: number,
 ) {
   await queryClient.invalidateQueries({ queryKey: queryKeys.myRackets });
-  await queryClient.invalidateQueries({ queryKey: ["public-rackets"] });
+  await queryClient.invalidateQueries({ queryKey: queryKeys.publicRacketsRoot });
   if (racketId != null) {
     await queryClient.invalidateQueries({ queryKey: queryKeys.myRacketDetails(racketId) });
   }

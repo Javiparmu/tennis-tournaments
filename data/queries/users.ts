@@ -62,7 +62,7 @@ export function useUpdateMeMutation() {
     // reload) before this PATCH; a cached ~60s session token can be stale by now and 401.
     mutationFn: async (payload: UpdateUserRequest) => updateMe(await getToken({ skipCache: true }), payload),
     // Covers both ["user", "me"] and ["user", id] by prefix.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.userRoot }),
   });
 }
 

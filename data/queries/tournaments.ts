@@ -103,7 +103,7 @@ async function invalidateTournament(
   queryClient: ReturnType<typeof useQueryClient>,
   id?: number,
 ) {
-  await queryClient.invalidateQueries({ queryKey: ["tournaments"] });
+  await queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
   if (id != null) {
     await queryClient.invalidateQueries({ queryKey: queryKeys.tournament(id) });
     await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentBracket(id) });
@@ -249,7 +249,7 @@ async function invalidateJoinRequests(
   queryClient: ReturnType<typeof useQueryClient>,
   tournamentId: number,
 ) {
-  await queryClient.invalidateQueries({ queryKey: ["tournament-join-requests", tournamentId] });
+  await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentJoinRequestsForTournament(tournamentId) });
   await invalidateTournament(queryClient, tournamentId);
 }
 

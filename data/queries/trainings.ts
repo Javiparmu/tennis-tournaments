@@ -39,9 +39,9 @@ export function useCreateTrainingMutation() {
   return useMutation({
     mutationFn: async (payload: CreateTrainingRequest) => createTraining(await getToken(), payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["profile-calendar"] });
-      await queryClient.invalidateQueries({ queryKey: ["my-trainings"] });
-      await queryClient.invalidateQueries({ queryKey: ["public-trainings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
     },
   });
 }
@@ -54,9 +54,9 @@ export function useUpdateTrainingMutation() {
     mutationFn: async ({ trainingId, payload }: { trainingId: number; payload: UpdateTrainingRequest }) =>
       updateTraining(await getToken(), trainingId, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["profile-calendar"] });
-      await queryClient.invalidateQueries({ queryKey: ["my-trainings"] });
-      await queryClient.invalidateQueries({ queryKey: ["public-trainings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
     },
   });
 }
@@ -68,9 +68,9 @@ export function useDeleteTrainingMutation() {
   return useMutation({
     mutationFn: async (trainingId: number) => deleteTraining(await getToken(), trainingId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["profile-calendar"] });
-      await queryClient.invalidateQueries({ queryKey: ["my-trainings"] });
-      await queryClient.invalidateQueries({ queryKey: ["public-trainings"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
     },
   });
 }
