@@ -10,6 +10,7 @@ import { ClubFormModal, type ClubFormValues } from "@/components/host/club-form-
 import { TournamentFormModal, type TournamentFormValues } from "@/components/host/tournament-form-modal";
 import { PageHeroFrame } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
+import { PageSkeleton } from "@/components/page-skeleton";
 import {
   useAddClubAdminMutation,
   useCanManageClub,
@@ -182,7 +183,7 @@ export default function ClubManagePage() {
             <aside>
               <h2 className="mb-4 font-display text-xl font-bold">Administradores</h2>
               <div className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
-                {adminsQuery.isLoading ? <p className="text-sm text-zinc-500">Cargando…</p> : null}
+                {adminsQuery.isLoading ? <PageSkeleton rows={2} height="h-8" /> : null}
                 <ul className="space-y-2">
                   {(adminsQuery.data ?? []).map((admin) => (
                     <li key={admin.id} className="flex items-center justify-between gap-2 text-sm">

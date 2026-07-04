@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PageHeroFrame } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
+import { PageSkeleton } from "@/components/page-skeleton";
 import {
   useCreateRacketMutation,
   useCreateStringingMutation,
@@ -193,7 +194,10 @@ export default function UserPage() {
   if (userQuery.isLoading) {
     return (
       <PageScaffold>
-        <p className="text-zinc-600">Cargando página de usuario...</p>
+        <div className="space-y-6">
+          <PageSkeleton rows={1} height="h-44" />
+          <PageSkeleton rows={2} height="h-32" />
+        </div>
       </PageScaffold>
     );
   }

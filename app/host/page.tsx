@@ -8,6 +8,7 @@ import { ClubContactCta } from "@/components/club-contact-modal";
 import { ClubFormModal, type ClubFormValues } from "@/components/host/club-form-modal";
 import { PageHero } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { useClubsQuery, useMeQuery, useUpdateClubMutation } from "@/data/queries";
 import { errorMessage } from "@/lib/errors";
 import type { Club } from "@/models";
@@ -73,11 +74,7 @@ export default function HostDashboardPage() {
           <h2 className="font-display text-xl font-bold">Clubes que gestionas</h2>
         </div>
 
-        {isLoading ? (
-          <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
-            <p className="text-sm text-zinc-500">Cargando clubes…</p>
-          </div>
-        ) : null}
+        {isLoading ? <PageSkeleton rows={2} height="h-28" /> : null}
 
         {!isLoading && myClubs.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
