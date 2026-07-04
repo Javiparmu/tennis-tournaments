@@ -23,15 +23,8 @@ import {
 } from "@/data/queries";
 import { errorMessage } from "@/lib/errors";
 import { formatDateRange } from "@/lib/format";
+import { TOURNAMENT_STATUS_LABEL } from "@/lib/labels";
 import { surfaceStyle } from "@/lib/surface";
-
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Borrador",
-  STARTED: "En curso",
-  COMPLETED: "Finalizado",
-  CANCELLED: "Cancelado",
-  ABANDONED: "Abandonado",
-};
 
 export default function ClubManagePage() {
   const params = useParams<{ id: string | string[] }>();
@@ -173,7 +166,7 @@ export default function ClubManagePage() {
                               {s.label}
                             </Chip>
                             <Chip size="sm" variant="soft" color="default">
-                              {STATUS_LABEL[t.status] ?? t.status}
+                              {TOURNAMENT_STATUS_LABEL[t.status] ?? t.status}
                             </Chip>
                           </div>
                         </Link>

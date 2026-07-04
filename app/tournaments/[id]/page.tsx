@@ -32,30 +32,16 @@ import {
 } from "@/data/queries";
 import { errorMessage } from "@/lib/errors";
 import { formatDateRange } from "@/lib/format";
+import { PHASE_FORMAT_LABEL, TOURNAMENT_STATUS_LABEL } from "@/lib/labels";
 import { surfaceStyle } from "@/lib/surface";
 import type {
   AddPlayersRequest,
   CreatePhaseRequest,
   Match,
   PhaseConfiguration,
-  TournamentStatus,
   UpdateMatchScoreRequest,
 } from "@/models";
 import { computeStandings, type PlayerStatus } from "@/lib/standings";
-
-const STATUS_LABEL: Record<TournamentStatus, string> = {
-  DRAFT: "Borrador",
-  STARTED: "En curso",
-  COMPLETED: "Finalizado",
-  CANCELLED: "Cancelado",
-  ABANDONED: "Abandonado",
-};
-
-const PHASE_FORMAT_LABEL: Record<string, string> = {
-  KNOCKOUT: "Eliminatoria",
-  GROUP: "Grupos",
-  SWISS: "Suizo",
-};
 
 const SEEDING_LABEL: Record<string, string> = {
   INPUT_ORDER: "orden de entrada",
@@ -215,7 +201,7 @@ export default function TournamentDetailPage() {
                         : "bg-white/10 text-white/80"
                     }`}
                   >
-                    {STATUS_LABEL[tournament.status]}
+                    {TOURNAMENT_STATUS_LABEL[tournament.status]}
                   </span>
                 </div>
                 <h1 className="mt-3 font-display text-4xl font-black tracking-tight md:text-5xl">{tournament.name}</h1>

@@ -10,16 +10,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { useTournamentsQuery } from "@/data/queries";
 import { countdown, dayMonth, formatDateRange } from "@/lib/format";
+import { TOURNAMENT_STATUS_LABEL_PUBLIC } from "@/lib/labels";
 import { surfaceStyle } from "@/lib/surface";
-import type { TournamentStatus } from "@/models/tournament";
-
-const STATUS_LABEL: Record<TournamentStatus, string> = {
-  DRAFT: "Próximamente",
-  STARTED: "En curso",
-  COMPLETED: "Finalizado",
-  CANCELLED: "Cancelado",
-  ABANDONED: "Cancelado",
-};
 
 export default function TournamentsPage() {
   const { data: tournaments = [], isLoading } = useTournamentsQuery();
@@ -96,7 +88,7 @@ export default function TournamentsPage() {
                             <span className="rounded-full bg-court/5 px-2 py-0.5 text-xs font-semibold text-court">
                               {tournament.status === "DRAFT"
                                 ? countdown(tournament.startDate)
-                                : STATUS_LABEL[tournament.status]}
+                                : TOURNAMENT_STATUS_LABEL_PUBLIC[tournament.status]}
                             </span>
                           </div>
                           <span className="flex items-center gap-1 pt-1 font-medium text-court">

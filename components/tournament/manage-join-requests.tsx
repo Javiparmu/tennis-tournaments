@@ -9,6 +9,7 @@ import {
   useRejectJoinRequestMutation,
   useTournamentJoinRequestsQuery,
 } from "@/data/queries";
+import { JOIN_STATUS_LABEL } from "@/lib/labels";
 import type { TournamentJoinRequestStatus } from "@/models";
 
 const STATUS_STYLE: Record<TournamentJoinRequestStatus, string> = {
@@ -17,14 +18,6 @@ const STATUS_STYLE: Record<TournamentJoinRequestStatus, string> = {
   REJECTED: "border border-rose-200 bg-rose-50 text-rose-600",
   WITHDRAWN: "border border-zinc-200 bg-zinc-100 text-zinc-600",
   EXPIRED: "border border-zinc-200 bg-zinc-100 text-zinc-600",
-};
-
-const STATUS_LABEL: Record<TournamentJoinRequestStatus, string> = {
-  PENDING: "Pendiente",
-  ACCEPTED: "Aceptada",
-  REJECTED: "Rechazada",
-  WITHDRAWN: "Retirada",
-  EXPIRED: "Caducada",
 };
 
 function errorMessage(error: unknown) {
@@ -63,7 +56,7 @@ export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
                 {req.playerNote && <p className="mt-0.5 text-xs text-zinc-500">{req.playerNote}</p>}
               </div>
               <Chip size="sm" variant="soft" className={STATUS_STYLE[req.status]}>
-                {STATUS_LABEL[req.status]}
+                {JOIN_STATUS_LABEL[req.status]}
               </Chip>
             </div>
 

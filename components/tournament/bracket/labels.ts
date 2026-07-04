@@ -1,20 +1,11 @@
-import type { BracketPhase, Match } from "@/models";
+import type { Match } from "@/models";
+
+// Bracket-only helper; the label maps live in the shared @/lib/labels module and
+// are re-exported here so existing bracket imports keep working.
+export { MATCH_STATUS_LABEL, PHASE_FORMAT_LABEL } from "@/lib/labels";
 
 export function statusColor(status: Match["status"]) {
   if (status === "LIVE" || status === "WALKOVER") return "warning" as const;
   if (status === "COMPLETED") return "success" as const;
   return "default" as const;
 }
-
-export const MATCH_STATUS_LABEL: Record<Match["status"], string> = {
-  SCHEDULED: "Programado",
-  LIVE: "En juego",
-  COMPLETED: "Finalizado",
-  WALKOVER: "W.O.",
-};
-
-export const PHASE_FORMAT_LABEL: Record<BracketPhase["format"], string> = {
-  KNOCKOUT: "Eliminatoria",
-  GROUP: "Grupos",
-  SWISS: "Suizo",
-};

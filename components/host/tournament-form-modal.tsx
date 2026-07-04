@@ -2,6 +2,7 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
+import { SURFACE_LABEL } from "@/lib/surface";
 import type { SurfaceType, TournamentBasic } from "@/models";
 import { ModalShell, inputClass } from "./modal-shell";
 
@@ -30,12 +31,6 @@ function toLocalInput(iso: string | null): string {
 }
 
 const SURFACES: SurfaceType[] = ["CLAY", "HARD", "GRASS"];
-
-const SURFACE_LABEL: Record<SurfaceType, string> = {
-  CLAY: "Tierra batida",
-  HARD: "Pista dura",
-  GRASS: "Hierba",
-};
 
 export function TournamentFormModal({ tournament, onClose, onSubmit, isSubmitting, submitError }: TournamentFormModalProps) {
   const [name, setName] = useState(tournament?.name ?? "");

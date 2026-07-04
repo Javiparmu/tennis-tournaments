@@ -2,6 +2,7 @@
 
 import { Button, Card, Chip } from "@heroui/react";
 import { useState } from "react";
+import { VISIBILITY_LABEL } from "@/lib/labels";
 import type { CreateRacketRequest, RacketSummary, RacketVisibility } from "@/models";
 
 type RacketFormModalProps = {
@@ -32,11 +33,6 @@ function buildInitialState(racket: RacketSummary | null | undefined): FormState 
 
 const inputClass =
   "w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-court";
-
-const VISIBILITY_LABEL: Record<string, string> = {
-  PUBLIC: "Pública",
-  PRIVATE: "Privada",
-};
 
 export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submitError }: RacketFormModalProps) {
   const [form, setForm] = useState<FormState>(() => buildInitialState(racket));

@@ -1,6 +1,8 @@
 "use client";
 
 import { Button, Card, Tooltip } from "@heroui/react";
+import { JOIN_STATUS_LABEL, TOURNAMENT_STATUS_LABEL } from "@/lib/labels";
+import { SURFACE_LABEL } from "@/lib/surface";
 import type { ProfileCalendarDay, ProfileCalendarEvent } from "@/models";
 import {
   type CalendarMode,
@@ -157,28 +159,6 @@ function CountBadge({ label, className }: { label: string; className: string }) 
 }
 
 const tournamentDateFormatter = new Intl.DateTimeFormat("es-ES", { month: "short", day: "numeric" });
-
-const JOIN_STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  ACCEPTED: "Aceptada",
-  REJECTED: "Rechazada",
-  WITHDRAWN: "Retirada",
-  EXPIRED: "Caducada",
-};
-
-const TOURNAMENT_STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Borrador",
-  STARTED: "En curso",
-  COMPLETED: "Finalizado",
-  CANCELLED: "Cancelado",
-  ABANDONED: "Abandonado",
-};
-
-const SURFACE_LABEL: Record<string, string> = {
-  CLAY: "Tierra batida",
-  HARD: "Pista dura",
-  GRASS: "Hierba",
-};
 
 function formatTournamentRange(start: string, end: string) {
   const startLabel = tournamentDateFormatter.format(new Date(start));

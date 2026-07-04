@@ -2,6 +2,7 @@
 
 import { Button, Card, Chip } from "@heroui/react";
 import { useState } from "react";
+import { VISIBILITY_LABEL } from "@/lib/labels";
 import type { CreateTrainingRequest, TrainingVisibility, UserTrainingEntry } from "@/models";
 
 type TrainingFormModalProps = {
@@ -35,11 +36,6 @@ function buildInitialState(training: UserTrainingEntry | null | undefined): Form
     visibility: training?.visibility ?? "PRIVATE",
   };
 }
-
-const VISIBILITY_LABEL: Record<string, string> = {
-  PUBLIC: "Pública",
-  PRIVATE: "Privada",
-};
 
 export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, submitError }: TrainingFormModalProps) {
   const [form, setForm] = useState<FormState>(() => buildInitialState(training));

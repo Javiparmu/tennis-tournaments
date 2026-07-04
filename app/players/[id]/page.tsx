@@ -26,6 +26,13 @@ import {
   useUserProfileCalendarQuery,
 } from "@/data/queries";
 import { errorMessage } from "@/lib/errors";
+import {
+  JOIN_STATUS_LABEL,
+  MATCH_STATUS_LABEL,
+  PHASE_FORMAT_LABEL,
+  RESULT_LABEL,
+  VISIBILITY_LABEL,
+} from "@/lib/labels";
 import type {
   CreateRacketRequest,
   CreateRacketStringingRequest,
@@ -96,37 +103,6 @@ function getTrainingDurationLabel(durationMinutes: number | null) {
   const minutes = durationMinutes % 60;
   return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
 }
-
-const MATCH_STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: "Programado",
-  LIVE: "En juego",
-  COMPLETED: "Finalizado",
-  WALKOVER: "W.O.",
-};
-
-const RESULT_LABEL: Record<string, string> = {
-  WIN: "Victoria",
-  LOSS: "Derrota",
-};
-
-const VISIBILITY_LABEL: Record<string, string> = {
-  PUBLIC: "Pública",
-  PRIVATE: "Privada",
-};
-
-const JOIN_STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  ACCEPTED: "Aceptada",
-  REJECTED: "Rechazada",
-  WITHDRAWN: "Retirada",
-  EXPIRED: "Caducada",
-};
-
-const PHASE_FORMAT_LABEL: Record<string, string> = {
-  KNOCKOUT: "Eliminatoria",
-  GROUP: "Grupos",
-  SWISS: "Suizo",
-};
 
 function UserSummaryCard({
   displayName,
