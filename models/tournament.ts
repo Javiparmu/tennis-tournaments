@@ -1,5 +1,4 @@
 import type { Match, PhaseFormat } from "./match";
-import type { Player } from "./player";
 
 export type SurfaceType = "CLAY" | "HARD" | "GRASS";
 
@@ -62,11 +61,9 @@ export type TournamentBasic = {
   updatedAt: string | null;
 };
 
-// GET /tournaments/{id} — full shape, with players and phases.
-export type Tournament = TournamentBasic & {
-  players: Player[];
-  phases: TournamentPhase[];
-};
+// GET /tournaments/{id} — same shape as the list. Players and phases are NOT
+// embedded here; fetch them from /tournaments/{id}/players and /phases.
+export type Tournament = TournamentBasic;
 
 export type CreateTournamentRequest = {
   name: string;

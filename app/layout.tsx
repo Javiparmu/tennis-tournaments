@@ -24,7 +24,7 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: "CourtRank — Torneos de tenis, organizados y jugados en un solo lugar",
   description:
-    "Los clubes publican torneos, los jugadores se inscriben y escalan en una clasificación estilo Elo. Encuentra tu próximo partido y registra cada resultado.",
+    "Los clubes publican torneos, los jugadores se inscriben y escalan en una clasificación por elo. Encuentra tu próximo partido y registra cada resultado.",
 };
 
 export default function RootLayout({

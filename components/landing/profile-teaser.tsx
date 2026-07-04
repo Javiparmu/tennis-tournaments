@@ -51,7 +51,7 @@ export function ProfileTeaser() {
       aria-labelledby="ranking-heading"
       className="relative overflow-hidden bg-linear-to-b from-court-night to-court-night-deep text-white"
     >
-      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
       <div aria-hidden className="floodlight pointer-events-none absolute -top-20 right-1/4 h-80 w-80" />
 
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-24 md:py-32 lg:grid-cols-2">
@@ -64,11 +64,11 @@ export function ProfileTeaser() {
             accent="en el ranking."
           />
           <p className="mt-4 max-w-md text-white/80">
-            Cada resultado mueve tu ranking estilo Elo, desbloquea logros y construye tu historial.
+            Cada resultado mueve tu ranking, desbloquea logros y construye tu historial.
             Registra entrenamientos y raquetas, y llega a cada torneo sabiendo cómo estás de forma.
           </p>
           <Link
-            href="/profile"
+            href="/players"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-ball-bright px-5 py-3 font-semibold text-court-ink transition-colors hover:bg-ball focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
           >
             {signedInUser ? "Abrir mi perfil" : "Ver mi perfil"}

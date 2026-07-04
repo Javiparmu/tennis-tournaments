@@ -38,9 +38,15 @@ export function Hero() {
       <div aria-hidden className="floodlight pointer-events-none absolute -top-24 left-1/4 h-80 w-80" />
       <div aria-hidden className="floodlight pointer-events-none absolute -right-20 top-1/3 h-96 w-96" />
 
-      <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
+      <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-20 md:pb-36 md:pt-28">
         <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
           <div>
+            <Rise delay={0.15}>
+              <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1.5 text-sm font-medium text-white/80 backdrop-blur-sm">
+                <span aria-hidden className="h-2 w-2 rounded-full bg-ball-bright shadow-[0_0_8px_1px] shadow-ball-bright/60" />
+                Ranking por elo · Clubes verificados
+              </span>
+            </Rise>
             <h1 className="max-w-3xl font-display text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
               {TITLE_WORDS.map((word, i) => (
                 <span key={word}>

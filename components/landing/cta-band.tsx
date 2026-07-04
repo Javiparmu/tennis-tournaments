@@ -6,7 +6,7 @@ import { CourtLinesSvg } from "./court-lines-svg";
 export function CtaBand() {
   return (
     <section className="relative overflow-hidden bg-linear-to-b from-court-night to-court-night-deep text-white">
-      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+      <CourtLinesSvg strokeWidth={2} className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
       <div aria-hidden className="floodlight pointer-events-none absolute -top-16 left-1/3 h-80 w-80" />
 
       <div className="relative mx-auto w-full max-w-6xl px-6 py-24 md:py-32 text-center">

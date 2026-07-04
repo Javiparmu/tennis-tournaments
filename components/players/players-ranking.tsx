@@ -76,7 +76,7 @@ function RankingRow({ user, position }: { user: User; position: number }) {
     // Signature row: the leader gets a scoreboard strip — court green, ball-bright digits.
     return (
       <Link
-        href={`/users/${encodeURIComponent(user.username)}`}
+        href={`/players/${encodeURIComponent(user.username)}`}
         prefetch={false}
         className={`${GRID} relative overflow-hidden bg-court px-4 py-4 transition-colors hover:bg-court-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ball-bright sm:px-5`}
       >
@@ -105,7 +105,7 @@ function RankingRow({ user, position }: { user: User; position: number }) {
 
   return (
     <Link
-      href={`/users/${encodeURIComponent(user.username)}`}
+      href={`/players/${encodeURIComponent(user.username)}`}
       prefetch={false}
       className={`${GRID} px-4 py-3 transition-colors hover:bg-court/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-court sm:px-5 ${
         isPodium ? "bg-court/[0.03]" : ""

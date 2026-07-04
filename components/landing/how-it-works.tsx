@@ -9,7 +9,7 @@ const tracks = [
     steps: [
       { icon: Search, title: "Explora torneos", body: "Mira qué hay abierto y filtra por fecha y superficie." },
       { icon: UserPlus, title: "Pide tu plaza", body: "Solicita jugar en un par de toques; el club confirma tu inscripción." },
-      { icon: Trophy, title: "Sube en el ranking", body: "Cada resultado actualiza tu ranking estilo Elo, tus logros y tu historial." },
+      { icon: Trophy, title: "Sube en el ranking", body: "Cada resultado actualiza tu ranking, tus logros y tu historial." },
     ],
   },
   {
@@ -17,7 +17,7 @@ const tracks = [
     accent: "text-blue",
     steps: [
       { icon: Mail, title: "Contacta con nosotros", body: "Te damos de alta la cuenta de tu club personalmente." },
-      { icon: Settings2, title: "Publica y gestiona", body: "Cuadro eliminatorio, grupos o sistema suizo: tú eliges el formato y las fases." },
+      { icon: Settings2, title: "Publica y gestiona", body: "Eliminatorio, grupos o sistema suizo: tú eliges el formato y las fases." },
       { icon: Megaphone, title: "Los jugadores se apuntan", body: "Recibes las solicitudes, confirmas jugadores y el cuadro se genera solo." },
     ],
   },

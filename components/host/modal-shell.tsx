@@ -30,7 +30,7 @@ export function ModalShell({ title, subtitle, onClose, disabled, headerExtra, ch
       <Card className="relative z-10 max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-court/10 bg-white shadow-2xl">
         <Card.Header className="flex items-start justify-between gap-4 p-5 pb-0">
           <div>
-            <p className="font-display text-lg font-bold">{title}</p>
+            <p className="font-display text-lg font-bold text-court-ink">{title}</p>
             {subtitle ? <p className="text-sm text-zinc-500">{subtitle}</p> : null}
           </div>
           {headerExtra}

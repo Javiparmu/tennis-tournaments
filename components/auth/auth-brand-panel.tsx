@@ -23,7 +23,7 @@ type AuthBrandPanelProps = {
 const SURFACE_WORDS = ["tierra batida.", "pista dura.", "hierba.", "tu pista."];
 
 const DEFAULT_HIGHLIGHTS: Highlight[] = [
-  { icon: Trophy, label: "Clasificación estilo Elo" },
+  { icon: Trophy, label: "Clasificación por elo" },
   { icon: Gamepad2, label: "Perfil de jugador gamificado" },
   { icon: Building2, label: "Torneos organizados por clubes" },
 ];

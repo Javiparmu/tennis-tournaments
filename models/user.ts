@@ -26,6 +26,8 @@ export type User = {
 
 export type UpdateUserRequest = {
   name?: string | null;
+  // User-chosen handle. Slugified + uniqueness-checked server-side; omit to keep it synced to the name.
+  username?: string | null;
   imageUrl?: string | null;
 };
 

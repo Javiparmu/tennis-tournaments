@@ -58,7 +58,9 @@ export function useUpdateMeMutation() {
   const { getToken } = useAuth();
 
   return useMutation({
-    mutationFn: async (payload: UpdateUserRequest) => updateMe(await getToken(), payload),
+    // skipCache: the modal runs a multi-step Clerk flow (user.update → setProfileImage →
+    // reload) before this PATCH; a cached ~60s session token can be stale by now and 401.
+    mutationFn: async (payload: UpdateUserRequest) => updateMe(await getToken({ skipCache: true }), payload),
     // Covers both ["user", "me"] and ["user", id] by prefix.
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["user"] }),
   });

@@ -27,7 +27,7 @@ function RankingCta() {
     content = (
       <>
         <p className="text-sm text-white/80">Consulta tu progreso, logros y torneos.</p>
-        <Link href={`/users/${encodeURIComponent(me.username)}`} className={btnClass}>
+        <Link href={`/players/${encodeURIComponent(me.username)}`} className={btnClass}>
           Abrir mi perfil
         </Link>
       </>

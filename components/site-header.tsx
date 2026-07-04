@@ -12,7 +12,7 @@ const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/tournaments", label: "Torneos" },
   { href: "/host", label: "Organizar" },
-  { href: "/profile", label: "Jugadores" },
+  { href: "/players", label: "Jugadores" },
 ];
 
 export function SiteHeader() {
@@ -20,9 +20,9 @@ export function SiteHeader() {
   const { signOut } = useClerk();
   const { user } = useUser();
   const { data: me } = useMeQuery();
-  // The avatar goes to your own player profile; /profile is the ranking, so fall
+  // The avatar goes to your own player profile; /players is the ranking, so fall
   // back to it only until the backend username resolves.
-  const myProfileHref = me ? `/users/${encodeURIComponent(me.username)}` : "/profile";
+  const myProfileHref = me ? `/players/${encodeURIComponent(me.username)}` : "/players";
 
   return (
     <header className="sticky top-0 z-50 border-b border-court/10 bg-background/80 backdrop-blur-xl">
@@ -39,10 +39,7 @@ export function SiteHeader() {
             const active =
               item.href === "/"
                 ? pathname === "/"
-                : item.href === "/profile"
-                  ? // /profile redirects to /users/{id}, so keep it active on the resolved page too.
-                    pathname.startsWith("/profile") || pathname.startsWith("/users")
-                  : pathname.startsWith(item.href);
+                : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -82,7 +79,7 @@ export function SiteHeader() {
           </Show>
           <Show when="signed-in">
             {/* Own avatar + sign-out instead of Clerk's UserButton, so there is no
-                Clerk-hosted account/profile editing surface. Edits happen at /profile. */}
+                Clerk-hosted account/profile editing surface. Edits happen at /players. */}
             <Link href={myProfileHref} aria-label="Mi perfil" className="shrink-0">
               {user?.imageUrl ? (
                 // biome-ignore lint/performance/noImgElement: remote Clerk avatar, not a static asset

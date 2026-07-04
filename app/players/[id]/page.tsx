@@ -868,7 +868,7 @@ export default function UserPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-6 text-white shadow-lg md:p-8">
-          <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+          <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
           <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
           <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
             <UserSummaryCard
@@ -1098,7 +1098,12 @@ export default function UserPage() {
 
       <MatchModal match={selectedMatch} onClose={() => setSelectedMatch(null)} />
       {isEditingProfile && isOwner ? (
-        <ProfileEditModal initialName={user.name ?? ""} onClose={() => setIsEditingProfile(false)} />
+        <ProfileEditModal
+          initialName={user.name ?? ""}
+          initialUsername={user.username}
+          initialImageUrl={user.imageUrl}
+          onClose={() => setIsEditingProfile(false)}
+        />
       ) : null}
       {editingTraining !== undefined ? (
         <TrainingFormModal

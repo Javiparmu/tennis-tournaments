@@ -105,7 +105,7 @@ export default function ClubManagePage() {
         {club && (
           <>
             <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
-              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
               <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
               <div className="relative flex flex-wrap items-start justify-between gap-3">
                 <div>

@@ -3,7 +3,7 @@ import { ClubContactCta } from "@/components/club-contact-modal";
 
 const links = [
   { href: "/tournaments", label: "Torneos" },
-  { href: "/profile", label: "Mi perfil" },
+  { href: "/players", label: "Mi perfil" },
 ];
 
 export function SiteFooter() {

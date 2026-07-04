@@ -24,6 +24,8 @@ import {
   useResetTournamentMutation,
   useStartTournamentMutation,
   useTournamentBracketQuery,
+  useTournamentPhasesQuery,
+  useTournamentPlayersQuery,
   useTournamentQuery,
   useUpdateMatchScoreMutation,
   useUpdateTournamentMutation,
@@ -66,10 +68,14 @@ const SEEDING_LABEL: Record<string, string> = {
 
 function describeConfig(config: PhaseConfiguration): string {
   switch (config.type) {
-    case "knockout":
-      return `${config.qualifiers} clasificado(s) · ${SEEDING_LABEL[config.seedingStrategy] ?? config.seedingStrategy.toLowerCase()}${
+    case "knockout": {
+      // Backend omits fields at their default value, so treat them as optional.
+      const qualifiers = config.qualifiers ?? 1;
+      const seeding = config.seedingStrategy ?? "INPUT_ORDER";
+      return `${qualifiers} clasificado(s) · ${SEEDING_LABEL[seeding] ?? seeding.toLowerCase()}${
         config.thirdPlacePlayoff ? " · partido por el 3er puesto" : ""
       }`;
+    }
     case "group":
       return `${config.groupCount} grupos · ${config.teamsPerGroup}/grupo · ${config.advancingPerGroup} avanzan`;
     case "swiss":
@@ -99,7 +105,11 @@ export default function TournamentDetailPage() {
 
   const tournamentQuery = useTournamentQuery(isValid ? id : undefined);
   const bracketQuery = useTournamentBracketQuery(isValid ? id : undefined);
+  const phasesQuery = useTournamentPhasesQuery(isValid ? id : undefined);
+  const playersQuery = useTournamentPlayersQuery(isValid ? id : undefined);
   const tournament = tournamentQuery.data;
+  const phases = phasesQuery.data ?? [];
+  const players = playersQuery.data ?? [];
   const canManage = useCanManageClub(tournament?.clubId);
 
   const updateTournament = useUpdateTournamentMutation();
@@ -116,7 +126,7 @@ export default function TournamentDetailPage() {
   const standings =
     tournament && inProgress
       ? computeStandings(
-          tournament.players ?? [],
+          players,
           bracketQuery.data?.phases.flatMap((phase) => phase.rounds.flatMap((round) => round.matches)) ?? [],
           tournament.championPlayerId,
         )
@@ -187,7 +197,7 @@ export default function TournamentDetailPage() {
         {tournament && (
           <>
             <div className="relative overflow-hidden rounded-3xl bg-linear-to-b from-court-night to-court-night-deep p-8 text-white shadow-lg md:p-10">
-              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.10]" />
+              <CourtLinesSvg className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.05]" />
               <div aria-hidden className="floodlight pointer-events-none absolute -top-16 right-1/4 h-72 w-72" />
               <div className="relative">
                 <div className="flex flex-wrap items-center gap-2">
@@ -220,11 +230,11 @@ export default function TournamentDetailPage() {
                   </span>
                   <span className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-white/50" />
-                    {(tournament.players ?? []).length} jugadores
+                    {players.length} jugadores
                   </span>
                   <span className="flex items-center gap-2">
                     <Gauge className="h-4 w-4 text-white/50" />
-                    {(tournament.phases ?? []).length} fases
+                    {phases.length} fases
                   </span>
                   <span className="flex items-center gap-2">Club anfitrión</span>
                 </div>
@@ -310,7 +320,7 @@ export default function TournamentDetailPage() {
                               {status === "champion" && <Trophy className="h-4 w-4 shrink-0 text-court" />}
                               {player.user ? (
                                 <Link
-                                  href={`/users/${encodeURIComponent(player.user.username)}`}
+                                  href={`/players/${encodeURIComponent(player.user.username)}`}
                                   className="truncate hover:text-court"
                                 >
                                   {player.name}
@@ -331,7 +341,7 @@ export default function TournamentDetailPage() {
                         ))}
                       </ul>
                     )
-                  ) : (tournament.players ?? []).length === 0 ? (
+                  ) : players.length === 0 ? (
                     <EmptyState
                       size="compact"
                       icon={Users}
@@ -340,11 +350,11 @@ export default function TournamentDetailPage() {
                     />
                   ) : (
                     <ul className="space-y-2">
-                      {(tournament.players ?? []).map((player) => (
+                      {players.map((player) => (
                         <li key={player.id} className="flex items-center justify-between gap-2 text-sm">
                           <span className="flex items-center gap-2">
                             {player.user ? (
-                              <Link href={`/users/${encodeURIComponent(player.user.username)}`} className="hover:text-court">
+                              <Link href={`/players/${encodeURIComponent(player.user.username)}`} className="hover:text-court">
                                 {player.name}
                               </Link>
                             ) : (
@@ -372,7 +382,7 @@ export default function TournamentDetailPage() {
 
                 <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
                   <h2 className="mb-3 font-display text-lg font-bold">Fases</h2>
-                  {(tournament.phases ?? []).length === 0 ? (
+                  {phases.length === 0 ? (
                     <EmptyState
                       size="compact"
                       icon={Layers}
@@ -381,7 +391,7 @@ export default function TournamentDetailPage() {
                     />
                   ) : (
                     <ol className="space-y-3">
-                      {(tournament.phases ?? []).map((phase) => (
+                      {phases.map((phase) => (
                         <li key={phase.id} className="rounded-xl bg-court/5 p-3">
                           <p className="text-sm font-semibold text-court-ink">
                             {phase.phaseOrder}. {PHASE_FORMAT_LABEL[phase.format] ?? phase.format}
@@ -442,7 +452,7 @@ export default function TournamentDetailPage() {
       ) : null}
       {addingPhase && tournament ? (
         <PhaseFormModal
-          defaultOrder={(tournament.phases ?? []).length + 1}
+          defaultOrder={phases.length + 1}
           onClose={() => {
             createPhase.reset();
             setAddingPhase(false);
