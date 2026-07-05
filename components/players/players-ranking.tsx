@@ -3,6 +3,7 @@
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
+import { rankUsers } from "@/components/players/rank-users";
 import { useUsersQuery } from "@/data/queries";
 import type { User } from "@/models";
 
@@ -12,16 +13,6 @@ function initials(value: string) {
     .map((p) => p[0]?.toUpperCase() ?? "")
     .slice(0, 2)
     .join("");
-}
-
-// Interim rank score. There is no elo/rating in the backend yet (see plan), so we rank by match
-// wins (the backend aggregates them onto GET /users). Tie-broken by username so the order is stable.
-function rankUsers(users: User[]): User[] {
-  return [...users].sort((a, b) => {
-    const byWins = (b.matchWins ?? 0) - (a.matchWins ?? 0);
-    if (byWins !== 0) return byWins;
-    return a.username.localeCompare(b.username);
-  });
 }
 
 // Shared column template so the header and every row line up like a real table.
@@ -37,7 +28,7 @@ function TableHeader() {
     >
       <span>Pos</span>
       <span>Jugador</span>
-      <span className="text-right">Victorias</span>
+      <span className="text-right">Puntos</span>
     </div>
   );
 }
@@ -68,7 +59,11 @@ function Avatar({ imageUrl, name, dark }: { imageUrl: string | null; name: strin
 
 function RankingRow({ user, position }: { user: User; position: number }) {
   const displayName = user.name ?? user.username;
-  const count = user.matchWins ?? 0;
+  // Rating is the ranked value; wins ride along as a smaller secondary line.
+  // Note: `matchWins` also counts walkover wins, whereas rating does not move on
+  // a walkover (not a played match), so the two numbers can legitimately diverge.
+  const rating = user.rating ?? 1000;
+  const wins = user.matchWins ?? 0;
   const isFirst = position === 1;
   const isPodium = position <= 3;
 
@@ -93,10 +88,13 @@ function RankingRow({ user, position }: { user: User; position: number }) {
         </span>
         <span className="text-right">
           <span className="block font-mono text-2xl font-bold tabular-nums leading-none text-ball-bright">
-            {count}
+            {rating}
           </span>
           <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
-            victorias
+            puntos
+          </span>
+          <span className="mt-1 block font-mono text-[11px] tabular-nums text-white/45">
+            {wins} victorias
           </span>
         </span>
       </Link>
@@ -125,10 +123,13 @@ function RankingRow({ user, position }: { user: User; position: number }) {
       </span>
       <span className="text-right">
         <span className="block font-mono text-lg font-bold tabular-nums leading-none text-court-ink">
-          {count}
+          {rating}
         </span>
         <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-          victorias
+          puntos
+        </span>
+        <span className="mt-1 block font-mono text-[11px] tabular-nums text-zinc-400">
+          {wins} victorias
         </span>
       </span>
     </Link>

@@ -1,6 +1,7 @@
-import { CalendarDays, Dumbbell, Medal, Target, Trophy } from "lucide-react";
+import { CalendarDays, Dumbbell, Medal, Target, TrendingUp, Trophy } from "lucide-react";
 
 export function StatsCard({
+  rating,
   totalEvents,
   scheduledMatches,
   playedMatches,
@@ -8,6 +9,7 @@ export function StatsCard({
   racketsCount,
   isOwner,
 }: {
+  rating: number;
   totalEvents: number;
   scheduledMatches: number;
   playedMatches: number;
@@ -16,6 +18,7 @@ export function StatsCard({
   isOwner: boolean;
 }) {
   const tiles = [
+    { icon: TrendingUp, value: rating, label: "Puntos" },
     { icon: CalendarDays, value: totalEvents, label: "Eventos en vista" },
     { icon: Target, value: scheduledMatches, label: "Programados / en juego" },
     { icon: Trophy, value: playedMatches, label: "Jugados" },
