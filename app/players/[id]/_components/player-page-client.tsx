@@ -315,6 +315,7 @@ export default function UserPage() {
           onEdit={() => setIsEditingProfile(true)}
         />
         <StatsCard
+          rating={user.rating ?? 1000}
           totalEvents={events.length}
           scheduledMatches={scheduledMatches}
           playedMatches={playedMatches}

@@ -18,6 +18,11 @@ export type User = {
   // Completed/walkover matches won by the user's linked player. Omitted by the
   // backend when 0 (defaults are not serialized).
   matchWins?: number;
+  // Elo-style rating (starts at 1000). Optional so an older backend tolerates —
+  // callers read `user.rating ?? 1000`.
+  rating?: number;
+  // Number of rated matches played; drives the provisional badge. Read as `?? 0`.
+  ratedMatches?: number;
   // Optional: only present on newer /users/me responses.
   role?: "USER" | "PLATFORM_ADMIN";
   // Clubs the user owns or administers; gates the host UI. Only /users/me fills it in.
