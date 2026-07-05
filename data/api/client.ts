@@ -40,7 +40,15 @@ function extractErrorMessage(rawText: string): string | undefined {
   return undefined;
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// App data always bypasses the fetch cache (React Query owns freshness);
+// metadata fetches opt into a short server-side revalidation window instead.
+type CachingStrategy = { cache: "no-store" } | { next: { revalidate: number } };
+
+async function requestWithCaching<T>(
+  path: string,
+  init: RequestInit | undefined,
+  caching: CachingStrategy,
+): Promise<T> {
   if (!apiBaseUrl) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
   }
@@ -56,7 +64,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const response = await fetch(`${base}${path}`, {
       ...init,
       signal: controller.signal,
-      cache: "no-store",
+      ...caching,
       headers,
     });
 
@@ -93,6 +101,16 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  return requestWithCaching<T>(path, init, { cache: "no-store" });
+}
+
+// generateMetadata-only variant for public GETs (no token). A short server-side
+// revalidation window keeps crawler/navigation bursts from hammering the backend.
+export async function requestForMetadata<T>(path: string): Promise<T> {
+  return requestWithCaching<T>(path, undefined, { next: { revalidate: 300 } });
 }
 
 export function buildRequestInit(init?: RequestInit, token?: string | null): RequestInit {
