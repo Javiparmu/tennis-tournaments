@@ -1,8 +1,8 @@
 "use client";
 
-export { queryKeys } from "./keys";
 export * from "./clubs";
 export * from "./host";
+export { queryKeys } from "./keys";
 export * from "./matches";
 export * from "./players";
 export * from "./rackets";

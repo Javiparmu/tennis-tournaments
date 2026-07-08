@@ -16,7 +16,7 @@ type Step = "start" | "email-code" | "reset";
 
 function Field({ htmlFor, label, children }: { htmlFor: string; label: string; children: ReactNode }) {
   return (
-    <label htmlFor={htmlFor} className="block space-y-2 text-sm font-medium text-zinc-700">
+    <label htmlFor={htmlFor} className="block space-y-2 text-sm font-medium text-stone-700">
       <span>{label}</span>
       {children}
     </label>
@@ -158,7 +158,11 @@ export function SignInForm() {
         <Button type="submit" className="w-full bg-court text-ball-bright hover:bg-court-hover" isDisabled={busy}>
           Verificar y entrar
         </Button>
-        <button type="button" onClick={backToStart} className="w-full text-sm font-medium text-zinc-500 hover:text-court">
+        <button
+          type="button"
+          onClick={backToStart}
+          className="w-full text-sm font-medium text-stone-500 hover:text-court"
+        >
           Volver
         </button>
       </Form>
@@ -197,7 +201,11 @@ export function SignInForm() {
         <Button type="submit" className="w-full bg-court text-ball-bright hover:bg-court-hover" isDisabled={busy}>
           Cambiar contraseña y entrar
         </Button>
-        <button type="button" onClick={backToStart} className="w-full text-sm font-medium text-zinc-500 hover:text-court">
+        <button
+          type="button"
+          onClick={backToStart}
+          className="w-full text-sm font-medium text-stone-500 hover:text-court"
+        >
           Volver
         </button>
       </Form>
@@ -236,7 +244,11 @@ export function SignInForm() {
         </Field>
 
         <div className="flex justify-end">
-          <button type="button" onClick={handleSendReset} className="text-sm font-medium text-court hover:text-court-hover">
+          <button
+            type="button"
+            onClick={handleSendReset}
+            className="text-sm font-medium text-court hover:text-court-hover"
+          >
             ¿Olvidaste tu contraseña?
           </button>
         </div>
@@ -251,7 +263,7 @@ export function SignInForm() {
       <button
         type="button"
         onClick={handleSendEmailCode}
-        className="w-full text-sm font-medium text-zinc-500 hover:text-court"
+        className="w-full text-sm font-medium text-stone-500 hover:text-court"
       >
         Prefiero usar un código de acceso
       </button>

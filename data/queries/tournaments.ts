@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acceptJoinRequest,
   addTournamentPlayers,
@@ -33,10 +33,14 @@ import type {
   CreateTournamentJoinRequest,
   CreateTournamentRequest,
   DecideTournamentJoinRequest,
+  Player,
+  Tournament,
+  TournamentBasic,
   TournamentJoinRequestStatus,
   UpdateTournamentRequest,
 } from "@/models";
 import { queryKeys } from "./keys";
+import { mergeDefined, optimistic, removeById, updateById } from "./optimistic";
 
 export function useTournamentsQuery() {
   return useQuery({
@@ -99,17 +103,18 @@ export function useTournamentBracketQuery(id?: number) {
   });
 }
 
-async function invalidateTournament(
-  queryClient: ReturnType<typeof useQueryClient>,
-  id?: number,
-) {
-  await queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+// Query keys touched by a tournament write, for background reconcile on settle.
+function tournamentKeys(id?: number): QueryKey[] {
+  const keys: QueryKey[] = [queryKeys.tournaments];
   if (id != null) {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.tournament(id) });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentBracket(id) });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentPlayers(id) });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentPhases(id) });
+    keys.push(
+      queryKeys.tournament(id),
+      queryKeys.tournamentBracket(id),
+      queryKeys.tournamentPlayers(id),
+      queryKeys.tournamentPhases(id),
+    );
   }
+  return keys;
 }
 
 export function useCreateTournamentMutation() {
@@ -118,7 +123,9 @@ export function useCreateTournamentMutation() {
 
   return useMutation({
     mutationFn: async (payload: CreateTournamentRequest) => createTournament(await getToken(), payload),
-    onSuccess: (tournament) => invalidateTournament(queryClient, tournament.id),
+    ...optimistic<CreateTournamentRequest, Tournament>(queryClient, {
+      invalidate: (_vars, tournament) => tournamentKeys(tournament?.id),
+    }),
   });
 }
 
@@ -128,7 +135,30 @@ export function useUpdateTournamentMutation() {
 
   return useMutation({
     mutationFn: async (payload: UpdateTournamentRequest) => updateTournament(await getToken(), payload),
-    onSuccess: (tournament) => invalidateTournament(queryClient, tournament.id),
+    ...optimistic<UpdateTournamentRequest, Tournament>(queryClient, {
+      targets: (vars) => {
+        const changes = {
+          name: vars.name,
+          description: vars.description,
+          surface: vars.surface,
+          clubId: vars.clubId,
+          startDate: vars.startDate,
+          endDate: vars.endDate,
+        };
+        return [
+          {
+            key: queryKeys.tournament(vars.id),
+            patch: (prev) => (prev ? mergeDefined(prev as Tournament, changes) : prev),
+          },
+          {
+            key: queryKeys.tournaments,
+            patch: (prev) =>
+              updateById(prev as TournamentBasic[] | undefined, vars.id, (row) => mergeDefined(row, changes)),
+          },
+        ];
+      },
+      invalidate: (vars) => tournamentKeys(vars.id),
+    }),
   });
 }
 
@@ -138,7 +168,12 @@ export function useDeleteTournamentMutation() {
 
   return useMutation({
     mutationFn: async (id: number) => deleteTournament(await getToken(), id),
-    onSuccess: () => invalidateTournament(queryClient),
+    ...optimistic<number, void>(queryClient, {
+      targets: (id) => [
+        { key: queryKeys.tournaments, patch: (prev) => removeById(prev as TournamentBasic[] | undefined, id) },
+      ],
+      invalidate: () => tournamentKeys(),
+    }),
   });
 }
 
@@ -148,7 +183,7 @@ export function useStartTournamentMutation() {
 
   return useMutation({
     mutationFn: async (id: number) => startTournament(await getToken(), id),
-    onSuccess: (tournament) => invalidateTournament(queryClient, tournament.id),
+    ...optimistic<number, Tournament>(queryClient, { invalidate: (id) => tournamentKeys(id) }),
   });
 }
 
@@ -158,7 +193,7 @@ export function useResetTournamentMutation() {
 
   return useMutation({
     mutationFn: async (id: number) => resetTournament(await getToken(), id),
-    onSuccess: (tournament) => invalidateTournament(queryClient, tournament.id),
+    ...optimistic<number, Tournament>(queryClient, { invalidate: (id) => tournamentKeys(id) }),
   });
 }
 
@@ -169,7 +204,9 @@ export function useCreatePhaseMutation() {
   return useMutation({
     mutationFn: async ({ id, payload }: { id: number; payload: CreatePhaseRequest }) =>
       createPhase(await getToken(), id, payload),
-    onSuccess: (_phase, { id }) => invalidateTournament(queryClient, id),
+    ...optimistic<{ id: number; payload: CreatePhaseRequest }, unknown>(queryClient, {
+      invalidate: ({ id }) => tournamentKeys(id),
+    }),
   });
 }
 
@@ -180,7 +217,9 @@ export function useAddTournamentPlayersMutation() {
   return useMutation({
     mutationFn: async ({ id, payload }: { id: number; payload: AddPlayersRequest }) =>
       addTournamentPlayers(await getToken(), id, payload),
-    onSuccess: (tournament) => invalidateTournament(queryClient, tournament.id),
+    ...optimistic<{ id: number; payload: AddPlayersRequest }, Tournament>(queryClient, {
+      invalidate: ({ id }) => tournamentKeys(id),
+    }),
   });
 }
 
@@ -191,7 +230,12 @@ export function useRemoveTournamentPlayerMutation() {
   return useMutation({
     mutationFn: async ({ id, playerId }: { id: number; playerId: number }) =>
       removeTournamentPlayer(await getToken(), id, playerId),
-    onSuccess: (_void, { id }) => invalidateTournament(queryClient, id),
+    ...optimistic<{ id: number; playerId: number }, void>(queryClient, {
+      targets: ({ id, playerId }) => [
+        { key: queryKeys.tournamentPlayers(id), patch: (prev) => removeById(prev as Player[] | undefined, playerId) },
+      ],
+      invalidate: ({ id }) => tournamentKeys(id),
+    }),
   });
 }
 
@@ -213,10 +257,9 @@ export function useCreateJoinRequestMutation() {
   return useMutation({
     mutationFn: async ({ id, payload }: { id: number; payload: CreateTournamentJoinRequest }) =>
       createJoinRequest(await getToken(), id, payload),
-    onSuccess: async (request) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myJoinRequests });
-      await invalidateTournament(queryClient, request.tournamentId);
-    },
+    ...optimistic<{ id: number; payload: CreateTournamentJoinRequest }, unknown>(queryClient, {
+      invalidate: ({ id }) => [queryKeys.myJoinRequests, ...tournamentKeys(id)],
+    }),
   });
 }
 
@@ -227,10 +270,9 @@ export function useWithdrawJoinRequestMutation() {
   return useMutation({
     mutationFn: async ({ id, requestId }: { id: number; requestId: number }) =>
       withdrawJoinRequest(await getToken(), id, requestId),
-    onSuccess: async (request) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myJoinRequests });
-      await invalidateTournament(queryClient, request.tournamentId);
-    },
+    ...optimistic<{ id: number; requestId: number }, unknown>(queryClient, {
+      invalidate: ({ id }) => [queryKeys.myJoinRequests, ...tournamentKeys(id)],
+    }),
   });
 }
 
@@ -245,12 +287,10 @@ export function useTournamentJoinRequestsQuery(id?: number, status?: TournamentJ
   });
 }
 
-async function invalidateJoinRequests(
-  queryClient: ReturnType<typeof useQueryClient>,
-  tournamentId: number,
-) {
-  await queryClient.invalidateQueries({ queryKey: queryKeys.tournamentJoinRequestsForTournament(tournamentId) });
-  await invalidateTournament(queryClient, tournamentId);
+// Keys touched when a host decides on a join request (the tournament's request
+// list plus everything a roster change affects).
+function joinRequestKeys(tournamentId: number): QueryKey[] {
+  return [queryKeys.tournamentJoinRequestsForTournament(tournamentId), ...tournamentKeys(tournamentId)];
 }
 
 export function useAcceptJoinRequestMutation() {
@@ -267,7 +307,9 @@ export function useAcceptJoinRequestMutation() {
       requestId: number;
       payload?: AcceptTournamentJoinRequest;
     }) => acceptJoinRequest(await getToken(), id, requestId, payload),
-    onSuccess: (request) => invalidateJoinRequests(queryClient, request.tournamentId),
+    ...optimistic<{ id: number; requestId: number; payload?: AcceptTournamentJoinRequest }, unknown>(queryClient, {
+      invalidate: ({ id }) => joinRequestKeys(id),
+    }),
   });
 }
 
@@ -285,7 +327,9 @@ export function useRejectJoinRequestMutation() {
       requestId: number;
       payload?: DecideTournamentJoinRequest;
     }) => rejectJoinRequest(await getToken(), id, requestId, payload),
-    onSuccess: (request) => invalidateJoinRequests(queryClient, request.tournamentId),
+    ...optimistic<{ id: number; requestId: number; payload?: DecideTournamentJoinRequest }, unknown>(queryClient, {
+      invalidate: ({ id }) => joinRequestKeys(id),
+    }),
   });
 }
 
@@ -296,6 +340,8 @@ export function useAllowResubmitJoinRequestMutation() {
   return useMutation({
     mutationFn: async ({ id, requestId }: { id: number; requestId: number }) =>
       allowResubmitJoinRequest(await getToken(), id, requestId),
-    onSuccess: (request) => invalidateJoinRequests(queryClient, request.tournamentId),
+    ...optimistic<{ id: number; requestId: number }, unknown>(queryClient, {
+      invalidate: ({ id }) => joinRequestKeys(id),
+    }),
   });
 }

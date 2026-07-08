@@ -1,16 +1,10 @@
-import type { BracketPhase, Match } from "@/models";
 import { computeStandings } from "@/lib/standings";
+import type { BracketPhase, Match } from "@/models";
 import { MatchCard } from "./match-card";
 import { StandingsTable } from "./standings-table";
 
 // SWISS phase: round-by-round fixtures alongside a running standings panel.
-export function SwissPhase({
-  phase,
-  onSelectMatch,
-}: {
-  phase: BracketPhase;
-  onSelectMatch?: (match: Match) => void;
-}) {
+export function SwissPhase({ phase, onSelectMatch }: { phase: BracketPhase; onSelectMatch?: (match: Match) => void }) {
   const rounds = [...(phase.rounds ?? [])].sort((a, b) => a.round - b.round);
   const matches = rounds.flatMap((r) => r.matches ?? []);
 
@@ -19,7 +13,7 @@ export function SwissPhase({
       <div className="space-y-5">
         {rounds.map((round) => (
           <div key={round.round}>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-zinc-400">Ronda {round.round}</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-stone-400">Ronda {round.round}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {(round.matches ?? []).map((match) => (
                 <MatchCard key={match.id} match={match} onSelect={onSelectMatch} />

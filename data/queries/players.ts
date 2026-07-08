@@ -3,8 +3,9 @@
 import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPlayer, deletePlayer, getPlayer, getPlayers, updatePlayer } from "@/data/api/players";
-import type { CreatePlayerRequest, UpdatePlayerRequest } from "@/models";
+import type { CreatePlayerRequest, Player, UpdatePlayerRequest } from "@/models";
 import { queryKeys } from "./keys";
+import { mergeDefined, optimistic, removeById, updateById } from "./optimistic";
 
 export function usePlayersQuery() {
   return useQuery({
@@ -29,9 +30,7 @@ export function useCreatePlayerMutation() {
 
   return useMutation({
     mutationFn: async (payload: CreatePlayerRequest) => createPlayer(await getToken(), payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.players });
-    },
+    ...optimistic<CreatePlayerRequest, unknown>(queryClient, { invalidate: () => [queryKeys.players] }),
   });
 }
 
@@ -41,10 +40,19 @@ export function useUpdatePlayerMutation() {
 
   return useMutation({
     mutationFn: async (payload: UpdatePlayerRequest) => updatePlayer(await getToken(), payload),
-    onSuccess: async (player) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.players });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.player(player.id) });
-    },
+    ...optimistic<UpdatePlayerRequest, Player>(queryClient, {
+      targets: (vars) => {
+        const rename = { name: vars.name };
+        return [
+          { key: queryKeys.player(vars.id), patch: (prev) => (prev ? mergeDefined(prev as Player, rename) : prev) },
+          {
+            key: queryKeys.players,
+            patch: (prev) => updateById(prev as Player[] | undefined, vars.id, (row) => mergeDefined(row, rename)),
+          },
+        ];
+      },
+      invalidate: (vars) => [queryKeys.players, queryKeys.player(vars.id)],
+    }),
   });
 }
 
@@ -54,8 +62,9 @@ export function useDeletePlayerMutation() {
 
   return useMutation({
     mutationFn: async (id: number) => deletePlayer(await getToken(), id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.players });
-    },
+    ...optimistic<number, void>(queryClient, {
+      targets: (id) => [{ key: queryKeys.players, patch: (prev) => removeById(prev as Player[] | undefined, id) }],
+      invalidate: () => [queryKeys.players],
+    }),
   });
 }

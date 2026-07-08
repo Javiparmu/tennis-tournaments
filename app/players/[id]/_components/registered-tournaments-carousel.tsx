@@ -59,7 +59,7 @@ export function RegisteredTournamentsCarousel({ userId }: { userId?: number }) {
             <div
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
               key={i}
-              className="h-28 w-[240px] shrink-0 animate-pulse rounded-xl border border-zinc-100 bg-zinc-100/70"
+              className="h-28 w-[240px] shrink-0 animate-pulse rounded-xl border border-stone-100 bg-stone-100/70"
             />
           ))}
 
@@ -76,11 +76,11 @@ export function RegisteredTournamentsCarousel({ userId }: { userId?: number }) {
                 <span className="absolute inset-y-3 left-0 w-1 rounded-full" style={{ background: s.hex }} />
                 <div className="ml-1 flex flex-col items-center justify-center rounded-lg bg-court/5 px-3 py-1">
                   <span className="font-display text-xl font-black leading-none text-court-ink">{day}</span>
-                  <span className="text-[10px] font-bold tracking-wider text-zinc-500">{month}</span>
+                  <span className="text-[10px] font-bold tracking-wider text-stone-500">{month}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-court-ink">{t.name}</p>
-                  <p className="truncate text-xs text-zinc-500">Club #{t.clubId}</p>
+                  <p className="truncate text-xs text-stone-500">Club #{t.clubId}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} border ${s.border}`}>
                       {s.label}

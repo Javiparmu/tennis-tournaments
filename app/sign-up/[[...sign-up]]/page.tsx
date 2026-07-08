@@ -30,7 +30,7 @@ export default function SignUpPage() {
             <h2 className="font-display text-3xl font-black tracking-tight text-court-ink sm:text-4xl">
               Crea tu cuenta
             </h2>
-            <p className="mt-2 text-zinc-600">
+            <p className="mt-2 text-stone-600">
               ¿Ya tienes cuenta?{" "}
               <Link href="/sign-in" className="font-semibold text-court hover:text-court-hover">
                 Inicia sesión

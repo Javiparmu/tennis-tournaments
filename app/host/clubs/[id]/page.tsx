@@ -83,7 +83,7 @@ export default function ClubManagePage() {
     <PageScaffold>
       <Link
         href="/host"
-        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-court"
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-court"
       >
         <ArrowLeft className="h-4 w-4" />
         Zona de organizador
@@ -91,7 +91,7 @@ export default function ClubManagePage() {
 
       {!isValid && <p className="text-rose-600">Identificador de club no válido.</p>}
       {isValid && clubQuery.isLoading && (
-        <div className="h-32 animate-pulse rounded-3xl border border-zinc-100 bg-zinc-100/70" />
+        <div className="h-32 animate-pulse rounded-3xl border border-stone-100 bg-stone-100/70" />
       )}
       {isValid && (clubQuery.error || (!clubQuery.isLoading && !club)) && (
         <p className="text-rose-600">No se pudo cargar este club.</p>
@@ -163,7 +163,7 @@ export default function ClubManagePage() {
                       >
                         <div>
                           <p className="font-display text-lg font-bold">{t.name}</p>
-                          <p className="text-sm text-zinc-500">{formatDateRange(t.startDate, t.endDate)}</p>
+                          <p className="text-sm text-stone-500">{formatDateRange(t.startDate, t.endDate)}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} border ${s.border}`}>
@@ -193,7 +193,7 @@ export default function ClubManagePage() {
                           type="button"
                           aria-label="Eliminar administrador"
                           onClick={() => removeAdmin.mutate({ clubId, userId: admin.id })}
-                          className="text-zinc-400 hover:text-rose-600"
+                          className="text-stone-400 hover:text-rose-600"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -201,7 +201,7 @@ export default function ClubManagePage() {
                     </li>
                   ))}
                   {!adminsQuery.isLoading && (adminsQuery.data ?? []).length === 0 ? (
-                    <li className="rounded-xl bg-court/5 px-3 py-4 text-center text-sm text-zinc-500">
+                    <li className="rounded-xl bg-court/5 px-3 py-4 text-center text-sm text-stone-500">
                       Aún no hay administradores.
                     </li>
                   ) : null}
@@ -218,7 +218,7 @@ export default function ClubManagePage() {
                       value={adminUserId}
                       onChange={(e) => setAdminUserId(e.target.value)}
                       placeholder="ID de usuario"
-                      className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-court"
+                      className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:border-court"
                     />
                     <button
                       type="submit"

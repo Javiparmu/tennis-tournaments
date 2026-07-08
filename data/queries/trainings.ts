@@ -11,6 +11,13 @@ import {
 } from "@/data/api/trainings";
 import type { CreateTrainingRequest, UpdateTrainingRequest } from "@/models";
 import { queryKeys } from "./keys";
+import { optimistic } from "./optimistic";
+
+// Training lists and the calendar are keyed by (from, to[, timezone]); an
+// optimistic splice into every cached range is fragile, so these mutations paint
+// nothing and lean on the non-awaited background reconcile (fast, and the modal
+// still closes immediately). Errors surface via the shared danger toast.
+const TRAINING_ROOTS = [queryKeys.profileCalendarRoot, queryKeys.myTrainingsRoot, queryKeys.publicTrainingsRoot];
 
 export function usePublicTrainingsQuery(userId?: number, from?: string, to?: string) {
   return useQuery({
@@ -38,11 +45,7 @@ export function useCreateTrainingMutation() {
 
   return useMutation({
     mutationFn: async (payload: CreateTrainingRequest) => createTraining(await getToken(), payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
-    },
+    ...optimistic<CreateTrainingRequest, unknown>(queryClient, { invalidate: () => TRAINING_ROOTS }),
   });
 }
 
@@ -53,11 +56,9 @@ export function useUpdateTrainingMutation() {
   return useMutation({
     mutationFn: async ({ trainingId, payload }: { trainingId: number; payload: UpdateTrainingRequest }) =>
       updateTraining(await getToken(), trainingId, payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
-    },
+    ...optimistic<{ trainingId: number; payload: UpdateTrainingRequest }, unknown>(queryClient, {
+      invalidate: () => TRAINING_ROOTS,
+    }),
   });
 }
 
@@ -67,10 +68,6 @@ export function useDeleteTrainingMutation() {
 
   return useMutation({
     mutationFn: async (trainingId: number) => deleteTraining(await getToken(), trainingId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profileCalendarRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myTrainingsRoot });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.publicTrainingsRoot });
-    },
+    ...optimistic<number, unknown>(queryClient, { invalidate: () => TRAINING_ROOTS }),
   });
 }

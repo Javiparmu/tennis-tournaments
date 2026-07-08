@@ -79,7 +79,7 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Fecha del entrenamiento</span>
             <input
               required
@@ -90,7 +90,7 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
             />
           </label>
 
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Duración (minutos)</span>
             <input
               type="number"
@@ -103,7 +103,7 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
           </label>
         </div>
 
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Visibilidad</span>
           <select
             value={form.visibility}
@@ -120,7 +120,7 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
           </select>
         </label>
 
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Notas</span>
           <textarea
             rows={5}
@@ -135,7 +135,7 @@ export function TrainingFormModal({ training, onClose, onSubmit, isSubmitting, s
         <FormError message={submitError} />
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

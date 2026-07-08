@@ -2,8 +2,8 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import type { AddPlayersRequest } from "@/models";
-import { ModalShell, inputClass } from "@/components/modal-shell";
 
 type AddPlayersModalProps = {
   onClose: () => void;
@@ -62,7 +62,7 @@ export function AddPlayersModal({ onClose, onSubmit, isSubmitting, submitError }
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

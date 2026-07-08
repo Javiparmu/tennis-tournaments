@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Card, Tooltip } from "@heroui/react";
+import { Button, Card, Dropdown, Label, Tooltip } from "@heroui/react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { JOIN_STATUS_LABEL, TOURNAMENT_STATUS_LABEL } from "@/lib/labels";
 import { SURFACE_LABEL } from "@/lib/surface";
 import type { ProfileCalendarDay, ProfileCalendarEvent } from "@/models";
 import {
-  type CalendarMode,
   buildCalendarSummariesByDay,
   buildEventsByDay,
+  type CalendarMode,
   formatRangeLabel,
   getCalendarDays,
   getWeekdayLabels,
@@ -24,6 +25,8 @@ type MiniCalendarProps = {
   onDaySelect: (dayKey: string) => void;
   onAnchorDateChange: (date: Date) => void;
 };
+
+const MODE_LABEL: Record<CalendarMode, string> = { month: "Mes", week: "Semana" };
 
 export function MiniCalendar({
   mode,
@@ -42,48 +45,63 @@ export function MiniCalendar({
 
   return (
     <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
-      <Card.Header className="flex items-center justify-between gap-4 p-5 pb-0">
-        <div>
-          <p className="font-display text-lg font-bold">Calendario del perfil</p>
-          <p className="text-sm text-zinc-500">Partidos y sesiones de entrenamiento en el rango seleccionado.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={mode === "month" ? "primary" : "ghost"}
-            className={mode === "month" ? "bg-court text-ball-bright" : "text-zinc-700"}
-            onPress={() => onModeChange("month")}
-          >
-            Mes
-          </Button>
-          <Button
-            variant={mode === "week" ? "primary" : "ghost"}
-            className={mode === "week" ? "bg-court text-ball-bright" : "text-zinc-700"}
-            onPress={() => onModeChange("week")}
-          >
-            Semana
-          </Button>
-        </div>
-      </Card.Header>
       <Card.Content className="gap-4 p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Button variant="ghost" className="text-zinc-700" onPress={() => onAnchorDateChange(moveAnchorDate(anchorDate, mode, -1))}>
-            Anterior
-          </Button>
-          <p className="text-sm font-medium text-zinc-700">{formatRangeLabel(mode, anchorDate)}</p>
-          <Button variant="ghost" className="text-zinc-700" onPress={() => onAnchorDateChange(moveAnchorDate(anchorDate, mode, 1))}>
-            Siguiente
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Dropdown>
+            <Dropdown.Trigger>
+              <Button size="sm" variant="ghost" className="gap-1 text-stone-700">
+                {MODE_LABEL[mode]}
+                <ChevronDown className="h-4 w-4" aria-hidden />
+              </Button>
+            </Dropdown.Trigger>
+            <Dropdown.Popover className="min-w-[150px]">
+              <Dropdown.Menu
+                selectionMode="single"
+                selectedKeys={new Set([mode])}
+                onSelectionChange={(keys) => {
+                  if (keys === "all") return;
+                  const next = keys.values().next().value as CalendarMode | undefined;
+                  if (next) onModeChange(next);
+                }}
+              >
+                <Dropdown.Item id="month" textValue="Mes">
+                  <Label>Mes</Label>
+                  <Dropdown.ItemIndicator />
+                </Dropdown.Item>
+                <Dropdown.Item id="week" textValue="Semana">
+                  <Label>Semana</Label>
+                  <Dropdown.ItemIndicator />
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1 text-stone-700"
+              onPress={() => onAnchorDateChange(moveAnchorDate(anchorDate, mode, -1))}
+            >
+              <ChevronLeft className="h-4 w-4" aria-hidden />
+              Anterior
+            </Button>
+            <p className="min-w-[7.5rem] text-center text-sm font-medium text-stone-700">
+              {formatRangeLabel(mode, anchorDate)}
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="gap-1 text-stone-700"
+              onPress={() => onAnchorDateChange(moveAnchorDate(anchorDate, mode, 1))}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            </Button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-[11px] font-medium text-zinc-500">
-          <LegendBadge className="bg-sky-100 text-sky-700" label="Programado" />
-          <LegendBadge className="bg-amber-100 text-amber-700" label="En juego" />
-          <LegendBadge className="bg-emerald-100 text-emerald-700" label="Jugado" />
-          <LegendBadge className="bg-violet-100 text-violet-700" label="Entrenamiento" />
-          <LegendBadge className="bg-rose-100 text-rose-700" label="Torneo" />
-        </div>
-
-        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-wide text-stone-400">
           {weekdayLabels.map((label) => (
             <div key={label}>{label}</div>
           ))}
@@ -113,14 +131,14 @@ export function MiniCalendar({
                   "min-h-24 cursor-pointer rounded-2xl border px-2 py-2 text-left transition",
                   isSelected
                     ? "border-court bg-court/5 shadow-sm"
-                    : "border-zinc-200 bg-zinc-50 hover:border-court/40 hover:bg-white",
-                  day.inCurrentPeriod ? "text-zinc-900" : "text-zinc-400",
+                    : "border-stone-200 bg-stone-50 hover:border-court/40 hover:bg-white",
+                  day.inCurrentPeriod ? "text-stone-900" : "text-stone-400",
                 ].join(" ")}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{day.date.getDate()}</span>
                   {summary ? (
-                    <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-semibold text-white">
                       {summary.totalCount}
                     </span>
                   ) : null}
@@ -148,6 +166,14 @@ export function MiniCalendar({
               </div>
             );
           })}
+        </div>
+
+        <div className="flex flex-wrap gap-2 border-t border-court/10 pt-4 text-[11px] font-medium text-stone-500">
+          <LegendBadge className="bg-sky-100 text-sky-700" label="Programado" />
+          <LegendBadge className="bg-amber-100 text-amber-700" label="En juego" />
+          <LegendBadge className="bg-emerald-100 text-emerald-700" label="Jugado" />
+          <LegendBadge className="bg-violet-100 text-violet-700" label="Entrenamiento" />
+          <LegendBadge className="bg-rose-100 text-rose-700" label="Torneo" />
         </div>
       </Card.Content>
     </Card>
@@ -183,9 +209,9 @@ function TournamentBadge({ events }: { events: ProfileCalendarEvent[] }) {
             const tournament = event.tournament;
             if (!tournament) return null;
             return (
-              <div key={event.eventId} className="border-b border-zinc-200 pb-1.5 last:border-0 last:pb-0">
+              <div key={event.eventId} className="border-b border-stone-200 pb-1.5 last:border-0 last:pb-0">
                 <p className="font-semibold">{tournament.name}</p>
-                <p className="mt-0.5 text-zinc-500">
+                <p className="mt-0.5 text-stone-500">
                   {formatTournamentRange(tournament.startDate, tournament.endDate)}
                   {tournament.surface ? ` · ${SURFACE_LABEL[tournament.surface] ?? tournament.surface}` : ""}
                 </p>
@@ -193,7 +219,7 @@ function TournamentBadge({ events }: { events: ProfileCalendarEvent[] }) {
                   <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
                     {JOIN_STATUS_LABEL[tournament.status] ?? tournament.status}
                   </span>
-                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-600">
+                  <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600">
                     {TOURNAMENT_STATUS_LABEL[tournament.tournamentStatus] ?? tournament.tournamentStatus}
                   </span>
                 </div>

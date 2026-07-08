@@ -8,7 +8,7 @@ import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 export default function SSOCallbackPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-background text-court-ink">
-      <p className="text-sm text-zinc-500">Redirigiendo…</p>
+      <p className="text-sm text-stone-500">Redirigiendo…</p>
       <AuthenticateWithRedirectCallback />
     </main>
   );

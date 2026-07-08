@@ -4,13 +4,7 @@ import { KnockoutTree } from "./knockout-tree";
 import { PHASE_FORMAT_LABEL } from "./labels";
 import { SwissPhase } from "./swiss-phase";
 
-export function PhaseBlock({
-  phase,
-  onSelectMatch,
-}: {
-  phase: BracketPhase;
-  onSelectMatch?: (match: Match) => void;
-}) {
+export function PhaseBlock({ phase, onSelectMatch }: { phase: BracketPhase; onSelectMatch?: (match: Match) => void }) {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">

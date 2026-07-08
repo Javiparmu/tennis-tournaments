@@ -2,8 +2,8 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import type { Club } from "@/models";
-import { ModalShell, inputClass } from "@/components/modal-shell";
 
 // Clubs are provisioned by the platform operator, so this modal only edits.
 export type ClubFormValues = {
@@ -49,24 +49,41 @@ export function ClubFormModal({ club, onClose, onSubmit, isSubmitting, submitErr
           });
         }}
       >
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Nombre</span>
-          <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Club de Tenis Ribera" className={inputClass} />
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Club de Tenis Ribera"
+            className={inputClass}
+          />
         </label>
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Teléfono</span>
-          <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+34 600 000 000" className={inputClass} />
+          <input
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="+34 600 000 000"
+            className={inputClass}
+          />
         </label>
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Dirección</span>
-          <textarea rows={2} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle, ciudad" className={inputClass} />
+          <textarea
+            rows={2}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Calle, ciudad"
+            className={inputClass}
+          />
         </label>
 
         {validationError ? <p className="text-sm text-rose-600">{validationError}</p> : null}
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

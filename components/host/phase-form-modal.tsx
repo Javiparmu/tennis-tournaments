@@ -2,8 +2,8 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import type { CreatePhaseRequest, PhaseConfiguration, PhaseFormat, SeedingStrategy } from "@/models";
-import { ModalShell, inputClass } from "@/components/modal-shell";
 
 type PhaseFormModalProps = {
   defaultOrder: number;
@@ -64,7 +64,12 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
   }
 
   return (
-    <ModalShell title="Añadir fase" subtitle="Define el formato y la configuración de esta fase." onClose={onClose} disabled={isSubmitting}>
+    <ModalShell
+      title="Añadir fase"
+      subtitle="Define el formato y la configuración de esta fase."
+      onClose={onClose}
+      disabled={isSubmitting}
+    >
       <Form
         className="space-y-4"
         onSubmit={async (event) => {
@@ -79,11 +84,18 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Orden de fase</span>
-            <input required type="number" min="1" value={phaseOrder} onChange={(e) => setPhaseOrder(e.target.value)} className={inputClass} />
+            <input
+              required
+              type="number"
+              min="1"
+              value={phaseOrder}
+              onChange={(e) => setPhaseOrder(e.target.value)}
+              className={inputClass}
+            />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Formato</span>
             <select value={format} onChange={(e) => setFormat(e.target.value as PhaseFormat)} className={inputClass}>
               {FORMATS.map((f) => (
@@ -97,13 +109,23 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
 
         {format === "KNOCKOUT" ? (
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Clasificados</span>
-              <input type="number" min="1" value={qualifiers} onChange={(e) => setQualifiers(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="1"
+                value={qualifiers}
+                onChange={(e) => setQualifiers(e.target.value)}
+                className={inputClass}
+              />
             </label>
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Sorteo</span>
-              <select value={seedingStrategy} onChange={(e) => setSeedingStrategy(e.target.value as SeedingStrategy)} className={inputClass}>
+              <select
+                value={seedingStrategy}
+                onChange={(e) => setSeedingStrategy(e.target.value as SeedingStrategy)}
+                className={inputClass}
+              >
                 {SEEDING.map((s) => (
                   <option key={s} value={s}>
                     {SEEDING_LABEL[s]}
@@ -111,8 +133,12 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 md:col-span-2">
-              <input type="checkbox" checked={thirdPlacePlayoff} onChange={(e) => setThirdPlacePlayoff(e.target.checked)} />
+            <label className="flex items-center gap-2 text-sm font-medium text-stone-700 md:col-span-2">
+              <input
+                type="checkbox"
+                checked={thirdPlacePlayoff}
+                onChange={(e) => setThirdPlacePlayoff(e.target.checked)}
+              />
               <span>Partido por el tercer puesto</span>
             </label>
           </div>
@@ -120,30 +146,60 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
 
         {format === "GROUP" ? (
           <div className="grid gap-4 md:grid-cols-3">
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Grupos</span>
-              <input type="number" min="1" value={groupCount} onChange={(e) => setGroupCount(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="1"
+                value={groupCount}
+                onChange={(e) => setGroupCount(e.target.value)}
+                className={inputClass}
+              />
             </label>
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Equipos / grupo</span>
-              <input type="number" min="2" value={teamsPerGroup} onChange={(e) => setTeamsPerGroup(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="2"
+                value={teamsPerGroup}
+                onChange={(e) => setTeamsPerGroup(e.target.value)}
+                className={inputClass}
+              />
             </label>
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Avanzan</span>
-              <input type="number" min="1" value={advancingPerGroup} onChange={(e) => setAdvancingPerGroup(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="1"
+                value={advancingPerGroup}
+                onChange={(e) => setAdvancingPerGroup(e.target.value)}
+                className={inputClass}
+              />
             </label>
           </div>
         ) : null}
 
         {format === "SWISS" ? (
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Puntos por victoria</span>
-              <input type="number" min="1" value={pointsPerWin} onChange={(e) => setPointsPerWin(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="1"
+                value={pointsPerWin}
+                onChange={(e) => setPointsPerWin(e.target.value)}
+                className={inputClass}
+              />
             </label>
-            <label className="space-y-2 text-sm font-medium text-zinc-700">
+            <label className="space-y-2 text-sm font-medium text-stone-700">
               <span>Avanzan (opcional)</span>
-              <input type="number" min="1" value={advancingCount} onChange={(e) => setAdvancingCount(e.target.value)} className={inputClass} />
+              <input
+                type="number"
+                min="1"
+                value={advancingCount}
+                onChange={(e) => setAdvancingCount(e.target.value)}
+                className={inputClass}
+              />
             </label>
           </div>
         ) : null}
@@ -152,7 +208,7 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

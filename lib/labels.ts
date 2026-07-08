@@ -1,4 +1,4 @@
-import type { MatchStatus, PhaseFormat, TournamentJoinRequestStatus, TournamentStatus } from "@/models";
+import type { MatchStatus, PhaseFormat, RatingReason, TournamentJoinRequestStatus, TournamentStatus } from "@/models";
 
 // Canonical Spanish label maps. Keep user-visible copy here so it stays
 // consistent across views; intentional per-context divergences are called out
@@ -34,6 +34,17 @@ export const MATCH_STATUS_LABEL: Record<MatchStatus, string> = {
   LIVE: "En juego",
   COMPLETED: "Finalizado",
   WALKOVER: "W.O.",
+};
+
+// Reason a rating event happened — shown in the progression chart's tooltip.
+// Keyed by RatingReason but declared as a wide record so an unknown backend
+// reason can fall back gracefully at the call site.
+export const RATING_REASON_LABEL: Record<RatingReason, string> = {
+  MATCH: "Partido",
+  GUEST_WIN: "Victoria (invitado)",
+  GUEST_LOSS: "Derrota (invitado)",
+  TOURNAMENT_BONUS: "Bonus de torneo",
+  DECAY: "Inactividad",
 };
 
 export const RESULT_LABEL: Record<string, string> = {

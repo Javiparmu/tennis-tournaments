@@ -27,11 +27,7 @@ export function SpotlightCard({
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: decorative spotlight follows the cursor; not an interactive control
-    <div
-      ref={ref}
-      onMouseMove={handleMove}
-      className={`group relative overflow-hidden ${className}`}
-    >
+    <div ref={ref} onMouseMove={handleMove} className={`group relative overflow-hidden ${className}`}>
       <div
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{

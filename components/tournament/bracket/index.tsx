@@ -11,7 +11,7 @@ export function Bracket({
   const phases = bracket.phases ?? [];
   if (phases.length === 0 || phases.every((p) => (p.rounds ?? []).length === 0)) {
     return (
-      <p className="rounded-2xl border border-dashed border-court/20 bg-white p-8 text-center text-sm text-zinc-500">
+      <p className="rounded-2xl border border-dashed border-court/20 bg-white p-8 text-center text-sm text-stone-500">
         Aún no se han generado partidos. El cuadro aparece cuando empieza el torneo.
       </p>
     );

@@ -32,6 +32,8 @@ export const queryKeys = {
   userMatchActivity: (userId?: number, from?: string, to?: string) =>
     ["user-match-activity", userId ?? "unknown", from ?? "na", to ?? "na"] as const,
   userTournaments: (userId?: number) => ["user-tournaments", userId ?? "unknown"] as const,
+  userRatingHistory: (userId?: number, limit?: number) =>
+    ["user-rating-history", userId ?? "unknown", limit ?? 50] as const,
   userProfileCalendar: (userId?: number, from?: string, to?: string, timezone?: string) =>
     ["profile-calendar", "user", userId ?? "unknown", from ?? "na", to ?? "na", timezone ?? "utc"] as const,
   myProfileCalendar: (from?: string, to?: string, timezone?: string) =>

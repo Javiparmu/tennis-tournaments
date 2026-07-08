@@ -16,7 +16,7 @@ export function PageSkeleton({
         <div
           // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
           key={i}
-          className={`${height} animate-pulse rounded-2xl border border-zinc-100 bg-zinc-100/70`}
+          className={`${height} animate-pulse rounded-2xl border border-stone-100 bg-stone-100/70`}
         />
       ))}
     </div>

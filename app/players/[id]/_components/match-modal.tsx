@@ -33,7 +33,7 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
       subtitle={`Fase ${PHASE_FORMAT_LABEL[match.phase.format] ?? match.phase.format} · ronda ${match.phase.round}`}
       onClose={onClose}
       headerExtra={
-        <Button variant="ghost" className="text-zinc-700" onPress={onClose}>
+        <Button variant="ghost" className="text-stone-700" onPress={onClose}>
           Cerrar
         </Button>
       }
@@ -53,26 +53,26 @@ export function MatchModal({ match, onClose }: MatchModalProps) {
           </Chip>
         </div>
 
-        <div className="grid gap-4 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-700 md:grid-cols-2">
+        <div className="grid gap-4 rounded-2xl bg-stone-50 p-4 text-sm text-stone-700 md:grid-cols-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Rival</p>
-            <p className="mt-1 font-medium text-zinc-900">{match.opponent?.name ?? "Sin rival registrado"}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">Rival</p>
+            <p className="mt-1 font-medium text-stone-900">{match.opponent?.name ?? "Sin rival registrado"}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
               {match.completedAt ? "Finalizado" : "Programado"}
             </p>
-            <p className="mt-1 font-medium text-zinc-900">
+            <p className="mt-1 font-medium text-stone-900">
               {primaryTime ? formatDateTime(primaryTime) : "Sin definir"}
             </p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Pista</p>
-            <p className="mt-1 font-medium text-zinc-900">{match.court ?? "Sin asignar"}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">Pista</p>
+            <p className="mt-1 font-medium text-stone-900">{match.court ?? "Sin asignar"}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Resultado</p>
-            <p className="mt-1 font-medium text-zinc-900">{formatScore(match.score, match.status)}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">Resultado</p>
+            <p className="mt-1 font-medium text-stone-900">{formatScore(match.score, match.status)}</p>
           </div>
         </div>
       </div>

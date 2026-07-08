@@ -1,24 +1,33 @@
 "use client";
 
 import { Chip } from "@heroui/react";
-import { ArrowRight, Building2, CalendarDays, Info } from "lucide-react";
+import { ArrowRight, Building2, CalendarDays, Info, SearchX } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { EmptyState } from "@/components/empty-state";
 import { PageHero } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
 import { FadeContent } from "@/components/react-bits/FadeContent";
 import { SpotlightCard } from "@/components/react-bits/SpotlightCard";
-import { useTournamentsQuery } from "@/data/queries";
+import { SearchInput } from "@/components/search-input";
+import { filterTournaments } from "@/components/tournament/filter-tournaments";
+import { useClubNameMap, useTournamentsQuery } from "@/data/queries";
 import { countdown, dayMonth, formatDateRange } from "@/lib/format";
 import { TOURNAMENT_STATUS_LABEL_PUBLIC } from "@/lib/labels";
 import { surfaceStyle } from "@/lib/surface";
 
 export default function TournamentsPage() {
   const { data: tournaments = [], isLoading } = useTournamentsQuery();
+  const clubNames = useClubNameMap();
+  const [query, setQuery] = useState("");
+
+  const filtered = filterTournaments(tournaments, query);
 
   return (
     <PageScaffold>
-      <div className="mb-10">
+      <div className="mb-6">
         <PageHero
+          compact
           eyebrow="Inscripción abierta"
           title="Próximos torneos"
           accent=" torneos"
@@ -26,18 +35,27 @@ export default function TournamentsPage() {
         />
       </div>
 
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        placeholder="Buscar torneo…"
+        label="Buscar torneo"
+        disabled={isLoading}
+        className="mb-6"
+      />
+
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {isLoading &&
           Array.from({ length: 6 }).map((_, i) => (
             <div
               // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
               key={i}
-              className="h-52 animate-pulse rounded-2xl border border-zinc-100 bg-zinc-100/70"
+              className="h-52 animate-pulse rounded-2xl border border-stone-100 bg-stone-100/70"
             />
           ))}
 
         {!isLoading &&
-          tournaments.map((tournament, i) => {
+          filtered.map((tournament, i) => {
             const s = surfaceStyle(tournament.surface);
             const { day, month } = dayMonth(tournament.startDate);
             return (
@@ -56,15 +74,15 @@ export default function TournamentsPage() {
                       <div className="flex items-start gap-4">
                         <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-court/5 py-2">
                           <span className="font-display text-2xl font-black leading-none text-court-ink">{day}</span>
-                          <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                          <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-stone-500">
                             {month}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <h2 className="truncate font-display text-lg font-bold text-court-ink">{tournament.name}</h2>
-                          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-zinc-500">
-                            <Building2 className="h-3.5 w-3.5" />
-                            Club anfitrión
+                          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-stone-500">
+                            <Building2 className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{clubNames.get(tournament.clubId) ?? "Club anfitrión"}</span>
                           </p>
                         </div>
                         <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} shrink-0 border ${s.border}`}>
@@ -72,7 +90,7 @@ export default function TournamentsPage() {
                         </Chip>
                       </div>
 
-                      <div className="mt-auto space-y-2 text-sm text-zinc-600">
+                      <div className="mt-auto space-y-2 text-sm text-stone-600">
                         <p className="flex items-center gap-2">
                           <Info className="h-4 w-4 shrink-0 text-court" />
                           <span className="truncate">
@@ -80,7 +98,7 @@ export default function TournamentsPage() {
                           </span>
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-xs text-zinc-500">
+                          <span className="flex items-center gap-2 text-xs text-stone-500">
                             <CalendarDays className="h-4 w-4 shrink-0 text-court" />
                             {formatDateRange(tournament.startDate, tournament.endDate)}
                           </span>
@@ -106,13 +124,21 @@ export default function TournamentsPage() {
       {!isLoading && tournaments.length === 0 && (
         <div className="rounded-2xl border border-dashed border-court/20 bg-white p-10 text-center">
           <p className="font-display text-lg font-bold">Aún no hay torneos</p>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-stone-500">
             Los clubes todavía no han publicado eventos aquí.{" "}
             <Link href="/sign-up" className="font-medium text-court hover:text-court-hover">
               Organiza uno →
             </Link>
           </p>
         </div>
+      )}
+
+      {!isLoading && tournaments.length > 0 && filtered.length === 0 && (
+        <EmptyState
+          icon={SearchX}
+          title="Sin resultados"
+          description={`Ningún torneo coincide con «${query.trim()}».`}
+        />
       )}
     </PageScaffold>
   );

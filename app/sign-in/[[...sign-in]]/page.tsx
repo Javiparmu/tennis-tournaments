@@ -30,7 +30,7 @@ export default function SignInPage() {
             <h2 className="font-display text-3xl font-black tracking-tight text-court-ink sm:text-4xl">
               Bienvenido de nuevo
             </h2>
-            <p className="mt-2 text-zinc-600">
+            <p className="mt-2 text-stone-600">
               ¿Aún no tienes cuenta?{" "}
               <Link href="/sign-up" className="font-semibold text-court hover:text-court-hover">
                 Regístrate

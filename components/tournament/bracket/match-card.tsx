@@ -1,6 +1,6 @@
 import { Chip } from "@heroui/react";
-import type { Match } from "@/models";
 import { formatScore } from "@/lib/score";
+import type { Match } from "@/models";
 import { MATCH_STATUS_LABEL, statusColor } from "./labels";
 
 function PlayerRow({ match, side }: { match: Match; side: 1 | 2 }) {
@@ -9,17 +9,15 @@ function PlayerRow({ match, side }: { match: Match; side: 1 | 2 }) {
   return (
     <div
       className={`flex items-center justify-between gap-2 px-3 py-1.5 ${
-        isWinner ? "font-semibold text-court-ink" : "text-zinc-600"
+        isWinner ? "font-semibold text-court-ink" : "text-stone-600"
       }`}
     >
       <span className="flex items-center gap-1.5 truncate">
         {isWinner && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-court" />}
-        {player?.name ?? <span className="text-zinc-400">Por definir</span>}
+        {player?.name ?? <span className="text-stone-400">Por definir</span>}
       </span>
       {player?.seed != null && (
-        <span className="shrink-0 rounded bg-zinc-100 px-1 text-[10px] font-medium text-zinc-500">
-          {player.seed}
-        </span>
+        <span className="shrink-0 rounded bg-stone-100 px-1 text-[10px] font-medium text-stone-500">{player.seed}</span>
       )}
     </div>
   );
@@ -34,7 +32,7 @@ export function MatchCard({ match, onSelect }: { match: Match; onSelect?: (match
         <PlayerRow match={match} side={2} />
       </div>
       <div className="flex items-center justify-between gap-2 border-t border-court/10 bg-court/5 px-3 py-1.5">
-        <span className="font-mono text-xs text-zinc-600">{formatScore(match.score, match.status)}</span>
+        <span className="font-mono text-xs text-stone-600">{formatScore(match.score, match.status)}</span>
         <Chip size="sm" variant="soft" color={statusColor(match.status)}>
           {MATCH_STATUS_LABEL[match.status]}
         </Chip>
@@ -51,7 +49,7 @@ export function MatchCard({ match, onSelect }: { match: Match; onSelect?: (match
       <button
         type="button"
         onClick={() => onSelect(match)}
-        className={`${base} cursor-pointer transition-shadow hover:shadow-md`}
+        className={`${base} cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court`}
       >
         {inner}
       </button>

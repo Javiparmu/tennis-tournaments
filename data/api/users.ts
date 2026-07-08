@@ -1,5 +1,6 @@
 import type {
   ProfileCalendarResponse,
+  RatingEvent,
   TournamentBasic,
   UpdateUserRequest,
   User,
@@ -19,6 +20,13 @@ export async function getUserTournaments(userId: number): Promise<TournamentBasi
 
 export async function getUser(userId: number): Promise<User> {
   return apiGet<User>(`/users/${userId}`);
+}
+
+// Public rating-history feed (newest-first), for the profile progression chart.
+// Backend clamps limit to [1, 200]; the default of 50 covers a typical season.
+export async function getUserRatingHistory(userId: number, limit = 50): Promise<RatingEvent[]> {
+  const query = new URLSearchParams({ limit: String(limit) }).toString();
+  return apiGet<RatingEvent[]>(`/users/${userId}/rating-history?${query}`);
 }
 
 export async function getUserByUsername(username: string): Promise<User> {

@@ -19,15 +19,44 @@ Three layers, strictly separated:
    - Get the token inside the `queryFn` / `mutationFn`: `async () => fn(await getToken(), …)` via `useAuth()`.
    - `staleTime: 30_000` is the default; `enabled` guards until required params (and `isLoaded && isSignedIn` for authed queries) are ready.
    - **Query keys come only from the `queryKeys` factory in `data/queries/keys.ts`.** Never inline a raw array. Add a new key to the factory.
-   - Mutations invalidate via the **broad `*Root` keys** (e.g. `queryKeys.myTrainingsRoot`, `queryKeys.userRoot`). These prefix-match every related key and are intentionally broad — do not narrow them.
+   - Mutations invalidate via the **broad `*Root` keys** (e.g. `queryKeys.myTrainingsRoot`, `queryKeys.userRoot`). These prefix-match every related key and are intentionally broad — do not narrow them. Invalidation runs in `onSettled`, **not** awaited — see **Optimistic updates** below.
 
 3. **Components** consume the query/mutation hooks. They never import from `data/api/*` directly.
+
+## Optimistic updates (mutations)
+
+Every create/update/delete mutation is wired for optimistic UX through the shared `optimistic()` factory in `data/queries/optimistic.ts`. Do not hand-roll `onMutate`/`onError`/`onSettled` per hook and do not put an awaited `invalidateQueries` in `onSuccess` (that blocks the modal on a full refetch after the write already succeeded — the bug this pattern replaced).
+
+Spread the factory into the mutation options and provide `mutationFn` yourself:
+
+```ts
+return useMutation({
+  mutationFn: async (payload: UpdateFooRequest) => updateFoo(await getToken(), payload),
+  ...optimistic<UpdateFooRequest, Foo>(queryClient, {
+    targets: (vars) => [{ key: queryKeys.foo(vars.id), patch: (prev) => (prev ? mergeDefined(prev as Foo, vars) : prev) }],
+    invalidate: (vars) => [queryKeys.foosRoot, queryKeys.foo(vars.id)],
+  }),
+});
+```
+
+What the factory does: `onMutate` cancels in-flight queries, snapshots each `targets` cache, and paints the optimistic value; `onError` rolls every snapshot back and fires a danger toast via `notifyMutationError`; `onSettled` invalidates the `invalidate` keys **without awaiting** (so `mutateAsync` resolves after one write, not after a refetch).
+
+Rules:
+- **Always pass explicit type args** — `optimistic<TVars, TData>(...)`. Omitting them lets contextual inference collapse `TData` and the options fail to type-check. Use `unknown` for `TData` when the hook doesn't read the response (reconcile-only).
+- **`targets` — paint only where a merge is safe and cheap:** single-entity caches (`mergeDefined`) and list deletes (`removeById`) / list-row edits (`updateById`), all pure helpers in `optimistic.ts`. A `patch` that returns `previous` unchanged is skipped (nothing snapshotted). Read a value the mutation vars don't carry (e.g. the old username) via `queryClient.getQueryData` inside `targets`.
+- **Reconcile-only (no `targets`) for fragile caches:** anything keyed by ranges/timezone (trainings, calendar) or with computed fan-out (match score, join-request decisions). The modal still closes fast and the background refetch fills it in — do **not** hand-splice those.
+- **`patch` stays pure** (side-effect free) so it's unit-testable; colocate cases in `optimistic.test.ts`.
+
+**Fire-and-close:** because these callbacks run from the mutation (not the component observer), they still fire after the triggering modal unmounts. So a handler may call `mutate(...)` / start the flow and `onClose()` immediately without awaiting — the paint, rollback, reconcile, and toast all still happen. Keep an awaited `mutateAsync` only when you need the response before closing (e.g. following a server-slugified value to a redirect URL).
+
+**Paint before slow side-effects, never after.** `onMutate` fires when `mutate` is *called*, so if a slow step (an image upload, say) runs before the call, the paint waits on it and stops being instant. Put the slow persistence step *inside* the mutation and paint a local stand-in up front: pass the durable step as a lazy callback the `mutationFn` awaits, and paint an immediately-available preview via a separate optimistic value (a data URL for an image — no revocation, survives unmount). `useUpdateMeMutation` + `profile-edit-modal.tsx` are the reference: the avatar paints from a data URL instantly, the Clerk upload runs in `mutationFn`, and the background refetch swaps in the real CDN URL.
 
 ## Errors and user-facing messages
 
 - `request()` throws `ApiError` with a Spanish, user-safe message.
 - To display any caught error, run it through `errorMessage(error)` (`lib/errors.ts`) — always returns a string.
-- Render it with `<FormError message={…} />` (`components/modal-shell.tsx`), gated on the query/mutation's `isError` / `error != null`, **not** on the message being truthy.
+- Render it with `<FormError message={…} />` (`components/modal-shell.tsx`), gated on the query/mutation's `isError` / `error != null`, **not** on the message being truthy. Use this for pre-submit validation and for modals that stay open on failure.
+- **Mutation failures also raise a danger toast** via `notifyMutationError` (`data/queries/notify.ts`, HeroUI `Toast.Provider` mounted in `app/providers.tsx`). This is the error channel for optimistic **fire-and-close** flows, where the modal is already gone — see **Optimistic updates**. Every mutation gets it through the `optimistic()` factory; do not call it by hand inside a mutation hook.
 - The `QueryClient` sets `defaultOptions.mutations.onError = console.error` (`app/providers.tsx`) as a last-resort floor so a failure is never fully silent. This is not a substitute for surfacing the error in the UI.
 
 ## Shared UI primitives

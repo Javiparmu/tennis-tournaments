@@ -4,7 +4,7 @@ import { Chip } from "@heroui/react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useUpcomingCalendarQuery } from "@/data/queries";
+import { useClubNameMap, useUpcomingCalendarQuery } from "@/data/queries";
 import { countdown, dayMonth } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
 
@@ -15,6 +15,7 @@ import { surfaceStyle } from "@/lib/surface";
 // breaks snap/click positions. Add the marquee later only if a passive demo is wanted.
 export function TournamentTimeline() {
   const { data: upcoming = [], isLoading } = useUpcomingCalendarQuery(10);
+  const clubNames = useClubNameMap();
   const scroller = useRef<HTMLDivElement>(null);
   // Only fade an edge when there is actually content scrolled off that side, so
   // the first card is never dimmed when the strip is at its start.
@@ -46,9 +47,7 @@ export function TournamentTimeline() {
     <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-lg backdrop-blur-md">
       <div className="mb-4 flex items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-3">
-          <h2 className="font-display text-xl font-black tracking-tight text-white md:text-2xl">
-            Próximos torneos
-          </h2>
+          <h2 className="font-display text-xl font-black tracking-tight text-white md:text-2xl">Próximos torneos</h2>
           {!isLoading && upcoming.length > 0 ? (
             <span className="rounded-full bg-ball-bright/15 px-2.5 py-0.5 text-xs font-bold text-ball-bright">
               {upcoming.length}
@@ -114,13 +113,13 @@ export function TournamentTimeline() {
                 <span className="absolute inset-y-4 left-0 w-1 rounded-full" style={{ background: s.hex }} />
                 <div className="ml-1.5 flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-court/5 py-2">
                   <span className="font-display text-2xl font-black leading-none text-court-ink">{day}</span>
-                  <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">{month}</span>
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-stone-500">{month}</span>
                 </div>
                 <div className="min-w-0 flex-1 py-0.5">
                   <p className="truncate font-display text-base font-bold text-court-ink group-hover:text-court">
                     {t.name}
                   </p>
-                  <p className="truncate text-xs text-zinc-500">Club #{t.clubId}</p>
+                  <p className="truncate text-xs text-stone-500">{clubNames.get(t.clubId) ?? "Club anfitrión"}</p>
                   <div className="mt-2.5 flex items-center gap-2">
                     <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} border ${s.border}`}>
                       {s.label}

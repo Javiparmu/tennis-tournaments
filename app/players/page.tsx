@@ -43,7 +43,7 @@ function RankingCta() {
   }
 
   return (
-    <div className="mt-6 flex min-h-[68px] flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4">
+    <div className="mt-4 flex min-h-[60px] flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-3">
       {content}
     </div>
   );
@@ -52,8 +52,9 @@ function RankingCta() {
 export default function ProfilePage() {
   return (
     <PageScaffold>
-      <div className="mb-8">
+      <div className="mb-6">
         <PageHero
+          compact
           eyebrow="Jugadores"
           title="Ranking de jugadores"
           accent=" jugadores"

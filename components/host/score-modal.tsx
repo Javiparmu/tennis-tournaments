@@ -3,8 +3,8 @@
 import { Button, Form } from "@heroui/react";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import type { Match, UpdateMatchScoreRequest } from "@/models";
-import { ModalShell, inputClass } from "@/components/modal-shell";
 
 type ScoreModalProps = {
   match: Match;
@@ -40,7 +40,12 @@ export function ScoreModal({ match, onClose, onSubmit, isSubmitting, submitError
   }
 
   return (
-    <ModalShell title="Resultado del partido" subtitle={`${name1} vs ${name2}`} onClose={onClose} disabled={isSubmitting}>
+    <ModalShell
+      title="Resultado del partido"
+      subtitle={`${name1} vs ${name2}`}
+      onClose={onClose}
+      disabled={isSubmitting}
+    >
       <Form
         className="space-y-4"
         onSubmit={async (event) => {
@@ -69,7 +74,7 @@ export function ScoreModal({ match, onClose, onSubmit, isSubmitting, submitError
           await onSubmit({ score: { sets } });
         }}
       >
-        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-xs font-semibold uppercase tracking-wide text-stone-400">
           <span>Set</span>
           <span className="w-14 text-center">{name1.split(" ")[0]}</span>
           <span className="w-14 text-center">{name2.split(" ")[0]}</span>
@@ -79,7 +84,7 @@ export function ScoreModal({ match, onClose, onSubmit, isSubmitting, submitError
           // biome-ignore lint/suspicious/noArrayIndexKey: positional set rows
           <div key={index} className="space-y-2 rounded-xl bg-court/5 p-3">
             <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2">
-              <span className="text-sm font-medium text-zinc-600">Set {index + 1}</span>
+              <span className="text-sm font-medium text-stone-600">Set {index + 1}</span>
               <input
                 type="number"
                 min="0"
@@ -98,13 +103,13 @@ export function ScoreModal({ match, onClose, onSubmit, isSubmitting, submitError
                 type="button"
                 aria-label="Eliminar set"
                 onClick={() => setRows((current) => current.filter((_, i) => i !== index))}
-                className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 hover:text-rose-600"
+                className="grid h-8 w-8 place-items-center rounded-lg text-stone-400 hover:text-rose-600"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="flex items-center gap-2 pl-1">
-              <span className="text-xs text-zinc-400">Tie-break</span>
+              <span className="text-xs text-stone-400">Tie-break</span>
               <input
                 type="number"
                 min="0"
@@ -138,7 +143,7 @@ export function ScoreModal({ match, onClose, onSubmit, isSubmitting, submitError
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

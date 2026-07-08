@@ -55,8 +55,7 @@ export function AuthBrandPanel({
 
       <FadeContent delay={0.1} className="max-w-md">
         <h1 className="font-display text-4xl font-black leading-[1.05] tracking-tight md:text-5xl">
-          {heading}{" "}
-          <RotatingText words={words} className="text-ball-bright" />
+          {heading} <RotatingText words={words} className="text-ball-bright" />
         </h1>
         <p className="mt-5 text-lg text-white/70">{pitch}</p>
 
@@ -73,9 +72,7 @@ export function AuthBrandPanel({
       </FadeContent>
 
       <FadeContent delay={0.2}>
-        <p className="text-sm text-white/50">
-          Miles de partidos jugados · Clubes de toda España · Sube en el ranking
-        </p>
+        <p className="text-sm text-white/50">Miles de partidos jugados · Clubes de toda España · Sube en el ranking</p>
       </FadeContent>
     </section>
   );

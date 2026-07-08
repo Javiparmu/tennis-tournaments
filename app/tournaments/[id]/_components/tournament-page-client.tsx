@@ -1,7 +1,20 @@
 "use client";
 
 import { Button, Chip } from "@heroui/react";
-import { ArrowLeft, CalendarDays, Gauge, Layers, Pencil, Play, RotateCcw, Trophy, Users, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  CircleAlert,
+  Gauge,
+  Layers,
+  Pencil,
+  Play,
+  RotateCcw,
+  Trophy,
+  Users,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -19,6 +32,7 @@ import { ManageJoinRequests } from "@/components/tournament/manage-join-requests
 import {
   useAddTournamentPlayersMutation,
   useCanManageClub,
+  useClubNameMap,
   useCreatePhaseMutation,
   useRemoveTournamentPlayerMutation,
   useResetTournamentMutation,
@@ -70,7 +84,7 @@ const STANDING_STYLE: Record<PlayerStatus, string> = {
   champion: "bg-ball/20 text-court border-court/30",
   in: "bg-court/10 text-court border-court/30",
   out: "bg-rose-50 text-rose-600 border-rose-200",
-  pending: "bg-zinc-100 text-zinc-500 border-zinc-200",
+  pending: "bg-stone-100 text-stone-500 border-stone-200",
 };
 
 const STANDING_LABEL: Record<PlayerStatus, string> = {
@@ -94,6 +108,7 @@ export default function TournamentDetailPage() {
   const phases = phasesQuery.data ?? [];
   const players = playersQuery.data ?? [];
   const canManage = useCanManageClub(tournament?.clubId);
+  const clubNames = useClubNameMap();
 
   const updateTournament = useUpdateTournamentMutation();
   const startTournament = useStartTournamentMutation();
@@ -171,7 +186,7 @@ export default function TournamentDetailPage() {
     <PageScaffold>
       <Link
         href="/tournaments"
-        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 hover:text-court"
+        className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-court"
       >
         <ArrowLeft className="h-4 w-4" />
         Todos los torneos
@@ -179,10 +194,14 @@ export default function TournamentDetailPage() {
 
       {!isValid && <p className="text-rose-600">Identificador de torneo no válido.</p>}
       {isValid && tournamentQuery.isLoading && (
-        <div className="h-40 animate-pulse rounded-3xl border border-zinc-100 bg-zinc-100/70" />
+        <div className="h-40 animate-pulse rounded-3xl border border-stone-100 bg-stone-100/70" />
       )}
       {isValid && (tournamentQuery.error || (!tournamentQuery.isLoading && !tournament)) && (
-        <p className="text-rose-600">No se pudo cargar este torneo.</p>
+        <EmptyState
+          icon={CircleAlert}
+          title="No se pudo cargar este torneo"
+          description="Puede que el torneo no exista o que haya un problema de conexión. Vuelve a intentarlo."
+        />
       )}
 
       {tournament && (
@@ -222,7 +241,10 @@ export default function TournamentDetailPage() {
                 <Gauge className="h-4 w-4 text-white/50" />
                 {phases.length} fases
               </span>
-              <span className="flex items-center gap-2">Club anfitrión</span>
+              <span className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-white/50" />
+                {clubNames.get(tournament.clubId) ?? "Club anfitrión"}
+              </span>
             </div>
 
             {canManage ? (
@@ -305,7 +327,7 @@ export default function TournamentDetailPage() {
                             )}
                           </span>
                           <span className="flex shrink-0 items-center gap-2">
-                            <span className="tabular-nums text-xs text-zinc-500">
+                            <span className="tabular-nums text-xs text-stone-500">
                               {wins}V · {losses}D
                             </span>
                             <Chip size="sm" variant="soft" className={`border ${STANDING_STYLE[status]}`}>
@@ -340,13 +362,13 @@ export default function TournamentDetailPage() {
                           )}
                         </span>
                         <span className="flex items-center gap-2">
-                          {player.seed != null && <span className="text-xs text-zinc-400">#{player.seed}</span>}
+                          {player.seed != null && <span className="text-xs text-stone-400">#{player.seed}</span>}
                           {canManage ? (
                             <button
                               type="button"
                               aria-label={`Eliminar ${player.name}`}
                               onClick={() => removePlayer.mutate({ id, playerId: player.id })}
-                              className="text-zinc-300 hover:text-rose-600"
+                              className="rounded text-stone-300 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -374,7 +396,7 @@ export default function TournamentDetailPage() {
                         <p className="text-sm font-semibold text-court-ink">
                           {phase.phaseOrder}. {PHASE_FORMAT_LABEL[phase.format] ?? phase.format}
                         </p>
-                        <p className="mt-0.5 text-xs text-zinc-500">{describeConfig(phase.configuration)}</p>
+                        <p className="mt-0.5 text-xs text-stone-500">{describeConfig(phase.configuration)}</p>
                       </li>
                     ))}
                   </ol>
@@ -385,11 +407,18 @@ export default function TournamentDetailPage() {
             <section>
               <h2 className="mb-4 font-display text-2xl font-black tracking-tight">Cuadro</h2>
               {bracketQuery.isLoading && (
-                <div className="h-48 animate-pulse rounded-2xl border border-zinc-100 bg-zinc-100/70" />
+                <div className="h-48 animate-pulse rounded-2xl border border-stone-100 bg-stone-100/70" />
               )}
-              {bracketQuery.error && <p className="text-sm text-rose-600">No se pudo cargar el cuadro.</p>}
+              {bracketQuery.error && (
+                <EmptyState
+                  size="compact"
+                  icon={CircleAlert}
+                  title="No se pudo cargar el cuadro"
+                  description="Vuelve a intentarlo en un momento."
+                />
+              )}
               {canManage && (
-                <p className="mb-3 text-sm text-zinc-500">Toca un partido para introducir o editar su resultado.</p>
+                <p className="mb-3 text-sm text-stone-500">Toca un partido para introducir o editar su resultado.</p>
               )}
               {bracketQuery.data && (
                 <Bracket bracket={bracketQuery.data} onSelectMatch={canManage ? setScoringMatch : undefined} />

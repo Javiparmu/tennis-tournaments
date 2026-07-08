@@ -36,20 +36,33 @@ type PageHeroProps = {
   /** Meta rows, chips, or action buttons rendered under the copy. */
   children?: ReactNode;
   className?: string;
+  /** Tighter padding + smaller title, for pages where the content below the hero
+      (e.g. the ranking list) is the point and the band should get out of the way. */
+  compact?: boolean;
 };
 
 // Dark night-court hero band shared across inner pages — the same language as the
 // landing hero (gradient + self-drawing chalk lines + floodlight + lime accent),
 // contained (rounded) so it drops into each page's existing max-w-6xl <main>.
-export function PageHero({ eyebrow, title, accent, subtitle, children, className = "" }: PageHeroProps) {
+export function PageHero({
+  eyebrow,
+  title,
+  accent,
+  subtitle,
+  children,
+  className = "",
+  compact = false,
+}: PageHeroProps) {
   const lead = accent && title.endsWith(accent) ? title.slice(0, title.length - accent.length) : title;
 
   return (
-    <PageHeroFrame className={`p-8 md:p-10 ${className}`.trim()}>
+    <PageHeroFrame className={`${compact ? "p-6 md:p-7" : "p-8 md:p-10"} ${className}`.trim()}>
       {eyebrow ? (
         <p className="font-display text-sm font-bold uppercase tracking-wide text-ball-bright/90">{eyebrow}</p>
       ) : null}
-      <h1 className="mt-2 font-display text-4xl font-black tracking-tight md:text-5xl">
+      <h1
+        className={`mt-2 font-display font-black tracking-tight ${compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl"}`}
+      >
         {lead}
         {accent && lead !== title ? <span className="text-ball-bright">{accent}</span> : null}
       </h1>

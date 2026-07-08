@@ -2,9 +2,9 @@
 
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import { SURFACE_LABEL } from "@/lib/surface";
 import type { SurfaceType, TournamentBasic } from "@/models";
-import { ModalShell, inputClass } from "@/components/modal-shell";
 
 export type TournamentFormValues = {
   name: string;
@@ -32,7 +32,13 @@ function toLocalInput(iso: string | null): string {
 
 const SURFACES: SurfaceType[] = ["CLAY", "HARD", "GRASS"];
 
-export function TournamentFormModal({ tournament, onClose, onSubmit, isSubmitting, submitError }: TournamentFormModalProps) {
+export function TournamentFormModal({
+  tournament,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  submitError,
+}: TournamentFormModalProps) {
   const [name, setName] = useState(tournament?.name ?? "");
   const [description, setDescription] = useState(tournament?.description ?? "");
   const [surface, setSurface] = useState<string>(tournament?.surface ?? "");
@@ -74,16 +80,28 @@ export function TournamentFormModal({ tournament, onClose, onSubmit, isSubmittin
           });
         }}
       >
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Nombre</span>
-          <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Open de Primavera 2026" className={inputClass} />
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Open de Primavera 2026"
+            className={inputClass}
+          />
         </label>
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Descripción</span>
-          <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Formato, premios, contacto…" className={inputClass} />
+          <textarea
+            rows={2}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Formato, premios, contacto…"
+            className={inputClass}
+          />
         </label>
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Superficie</span>
             <select value={surface} onChange={(e) => setSurface(e.target.value)} className={inputClass}>
               <option value="">Sin especificar</option>
@@ -94,13 +112,25 @@ export function TournamentFormModal({ tournament, onClose, onSubmit, isSubmittin
               ))}
             </select>
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Inicio</span>
-            <input required type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
+            <input
+              required
+              type="datetime-local"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={inputClass}
+            />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Fin</span>
-            <input required type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputClass} />
+            <input
+              required
+              type="datetime-local"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={inputClass}
+            />
           </label>
         </div>
 
@@ -108,7 +138,7 @@ export function TournamentFormModal({ tournament, onClose, onSubmit, isSubmittin
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

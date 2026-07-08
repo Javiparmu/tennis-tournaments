@@ -39,22 +39,14 @@ export function TrainingSection({
 }) {
   return (
     <Card className="rounded-2xl border border-court/10 bg-white shadow-sm">
-      <Card.Header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="font-display text-lg font-bold">Sesiones de entrenamiento</p>
-          <p className="text-sm text-zinc-500">
-            {isOwner
-              ? "Registra nuevas sesiones, añade notas y elige si cada una es pública o privada."
-              : "Aquí solo aparecen las sesiones de entrenamiento que este jugador comparte públicamente."}
-          </p>
-        </div>
+      <Card.Content className="gap-3 p-5">
         {isOwner ? (
-          <Button className="bg-court text-ball-bright hover:bg-court-hover" onPress={onCreate}>
-            Añadir sesión de entrenamiento
-          </Button>
+          <div className="flex justify-end">
+            <Button size="sm" className="bg-court text-ball-bright hover:bg-court-hover" onPress={onCreate}>
+              Añadir sesión
+            </Button>
+          </div>
         ) : null}
-      </Card.Header>
-      <Card.Content className="gap-3 pt-0">
         {trainings.length === 0 ? (
           <EmptyState
             size="compact"
@@ -64,11 +56,11 @@ export function TrainingSection({
           />
         ) : null}
         {trainings.map((training) => (
-          <div key={training.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <div key={training.id} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-zinc-900">{formatTrainingDate(training.trainingDate)}</p>
+                  <p className="font-semibold text-stone-900">{formatTrainingDate(training.trainingDate)}</p>
                   <Chip color="default" variant="soft">
                     {getTrainingDurationLabel(training.durationMinutes)}
                   </Chip>
@@ -76,8 +68,8 @@ export function TrainingSection({
                     {VISIBILITY_LABEL[training.visibility] ?? training.visibility}
                   </Chip>
                 </div>
-                <p className="mt-2 text-sm text-zinc-600">{training.notes ?? "No hay notas para esta sesión."}</p>
-                <p className="mt-2 text-xs text-zinc-400">
+                <p className="mt-2 text-sm text-stone-600">{training.notes ?? "No hay notas para esta sesión."}</p>
+                <p className="mt-2 text-xs text-stone-400">
                   Registrado {formatDateTime(training.createdAt)}
                   {training.updatedAt ? ` · Actualizado ${formatDateTime(training.updatedAt)}` : ""}
                 </p>
@@ -85,7 +77,7 @@ export function TrainingSection({
 
               {isOwner ? (
                 <div className="flex gap-2">
-                  <Button variant="ghost" className="text-zinc-700" onPress={() => onEdit(training)}>
+                  <Button variant="ghost" className="text-stone-700" onPress={() => onEdit(training)}>
                     Editar
                   </Button>
                   <Button

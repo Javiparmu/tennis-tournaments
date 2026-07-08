@@ -35,12 +35,7 @@ export function CourtLinesSvg({
   const draw = animate && !reduced;
 
   return (
-    <svg
-      viewBox="0 0 1189 549"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-      className={className}
-    >
+    <svg viewBox="0 0 1189 549" preserveAspectRatio="xMidYMid slice" aria-hidden="true" className={className}>
       {LINES.map(([d, step]) =>
         draw ? (
           <motion.path

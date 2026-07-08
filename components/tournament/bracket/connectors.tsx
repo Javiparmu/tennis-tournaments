@@ -32,9 +32,7 @@ export function Connectors({
       const midX = startX + (endX - startX) / 2;
       const child = byId.get(dep.requiredMatchId);
       const highlight =
-        child != null &&
-        child.winnerId != null &&
-        (child.status === "COMPLETED" || child.status === "WALKOVER");
+        child != null && child.winnerId != null && (child.status === "COMPLETED" || child.status === "WALKOVER");
       edges.push({
         key: `${dep.requiredMatchId}->${parent.id}`,
         d: `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`,

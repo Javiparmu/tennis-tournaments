@@ -4,7 +4,7 @@ import { Card } from "@heroui/react";
 import type { ReactNode } from "react";
 
 export const inputClass =
-  "w-full rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-court";
+  "w-full rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-court";
 
 // Shared inline validation/submit error line. Renders nothing when empty so
 // call sites can pass an error directly without their own guard.
@@ -41,7 +41,7 @@ export function ModalShell({
   children,
 }: ModalShellProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 px-4 py-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 px-4 py-8">
       <button
         type="button"
         aria-label="Cerrar"
@@ -55,7 +55,7 @@ export function ModalShell({
         <Card.Header className="flex items-start justify-between gap-4 p-5 pb-0">
           <div>
             <p className="font-display text-lg font-bold text-court-ink">{title}</p>
-            {subtitle ? <p className="text-sm text-zinc-500">{subtitle}</p> : null}
+            {subtitle ? <p className="text-sm text-stone-500">{subtitle}</p> : null}
           </div>
           {headerExtra}
         </Card.Header>

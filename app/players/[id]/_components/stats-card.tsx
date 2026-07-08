@@ -1,16 +1,14 @@
-import { CalendarDays, Dumbbell, Medal, Target, TrendingUp, Trophy } from "lucide-react";
+import { Dumbbell, Target, Trophy, Zap } from "lucide-react";
 
+// Compact stat strip for the Resumen dashboard (light surface). The rating headline
+// lives in the profile header, so it is intentionally not repeated here.
 export function StatsCard({
-  rating,
-  totalEvents,
   scheduledMatches,
   playedMatches,
   trainings,
   racketsCount,
   isOwner,
 }: {
-  rating: number;
-  totalEvents: number;
   scheduledMatches: number;
   playedMatches: number;
   trainings: number;
@@ -18,24 +16,26 @@ export function StatsCard({
   isOwner: boolean;
 }) {
   const tiles = [
-    { icon: TrendingUp, value: rating, label: "Puntos" },
-    { icon: CalendarDays, value: totalEvents, label: "Eventos en vista" },
-    { icon: Target, value: scheduledMatches, label: "Programados / en juego" },
+    { icon: Zap, value: scheduledMatches, label: "Programados" },
     { icon: Trophy, value: playedMatches, label: "Jugados" },
-    { icon: Dumbbell, value: trainings, label: "Entrenamientos" },
-    { icon: Medal, value: racketsCount, label: isOwner ? "Tus raquetas" : "Raquetas públicas" },
+    { icon: Dumbbell, value: trainings, label: "Entrenos" },
+    { icon: Target, value: racketsCount, label: isOwner ? "Raquetas" : "Raquetas públicas" },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {tiles.map((tile) => (
         <div
           key={tile.label}
-          className="rounded-xl border border-white/10 bg-white/[0.06] p-3 text-center backdrop-blur-md"
+          className="flex items-center gap-3 rounded-2xl border border-court/10 bg-white p-3 shadow-sm"
         >
-          <tile.icon className="mx-auto h-4 w-4 text-ball-bright" />
-          <p className="mt-1 font-display text-2xl font-black text-white">{tile.value}</p>
-          <p className="text-[11px] text-white/70">{tile.label}</p>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-court/5">
+            <tile.icon className="h-4 w-4 text-court" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-xl font-black leading-none text-court-ink tabular-nums">{tile.value}</p>
+            <p className="truncate text-[11px] text-stone-500">{tile.label}</p>
+          </div>
         </div>
       ))}
     </div>

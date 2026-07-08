@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createRacket,
   createStringing,
@@ -17,10 +17,12 @@ import {
 import type {
   CreateRacketRequest,
   CreateRacketStringingRequest,
+  RacketSummary,
   UpdateRacketRequest,
   UpdateRacketStringingRequest,
 } from "@/models";
 import { queryKeys } from "./keys";
+import { optimistic, removeById } from "./optimistic";
 
 export function usePublicRacketsQuery(userId?: number) {
   return useQuery({
@@ -62,15 +64,11 @@ export function useMyRacketDetailsQuery(racketId?: number, enabled = true) {
   });
 }
 
-async function invalidateRackets(
-  queryClient: ReturnType<typeof useQueryClient>,
-  racketId?: number,
-) {
-  await queryClient.invalidateQueries({ queryKey: queryKeys.myRackets });
-  await queryClient.invalidateQueries({ queryKey: queryKeys.publicRacketsRoot });
-  if (racketId != null) {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.myRacketDetails(racketId) });
-  }
+// Keys touched by any racket/stringing write, for background reconcile on settle.
+function racketKeys(racketId?: number): QueryKey[] {
+  const keys: QueryKey[] = [queryKeys.myRackets, queryKeys.publicRacketsRoot];
+  if (racketId != null) keys.push(queryKeys.myRacketDetails(racketId));
+  return keys;
 }
 
 export function useCreateRacketMutation() {
@@ -79,7 +77,7 @@ export function useCreateRacketMutation() {
 
   return useMutation({
     mutationFn: async (payload: CreateRacketRequest) => createRacket(await getToken(), payload),
-    onSuccess: () => invalidateRackets(queryClient),
+    ...optimistic<CreateRacketRequest, unknown>(queryClient, { invalidate: () => racketKeys() }),
   });
 }
 
@@ -90,7 +88,9 @@ export function useUpdateRacketMutation() {
   return useMutation({
     mutationFn: async ({ racketId, payload }: { racketId: number; payload: UpdateRacketRequest }) =>
       updateRacket(await getToken(), racketId, payload),
-    onSuccess: (racket) => invalidateRackets(queryClient, racket.id),
+    ...optimistic<{ racketId: number; payload: UpdateRacketRequest }, unknown>(queryClient, {
+      invalidate: ({ racketId }) => racketKeys(racketId),
+    }),
   });
 }
 
@@ -100,7 +100,12 @@ export function useDeleteRacketMutation() {
 
   return useMutation({
     mutationFn: async (racketId: number) => deleteRacket(await getToken(), racketId),
-    onSuccess: () => invalidateRackets(queryClient),
+    ...optimistic<number, void>(queryClient, {
+      targets: (racketId) => [
+        { key: queryKeys.myRackets, patch: (prev) => removeById(prev as RacketSummary[] | undefined, racketId) },
+      ],
+      invalidate: () => racketKeys(),
+    }),
   });
 }
 
@@ -111,7 +116,9 @@ export function useCreateStringingMutation() {
   return useMutation({
     mutationFn: async ({ racketId, payload }: { racketId: number; payload: CreateRacketStringingRequest }) =>
       createStringing(await getToken(), racketId, payload),
-    onSuccess: (_entry, { racketId }) => invalidateRackets(queryClient, racketId),
+    ...optimistic<{ racketId: number; payload: CreateRacketStringingRequest }, unknown>(queryClient, {
+      invalidate: ({ racketId }) => racketKeys(racketId),
+    }),
   });
 }
 
@@ -129,7 +136,12 @@ export function useUpdateStringingMutation() {
       stringingId: number;
       payload: UpdateRacketStringingRequest;
     }) => updateStringing(await getToken(), racketId, stringingId, payload),
-    onSuccess: (_entry, { racketId }) => invalidateRackets(queryClient, racketId),
+    ...optimistic<{ racketId: number; stringingId: number; payload: UpdateRacketStringingRequest }, unknown>(
+      queryClient,
+      {
+        invalidate: ({ racketId }) => racketKeys(racketId),
+      },
+    ),
   });
 }
 
@@ -140,6 +152,8 @@ export function useDeleteStringingMutation() {
   return useMutation({
     mutationFn: async ({ racketId, stringingId }: { racketId: number; stringingId: number }) =>
       deleteStringing(await getToken(), racketId, stringingId),
-    onSuccess: (_void, { racketId }) => invalidateRackets(queryClient, racketId),
+    ...optimistic<{ racketId: number; stringingId: number }, void>(queryClient, {
+      invalidate: ({ racketId }) => racketKeys(racketId),
+    }),
   });
 }

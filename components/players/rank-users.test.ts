@@ -53,10 +53,7 @@ describe("rankUsers", () => {
   });
 
   it("returns a new array without mutating the input", () => {
-    const input = [
-      user({ id: 1, username: "a", rating: 1000 }),
-      user({ id: 2, username: "b", rating: 1500 }),
-    ];
+    const input = [user({ id: 1, username: "a", rating: 1000 }), user({ id: 2, username: "b", rating: 1500 })];
     const ranked = rankUsers(input);
     expect(ranked).not.toBe(input);
     expect(input.map((u) => u.username)).toEqual(["a", "b"]);

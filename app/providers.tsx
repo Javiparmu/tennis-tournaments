@@ -1,5 +1,6 @@
 "use client";
 
+import { Toast } from "@heroui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -21,5 +22,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {/* Imperative toast queue (lives outside React) — fired from mutation onError
+          via notifyMutationError so optimistic fire-and-close flows can still
+          surface failures after their modal has closed. */}
+      <Toast.Provider placement="bottom end" />
+    </QueryClientProvider>
+  );
 }

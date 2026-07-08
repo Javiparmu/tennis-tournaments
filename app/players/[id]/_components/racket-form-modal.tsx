@@ -72,7 +72,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
           });
         }}
       >
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Nombre</span>
           <input
             required
@@ -84,7 +84,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
         </label>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Marca</span>
             <input
               value={form.brand}
@@ -93,7 +93,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
               className={inputClass}
             />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Modelo</span>
             <input
               value={form.model}
@@ -105,7 +105,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Patrón de cuerdas</span>
             <input
               value={form.stringPattern}
@@ -114,7 +114,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
               className={inputClass}
             />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Visibilidad</span>
             <select
               value={form.visibility}
@@ -133,7 +133,7 @@ export function RacketFormModal({ racket, onClose, onSubmit, isSubmitting, submi
         <FormError message={submitError} />
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>

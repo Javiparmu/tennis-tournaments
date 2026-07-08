@@ -30,10 +30,10 @@ export function ConfirmDialog({
   return (
     <ModalShell title={title} onClose={onClose} disabled={isPending} size="md">
       <div className="space-y-4">
-        {description ? <p className="text-sm text-zinc-600">{description}</p> : null}
+        {description ? <p className="text-sm text-stone-600">{description}</p> : null}
         <FormError message={error} />
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isPending}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isPending}>
             Cancelar
           </Button>
           <Button

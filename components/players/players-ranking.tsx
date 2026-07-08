@@ -1,9 +1,12 @@
 "use client";
 
-import { Trophy } from "lucide-react";
+import { CircleAlert, SearchX, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { filterRankedUsers } from "@/components/players/filter-ranked-users";
 import { rankUsers } from "@/components/players/rank-users";
+import { SearchInput } from "@/components/search-input";
 import { useUsersQuery } from "@/data/queries";
 import type { User } from "@/models";
 
@@ -24,7 +27,7 @@ function TableHeader() {
   return (
     <div
       aria-hidden
-      className={`${GRID} border-b border-court/10 px-4 py-3 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-400 sm:px-5`}
+      className={`${GRID} border-b border-court/10 px-4 py-3 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-stone-400 sm:px-5`}
     >
       <span>Pos</span>
       <span>Jugador</span>
@@ -90,12 +93,8 @@ function RankingRow({ user, position }: { user: User; position: number }) {
           <span className="block font-mono text-2xl font-bold tabular-nums leading-none text-ball-bright">
             {rating}
           </span>
-          <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">
-            puntos
-          </span>
-          <span className="mt-1 block font-mono text-[11px] tabular-nums text-white/45">
-            {wins} victorias
-          </span>
+          <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-white/50">puntos</span>
+          <span className="mt-1 block font-mono text-[11px] tabular-nums text-white/45">{wins} victorias</span>
         </span>
       </Link>
     );
@@ -109,28 +108,20 @@ function RankingRow({ user, position }: { user: User; position: number }) {
         isPodium ? "bg-court/[0.03]" : ""
       }`}
     >
-      <span
-        className={`font-display text-xl font-black leading-none ${isPodium ? "text-court" : "text-zinc-300"}`}
-      >
+      <span className={`font-display text-xl font-black leading-none ${isPodium ? "text-court" : "text-stone-300"}`}>
         {position}
       </span>
       <span className="flex min-w-0 items-center gap-3">
         <Avatar imageUrl={user.imageUrl} name={displayName} />
         <span className="min-w-0">
           <span className="block truncate font-semibold text-court-ink">{displayName}</span>
-          <span className="block truncate text-sm text-zinc-500">@{user.username}</span>
+          <span className="block truncate text-sm text-stone-500">@{user.username}</span>
         </span>
       </span>
       <span className="text-right">
-        <span className="block font-mono text-lg font-bold tabular-nums leading-none text-court-ink">
-          {rating}
-        </span>
-        <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-400">
-          puntos
-        </span>
-        <span className="mt-1 block font-mono text-[11px] tabular-nums text-zinc-400">
-          {wins} victorias
-        </span>
+        <span className="block font-mono text-lg font-bold tabular-nums leading-none text-court-ink">{rating}</span>
+        <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.18em] text-stone-400">puntos</span>
+        <span className="mt-1 block font-mono text-[11px] tabular-nums text-stone-400">{wins} victorias</span>
       </span>
     </Link>
   );
@@ -167,13 +158,32 @@ function SkeletonRows() {
 
 export function PlayersRanking() {
   const { data, isLoading, isError } = useUsersQuery();
+  const [query, setQuery] = useState("");
 
   if (isLoading) {
-    return <SkeletonRows />;
+    return (
+      <div>
+        <SearchInput
+          value=""
+          onChange={() => {}}
+          placeholder="Buscar jugador…"
+          label="Buscar jugador"
+          disabled
+          className="mb-4"
+        />
+        <SkeletonRows />
+      </div>
+    );
   }
 
   if (isError) {
-    return <p className="text-rose-600">No se pudo cargar el ranking.</p>;
+    return (
+      <EmptyState
+        icon={CircleAlert}
+        title="No se pudo cargar el ranking"
+        description="Hubo un problema al cargar la clasificación. Vuelve a intentarlo en un momento."
+      />
+    );
   }
 
   const ranked = rankUsers(data ?? []);
@@ -188,15 +198,34 @@ export function PlayersRanking() {
     );
   }
 
+  const rows = filterRankedUsers(ranked, query);
+
   return (
-    <TableShell>
-      <ol className="divide-y divide-court/5">
-        {ranked.map((user, index) => (
-          <li key={user.id}>
-            <RankingRow user={user} position={index + 1} />
-          </li>
-        ))}
-      </ol>
-    </TableShell>
+    <div>
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        placeholder="Buscar jugador…"
+        label="Buscar jugador"
+        className="mb-4"
+      />
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={SearchX}
+          title="Sin resultados"
+          description={`Ningún jugador coincide con «${query.trim()}».`}
+        />
+      ) : (
+        <TableShell>
+          <ol className="divide-y divide-court/5">
+            {rows.map(({ user, position }) => (
+              <li key={user.id}>
+                <RankingRow user={user} position={position} />
+              </li>
+            ))}
+          </ol>
+        </TableShell>
+      )}
+    </div>
   );
 }

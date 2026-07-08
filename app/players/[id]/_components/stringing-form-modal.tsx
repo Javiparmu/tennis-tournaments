@@ -3,11 +3,13 @@
 import { Button } from "@heroui/react";
 import { useState } from "react";
 import { FormError, inputClass, ModalShell } from "@/components/modal-shell";
-import type { CreateRacketStringingRequest } from "@/models";
+import type { CreateRacketStringingRequest, RacketStringingHistoryEntry } from "@/models";
 import { toLocalDayKey } from "./date-utils";
 
 type StringingFormModalProps = {
   racketName: string;
+  /** When set, the form edits this entry instead of creating a new one. */
+  entry?: RacketStringingHistoryEntry | null;
   onClose: () => void;
   onSubmit: (payload: CreateRacketStringingRequest) => Promise<void>;
   isSubmitting: boolean;
@@ -25,25 +27,31 @@ type FormState = {
 
 export function StringingFormModal({
   racketName,
+  entry,
   onClose,
   onSubmit,
   isSubmitting,
   submitError,
 }: StringingFormModalProps) {
+  const isEditing = entry != null;
   const [form, setForm] = useState<FormState>(() => ({
-    stringingDate: toLocalDayKey(new Date()),
-    mainsTensionKg: "",
-    crossesTensionKg: "",
-    mainStringType: "",
-    crossStringType: "",
-    performanceNotes: "",
+    stringingDate: entry?.stringingDate ?? toLocalDayKey(new Date()),
+    mainsTensionKg: entry ? String(entry.mainsTensionKg) : "",
+    crossesTensionKg: entry ? String(entry.crossesTensionKg) : "",
+    mainStringType: entry?.mainStringType ?? "",
+    crossStringType: entry?.crossStringType ?? "",
+    performanceNotes: entry?.performanceNotes ?? "",
   }));
   const [validationError, setValidationError] = useState<string | null>(null);
 
   return (
     <ModalShell
-      title="Añadir encordado"
-      subtitle={`Nuevo registro de encordado para ${racketName}.`}
+      title={isEditing ? "Editar encordado" : "Añadir encordado"}
+      subtitle={
+        isEditing
+          ? `Actualiza el registro de encordado de ${racketName}.`
+          : `Nuevo registro de encordado para ${racketName}.`
+      }
       onClose={onClose}
       disabled={isSubmitting}
     >
@@ -73,7 +81,7 @@ export function StringingFormModal({
         }}
       >
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Fecha</span>
             <input
               required
@@ -83,7 +91,7 @@ export function StringingFormModal({
               className={inputClass}
             />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Verticales (kg)</span>
             <input
               required
@@ -96,7 +104,7 @@ export function StringingFormModal({
               className={inputClass}
             />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Horizontales (kg)</span>
             <input
               required
@@ -112,7 +120,7 @@ export function StringingFormModal({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Cuerda vertical</span>
             <input
               value={form.mainStringType}
@@ -121,7 +129,7 @@ export function StringingFormModal({
               className={inputClass}
             />
           </label>
-          <label className="space-y-2 text-sm font-medium text-zinc-700">
+          <label className="space-y-2 text-sm font-medium text-stone-700">
             <span>Cuerda horizontal</span>
             <input
               value={form.crossStringType}
@@ -132,7 +140,7 @@ export function StringingFormModal({
           </label>
         </div>
 
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Notas</span>
           <textarea
             rows={3}
@@ -147,11 +155,11 @@ export function StringingFormModal({
         <FormError message={submitError} />
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" className="text-zinc-700" onPress={onClose} isDisabled={isSubmitting}>
+          <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-court text-ball-bright hover:bg-court-hover" isDisabled={isSubmitting}>
-            Añadir encordado
+            {isEditing ? "Guardar cambios" : "Añadir encordado"}
           </Button>
         </div>
       </form>

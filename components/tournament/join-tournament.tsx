@@ -1,14 +1,10 @@
 "use client";
 
-import { Button, Chip } from "@heroui/react";
 import { Show, useUser } from "@clerk/nextjs";
+import { Button, Chip } from "@heroui/react";
 import { Check, Clock, UserPlus } from "lucide-react";
 import { useState } from "react";
-import {
-  useCreateJoinRequestMutation,
-  useMyJoinRequestsQuery,
-  useWithdrawJoinRequestMutation,
-} from "@/data/queries";
+import { useCreateJoinRequestMutation, useMyJoinRequestsQuery, useWithdrawJoinRequestMutation } from "@/data/queries";
 import type { TournamentJoinRequestStatus, TournamentStatus } from "@/models";
 
 const STATUS_LABEL: Record<TournamentJoinRequestStatus, string> = {
@@ -46,9 +42,7 @@ export function JoinTournament({
   const playerName = user?.fullName?.trim() || user?.username?.trim() || null;
 
   // Most recent request for this tournament (ids increase over time).
-  const mine = requests
-    .filter((r) => r.tournamentId === tournamentId)
-    .sort((a, b) => b.id - a.id)[0];
+  const mine = requests.filter((r) => r.tournamentId === tournamentId).sort((a, b) => b.id - a.id)[0];
 
   const hasActive = mine != null && ACTIVE.includes(mine.status);
   const isOpen = OPEN_STATUSES.includes(tournamentStatus);
@@ -67,7 +61,7 @@ export function JoinTournament({
                 ? "border border-court/30 bg-court/10 text-court"
                 : mine.status === "PENDING"
                   ? "border border-ball/40 bg-ball/20 text-court"
-                  : "border border-zinc-200 bg-zinc-100 text-zinc-600"
+                  : "border border-stone-200 bg-stone-100 text-stone-600"
             }
           >
             <span className="flex items-center gap-1.5">
@@ -120,7 +114,7 @@ export function JoinTournament({
             {create.error && <p className="text-sm text-rose-600">{errorMessage(create.error)}</p>}
           </div>
         ) : (
-          <p className="mt-2 text-sm text-zinc-500">La inscripción está cerrada para este torneo.</p>
+          <p className="mt-2 text-sm text-stone-500">La inscripción está cerrada para este torneo.</p>
         )}
       </section>
     </Show>

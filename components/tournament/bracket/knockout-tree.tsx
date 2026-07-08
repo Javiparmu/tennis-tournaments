@@ -186,7 +186,7 @@ export function KnockoutTree({
           <div className="relative z-10 flex items-stretch gap-12">
             {rounds.map((round) => (
               <div key={round.round} className="flex w-56 shrink-0 flex-col">
-                <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-zinc-400">
+                <p className="mb-3 text-center text-xs font-bold uppercase tracking-wide text-stone-400">
                   Ronda {round.round}
                 </p>
                 <div className="flex flex-1 flex-col justify-around gap-4">

@@ -10,7 +10,7 @@ const TONE: Record<Tone, { border: string; icon: string; iconBg: string; title: 
     icon: "text-court",
     iconBg: "bg-court/10",
     title: "text-court-ink",
-    body: "text-zinc-500",
+    body: "text-stone-500",
   },
   dark: {
     border: "border-white/15",
@@ -54,9 +54,7 @@ export function EmptyState({
     >
       {Icon ? (
         <span
-          className={`flex items-center justify-center rounded-full ${t.iconBg} ${
-            compact ? "h-9 w-9" : "h-11 w-11"
-          }`}
+          className={`flex items-center justify-center rounded-full ${t.iconBg} ${compact ? "h-9 w-9" : "h-11 w-11"}`}
         >
           <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${t.icon}`} aria-hidden />
         </span>

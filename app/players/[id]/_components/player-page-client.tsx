@@ -1,14 +1,15 @@
 "use client";
 
+import { CalendarDays, Dumbbell, LayoutDashboard, Target } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PageHeroFrame } from "@/components/page-hero";
 import { PageScaffold } from "@/components/page-scaffold";
 import { PageSkeleton } from "@/components/page-skeleton";
+import { type SectionTabItem, SectionTabs } from "@/components/section-tabs";
 import {
   useCreateRacketMutation,
-  useCreateStringingMutation,
   useCreateTrainingMutation,
   useDeleteRacketMutation,
   useDeleteTrainingMutation,
@@ -26,13 +27,14 @@ import {
 import { errorMessage } from "@/lib/errors";
 import type {
   CreateRacketRequest,
-  CreateRacketStringingRequest,
   CreateTrainingRequest,
   ProfileCalendarEvent,
   RacketSummary,
   UserProfileMatchEntry,
   UserTrainingEntry,
 } from "@/models";
+import { AchievementsCard } from "./achievements-card";
+import { CalendarSection } from "./calendar-section";
 import {
   buildEventsByDay,
   type CalendarMode,
@@ -44,17 +46,17 @@ import {
   toLocalDayKey,
 } from "./date-utils";
 import { MatchModal } from "./match-modal";
-import { OverviewSection } from "./overview-section";
 import { ProfileEditModal } from "./profile-edit-modal";
+import { RacketDetailModal } from "./racket-detail-modal";
 import { RacketFormModal } from "./racket-form-modal";
 import { RacketsCard } from "./rackets-card";
+import { RatingProgressCard } from "./rating-progress-card";
 import { RegisteredTournamentsCarousel } from "./registered-tournaments-carousel";
-import { type ProfileSection, SectionNavigation } from "./section-navigation";
 import { StatsCard } from "./stats-card";
-import { StringingFormModal } from "./stringing-form-modal";
 import { TrainingFormModal } from "./training-form-modal";
 import { TrainingSection } from "./training-section";
 import { UserSummaryCard } from "./user-summary-card";
+import { WeekStripCard } from "./week-strip-card";
 
 const EMPTY_EVENTS: ProfileCalendarEvent[] = [];
 
@@ -64,14 +66,13 @@ export default function UserPage() {
   const rawUsername = Array.isArray(params.id) ? params.id[0] : params.id;
   const username = rawUsername ? decodeURIComponent(rawUsername) : "";
 
-  const [activeSection, setActiveSection] = useState<ProfileSection>("overview");
   const [mode, setMode] = useState<CalendarMode>("month");
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [manualSelectedDayKey, setManualSelectedDayKey] = useState<string | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<UserProfileMatchEntry | null>(null);
   const [editingTraining, setEditingTraining] = useState<UserTrainingEntry | null | undefined>(undefined);
   const [editingRacket, setEditingRacket] = useState<RacketSummary | null | undefined>(undefined);
-  const [stringingRacket, setStringingRacket] = useState<RacketSummary | null>(null);
+  const [detailRacket, setDetailRacket] = useState<RacketSummary | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<
     { type: "training"; training: UserTrainingEntry } | { type: "racket"; racket: RacketSummary } | null
@@ -101,7 +102,6 @@ export default function UserPage() {
   const createRacketMutation = useCreateRacketMutation();
   const updateRacketMutation = useUpdateRacketMutation();
   const deleteRacketMutation = useDeleteRacketMutation();
-  const createStringingMutation = useCreateStringingMutation();
   const joinRequestsQuery = useMyJoinRequestsQuery();
   const tournamentsQuery = useTournamentsQuery();
 
@@ -190,7 +190,6 @@ export default function UserPage() {
         ? deleteRacketMutation.error && errorMessage(deleteRacketMutation.error)
         : null;
   const racketSubmitError = racketError ? errorMessage(racketError) : null;
-  const stringingSubmitError = createStringingMutation.error ? errorMessage(createStringingMutation.error) : null;
 
   if (!username) {
     return (
@@ -222,18 +221,15 @@ export default function UserPage() {
   const user = userQuery.data;
   const displayName = user.name ?? user.username;
   const handle = user.username;
+  const currentRating = user.rating ?? 1000;
 
   async function handleTrainingSubmit(payload: CreateTrainingRequest) {
     try {
       if (editingTraining) {
-        await updateTrainingMutation.mutateAsync({
-          trainingId: editingTraining.id,
-          payload,
-        });
+        await updateTrainingMutation.mutateAsync({ trainingId: editingTraining.id, payload });
       } else {
         await createTrainingMutation.mutateAsync(payload);
       }
-
       setEditingTraining(undefined);
     } catch {
       // Error state is surfaced through the mutation objects and the modal stays open.
@@ -279,66 +275,50 @@ export default function UserPage() {
     setPendingDelete(null);
   }
 
-  async function handleStringingSubmit(payload: CreateRacketStringingRequest) {
-    if (!stringingRacket) return;
-    try {
-      await createStringingMutation.mutateAsync({ racketId: stringingRacket.id, payload });
-      setStringingRacket(null);
-    } catch {
-      // Error surfaced via the mutation object; modal stays open.
-    }
-  }
-
   function closeRacketModal() {
     createRacketMutation.reset();
     updateRacketMutation.reset();
     setEditingRacket(undefined);
   }
 
-  function closeStringingModal() {
-    createStringingMutation.reset();
-    setStringingRacket(null);
-  }
+  const dayPreview = allSelectedDayEvents.slice(0, 3);
 
-  const overviewPreview = allSelectedDayEvents.slice(0, 3);
+  const resumenContent = (
+    <div className="space-y-6">
+      <StatsCard
+        scheduledMatches={scheduledMatches}
+        playedMatches={playedMatches}
+        trainings={trainingCount}
+        racketsCount={rackets.length}
+        isOwner={isOwner}
+      />
+      <RatingProgressCard userId={viewedUserId} currentRating={currentRating} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RegisteredTournamentsCarousel userId={viewedUserId} />
+        <AchievementsCard achievements={user.achievements ?? []} />
+      </div>
+      {isOwner ? <WeekStripCard calendarDays={calendarDays} events={events} loading={calendarLoading} /> : null}
+      <RacketsCard
+        rackets={rackets}
+        isOwner={isOwner}
+        isLoading={racketsLoading}
+        preview
+        previewLimit={4}
+        seeAllHref="?tab=raquetas"
+        onOpenDetail={setDetailRacket}
+      />
+    </div>
+  );
 
-  return (
-    <PageScaffold>
-      <PageHeroFrame className="p-6 md:p-8" contentClassName="grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
-        <UserSummaryCard
-          displayName={displayName}
-          username={handle}
-          imageUrl={user.imageUrl}
-          createdAt={user.createdAt}
-          achievements={user.achievements ?? []}
-          isOwner={isOwner}
-          onEdit={() => setIsEditingProfile(true)}
-        />
-        <StatsCard
-          rating={user.rating ?? 1000}
-          totalEvents={events.length}
-          scheduledMatches={scheduledMatches}
-          playedMatches={playedMatches}
-          trainings={trainingCount}
-          racketsCount={rackets.length}
-          isOwner={isOwner}
-        />
-      </PageHeroFrame>
+  const tabs: SectionTabItem[] = [{ id: "resumen", label: "Resumen", icon: LayoutDashboard, content: resumenContent }];
 
-      <SectionNavigation activeSection={activeSection} onChange={setActiveSection} isOwner={isOwner} />
-
-      {(calendarQuery.error || publicRacketsQuery.error || myRacketsQuery.error) && !racketsLoading ? (
-        <p className="mt-6 text-sm text-rose-600">Algunas secciones del perfil no se pudieron cargar por completo.</p>
-      ) : null}
-
-      {activeSection === "overview" && !isOwner ? (
-        <div className="mt-8">
-          <RegisteredTournamentsCarousel userId={viewedUserId} />
-        </div>
-      ) : null}
-
-      {activeSection === "overview" && isOwner ? (
-        <OverviewSection
+  if (isOwner) {
+    tabs.push({
+      id: "calendario",
+      label: "Calendario",
+      icon: CalendarDays,
+      content: (
+        <CalendarSection
           mode={mode}
           anchorDate={anchorDate}
           selectedDayKey={selectedDayKey}
@@ -348,40 +328,70 @@ export default function UserPage() {
           onDaySelect={setManualSelectedDayKey}
           onAnchorDateChange={setAnchorDate}
           calendarLoading={calendarLoading}
-          overviewPreview={overviewPreview}
-          rackets={rackets}
-          racketsLoading={racketsLoading}
-          isOwner={isOwner}
+          dayPreview={dayPreview}
         />
+      ),
+    });
+  }
+
+  tabs.push({
+    id: "raquetas",
+    label: "Raquetas",
+    icon: Target,
+    content: (
+      <RacketsCard
+        rackets={rackets}
+        isOwner={isOwner}
+        isLoading={racketsLoading}
+        hideHeader
+        onAdd={isOwner ? () => setEditingRacket(null) : undefined}
+        onEdit={isOwner ? setEditingRacket : undefined}
+        onDelete={isOwner ? (racket) => setPendingDelete({ type: "racket", racket }) : undefined}
+        onOpenDetail={setDetailRacket}
+        isMutating={deleteRacketMutation.isPending}
+      />
+    ),
+  });
+
+  if (isOwner) {
+    tabs.push({
+      id: "entrenos",
+      label: "Entrenos",
+      icon: Dumbbell,
+      content: (
+        <TrainingSection
+          isOwner={isOwner}
+          trainings={trainingEvents}
+          onCreate={() => setEditingTraining(null)}
+          onEdit={setEditingTraining}
+          onDelete={(training) => setPendingDelete({ type: "training", training })}
+          isDeleting={deleteTrainingMutation.isPending}
+        />
+      ),
+    });
+  }
+
+  return (
+    <PageScaffold>
+      <PageHeroFrame className="p-5 md:p-6">
+        <UserSummaryCard
+          displayName={displayName}
+          username={handle}
+          imageUrl={user.imageUrl}
+          createdAt={user.createdAt}
+          rating={currentRating}
+          isOwner={isOwner}
+          onEdit={() => setIsEditingProfile(true)}
+        />
+      </PageHeroFrame>
+
+      {(calendarQuery.error || publicRacketsQuery.error || myRacketsQuery.error) && !racketsLoading ? (
+        <p className="mt-6 text-sm text-rose-600">Algunas secciones del perfil no se pudieron cargar por completo.</p>
       ) : null}
 
-      {activeSection === "training" ? (
-        <div className="mt-8">
-          <TrainingSection
-            isOwner={isOwner}
-            trainings={trainingEvents}
-            onCreate={() => setEditingTraining(null)}
-            onEdit={setEditingTraining}
-            onDelete={(training) => setPendingDelete({ type: "training", training })}
-            isDeleting={deleteTrainingMutation.isPending}
-          />
-        </div>
-      ) : null}
-
-      {activeSection === "rackets" ? (
-        <div className="mt-8">
-          <RacketsCard
-            rackets={rackets}
-            isOwner={isOwner}
-            isLoading={racketsLoading}
-            onAdd={isOwner ? () => setEditingRacket(null) : undefined}
-            onEdit={isOwner ? setEditingRacket : undefined}
-            onDelete={isOwner ? (racket) => setPendingDelete({ type: "racket", racket }) : undefined}
-            onAddStringing={isOwner ? setStringingRacket : undefined}
-            isMutating={deleteRacketMutation.isPending}
-          />
-        </div>
-      ) : null}
+      <div className="mt-8">
+        <SectionTabs tabs={tabs} ariaLabel="Secciones del perfil" />
+      </div>
 
       <MatchModal match={selectedMatch} onClose={() => setSelectedMatch(null)} />
       {isEditingProfile && isOwner ? (
@@ -412,13 +422,12 @@ export default function UserPage() {
           submitError={racketSubmitError}
         />
       ) : null}
-      {stringingRacket ? (
-        <StringingFormModal
-          racketName={stringingRacket.displayName}
-          onClose={closeStringingModal}
-          onSubmit={handleStringingSubmit}
-          isSubmitting={createStringingMutation.isPending}
-          submitError={stringingSubmitError}
+      {detailRacket ? (
+        <RacketDetailModal
+          racket={detailRacket}
+          userId={viewedUserId}
+          isOwner={isOwner}
+          onClose={() => setDetailRacket(null)}
         />
       ) : null}
 

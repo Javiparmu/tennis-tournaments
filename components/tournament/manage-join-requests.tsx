@@ -19,8 +19,8 @@ const STATUS_STYLE: Record<TournamentJoinRequestStatus, string> = {
   PENDING: "border border-ball/40 bg-ball/20 text-court",
   ACCEPTED: "border border-court/30 bg-court/10 text-court",
   REJECTED: "border border-rose-200 bg-rose-50 text-rose-600",
-  WITHDRAWN: "border border-zinc-200 bg-zinc-100 text-zinc-600",
-  EXPIRED: "border border-zinc-200 bg-zinc-100 text-zinc-600",
+  WITHDRAWN: "border border-stone-200 bg-stone-100 text-stone-600",
+  EXPIRED: "border border-stone-200 bg-stone-100 text-stone-600",
 };
 
 export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
@@ -52,7 +52,7 @@ export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
     <section className="rounded-2xl border border-court/10 bg-white p-5 shadow-sm">
       <h2 className="mb-3 font-display text-lg font-bold">Solicitudes de inscripción</h2>
 
-      {isLoading && <div className="h-16 animate-pulse rounded-xl bg-zinc-100/70" />}
+      {isLoading && <div className="h-16 animate-pulse rounded-xl bg-stone-100/70" />}
       {!isLoading && sorted.length === 0 && (
         <EmptyState
           size="compact"
@@ -68,7 +68,7 @@ export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-sm font-semibold text-court-ink">{req.player.name}</p>
-                {req.playerNote && <p className="mt-0.5 text-xs text-zinc-500">{req.playerNote}</p>}
+                {req.playerNote && <p className="mt-0.5 text-xs text-stone-500">{req.playerNote}</p>}
               </div>
               <Chip size="sm" variant="soft" className={STATUS_STYLE[req.status]}>
                 {JOIN_STATUS_LABEL[req.status]}
@@ -109,7 +109,7 @@ export function ManageJoinRequests({ tournamentId }: { tournamentId: number }) {
               <Button
                 size="sm"
                 variant="ghost"
-                className="mt-2 text-zinc-700"
+                className="mt-2 text-stone-700"
                 onPress={() => {
                   beginAction(req.id);
                   allowResubmit.mutate({ id: tournamentId, requestId: req.id }, actionOptions(req.id));

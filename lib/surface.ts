@@ -23,10 +23,10 @@ const STYLES: Record<SurfaceType, SurfaceStyle> = {
 
 const FALLBACK: SurfaceStyle = {
   label: "Por definir",
-  text: "text-zinc-500",
-  bg: "bg-zinc-100",
-  border: "border-zinc-200",
-  hex: "#71717a",
+  text: "text-stone-500",
+  bg: "bg-stone-100",
+  border: "border-stone-200",
+  hex: "#78716c",
 };
 
 // Canonical surface labels (clay/hard/grass), shared with forms and calendars.

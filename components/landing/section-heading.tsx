@@ -40,9 +40,7 @@ export function SectionHeading({
         } ${dark ? "text-white" : "text-court-ink"}`}
       >
         {lead}
-        {accent && lead !== title ? (
-          <span className={dark ? "text-ball-bright" : "text-court"}>{accent}</span>
-        ) : null}
+        {accent && lead !== title ? <span className={dark ? "text-ball-bright" : "text-court"}>{accent}</span> : null}
       </h2>
     </div>
   );

@@ -6,6 +6,7 @@ export type * from "./match";
 export type * from "./player";
 export type * from "./profile-calendar";
 export type * from "./racket";
+export type * from "./rating";
 export type * from "./score";
 export type * from "./tournament";
 export type * from "./training";

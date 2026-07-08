@@ -3,7 +3,7 @@
 import { Button, Form } from "@heroui/react";
 import { CheckCircle2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { ModalShell, inputClass } from "@/components/modal-shell";
+import { inputClass, ModalShell } from "@/components/modal-shell";
 import { useClubContactRequestMutation } from "@/data/queries";
 import { CLUB_CONTACT_EMAIL } from "@/lib/contact";
 
@@ -49,9 +49,9 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col items-center gap-3 py-6 text-center">
           <CheckCircle2 className="h-10 w-10 text-court" />
           <p className="font-display text-lg font-bold text-court-ink">¡Gracias por tu interés!</p>
-          <p className="max-w-sm text-sm text-zinc-600">
-            Hemos recibido la solicitud de <span className="font-semibold">{clubName.trim()}</span>. Te contactaremos
-            en {email.trim()} para dar de alta tu club.
+          <p className="max-w-sm text-sm text-stone-600">
+            Hemos recibido la solicitud de <span className="font-semibold">{clubName.trim()}</span>. Te contactaremos en{" "}
+            {email.trim()} para dar de alta tu club.
           </p>
           <Button type="button" className="mt-2 bg-court text-ball-bright hover:bg-court-hover" onPress={onClose}>
             Entendido
@@ -90,7 +90,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
           }
         }}
       >
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Nombre del club</span>
           <input
             required
@@ -100,7 +100,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
             className={inputClass}
           />
         </label>
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Tu nombre</span>
           <input
             required
@@ -111,7 +111,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
           />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-2 text-sm font-medium text-zinc-700">
+          <label className="block space-y-2 text-sm font-medium text-stone-700">
             <span>Email</span>
             <input
               required
@@ -122,7 +122,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
               className={inputClass}
             />
           </label>
-          <label className="block space-y-2 text-sm font-medium text-zinc-700">
+          <label className="block space-y-2 text-sm font-medium text-stone-700">
             <span>Teléfono (opcional)</span>
             <input
               type="tel"
@@ -133,7 +133,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
             />
           </label>
         </div>
-        <label className="block space-y-2 text-sm font-medium text-zinc-700">
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Mensaje (opcional)</span>
           <textarea
             rows={3}
@@ -148,7 +148,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
         {submitError ? <p className="text-sm text-rose-600">{submitError}</p> : null}
 
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-stone-400">
             También puedes escribirnos a{" "}
             <a href={`mailto:${CLUB_CONTACT_EMAIL}`} className="font-medium text-court hover:text-court-hover">
               {CLUB_CONTACT_EMAIL}
@@ -158,7 +158,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
             <Button
               type="button"
               variant="ghost"
-              className="text-zinc-700"
+              className="text-stone-700"
               onPress={onClose}
               isDisabled={contactRequest.isPending}
             >
