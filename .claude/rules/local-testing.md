@@ -14,8 +14,8 @@ The backend seed provisions these claimable accounts (sign in with email + passw
 
 | Account | Role | Reaches |
 | --- | --- | --- |
-| `club+clerk_test@example.com` | Club owner ("Seed Tennis Club") | `/host` — tournament lifecycle, join-request accept/reject |
-| `admin+clerk_test@example.com` | `PLATFORM_ADMIN` | `/admin` — review club contact requests, provision clubs |
+| `club+clerk_test@example.com` / `CourtRankClub123!` | Club owner ("Seed Tennis Club") | `/host` — tournament lifecycle, join-request accept/reject |
+| `admin+clerk_test@example.com` / `CourtRankAdmin123!` | `PLATFORM_ADMIN` | `/admin` — review club contact requests, provision clubs |
 
 The seed creates these users with `auth_subject = NULL`; the backend claims the row on first Clerk sign-in with the matching email, so they survive DB resets with no manual relinking.
 

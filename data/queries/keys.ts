@@ -2,6 +2,10 @@
 // the same segment(s) (e.g. userRoot covers ["user", id], ["user", "me"] and
 // ["user", "by-username", ...]) — they are intentionally broad; do not narrow.
 export const queryKeys = {
+  adminRoot: ["admin"] as const,
+  adminOverview: ["admin", "overview"] as const,
+  adminClubContactRequests: ["admin", "club-contact-requests"] as const,
+  adminClubs: ["admin", "clubs"] as const,
   tournaments: ["tournaments"] as const,
   userRoot: ["user"] as const,
   profileCalendarRoot: ["profile-calendar"] as const,

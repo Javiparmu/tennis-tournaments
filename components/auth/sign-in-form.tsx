@@ -51,17 +51,39 @@ export function SignInForm() {
   const handlePassword = async (event: FormEvent) => {
     event.preventDefault();
     setFormError(null);
+    // A leftover incomplete sign-in persisted on the Clerk client can pin the resource at
+    // `needs_second_factor`, so `password()` (which reuses an existing attempt) makes a
+    // correct password look like it "can't complete". reset() clears that local state so
+    // password() starts a fresh attempt. reset() is local-only (no API call).
+    if (signIn.status) await signIn.reset();
     const { error } = await signIn.password({ identifier: email, password });
     if (error) {
       setFormError(clerkErrorMessage(error));
       return;
     }
-    if (signIn.status === "complete") await finalize();
-    else setFormError("No se pudo completar el inicio de sesión.");
+    if (signIn.status === "complete") {
+      await finalize();
+      return;
+    }
+    // Password accepted but the sign-in isn't complete (needs_first_factor / needs_new_password
+    // / needs_second_factor). Log the supported second factors so a genuine 2FA requirement is
+    // visible (empty array here would mean a stale attempt rather than real MFA).
+    console.warn(
+      "[sign-in] password ok but status not complete:",
+      signIn.status,
+      "secondFactors:",
+      signIn.supportedSecondFactors,
+    );
+    setFormError(
+      'No pudimos completar el inicio de sesión con esa contraseña. Prueba con Google o usa "¿Olvidaste tu contraseña?".',
+    );
   };
 
   const handleGoogle = async () => {
     setFormError(null);
+    // `clerk.client.signIn` is a persistent singleton; a prior failed password/email
+    // attempt leaves it non-fresh so `sso()` can't launch the redirect. Reset first.
+    if (signIn.status) await signIn.reset();
     const { error } = await signIn.sso({
       strategy: "oauth_google",
       redirectUrl: "/",

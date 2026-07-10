@@ -83,6 +83,9 @@ export function SignUpForm() {
 
   const handleGoogle = async () => {
     setFormError(null);
+    // `clerk.client.signUp` is a persistent singleton; a prior failed create attempt
+    // leaves it non-fresh so `sso()` can't launch the redirect. Reset first.
+    if (signUp.status) await signUp.reset();
     const { error } = await signUp.sso({
       strategy: "oauth_google",
       redirectUrl: "/",
