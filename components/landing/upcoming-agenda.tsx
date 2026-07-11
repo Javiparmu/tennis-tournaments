@@ -18,16 +18,6 @@ import { surfaceStyle } from "@/lib/surface";
 // formatted locally here.
 const MONTH_LONG = new Intl.DateTimeFormat("es-ES", { month: "long" });
 
-// A "Próximos" panel must never show "hace 5d": drop anything already past
-// (keeping today) and sort ascending so the soonest tournament leads. Pure so
-// the memo stays cheap and predictable.
-function upcomingSorted<T extends { startDate: string }>(rows: T[]): T[] {
-  const floor = Date.now() - 86_400_000;
-  return rows
-    .filter((t) => +new Date(t.startDate) >= floor)
-    .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate));
-}
-
 function monthKey(date: string): string {
   const d = new Date(date);
   return `${d.getFullYear()}-${d.getMonth()}`;
@@ -37,7 +27,8 @@ export function UpcomingAgenda() {
   const { data = [], isLoading } = useUpcomingCalendarQuery(6);
   const clubNames = useClubNameMap();
 
-  const rows = useMemo(() => upcomingSorted(data).slice(0, 5), [data]);
+  // The feed arrives future-only and soonest-first from getUpcomingCalendar.
+  const rows = useMemo(() => data.slice(0, 5), [data]);
   // Only label months when the list actually spans more than one — a single-month
   // agenda reads cleaner without a redundant header.
   const showMonths = useMemo(() => new Set(rows.map((t) => monthKey(t.startDate))).size > 1, [rows]);

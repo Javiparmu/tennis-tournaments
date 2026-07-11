@@ -22,10 +22,25 @@ export async function getTournaments(): Promise<TournamentBasic[]> {
   return apiGet<TournamentBasic[]>("/tournaments");
 }
 
+// One day of grace keeps tournaments starting "Hoy" in the feed regardless of
+// the viewer's time of day.
+const UPCOMING_GRACE_MS = 86_400_000;
+
+/** Pure: drops already-started tournaments (minus grace), sorts soonest-first, truncates. */
+export function upcomingCalendar(
+  tournaments: TournamentBasic[],
+  limit: number,
+  now: number = Date.now(),
+): TournamentBasic[] {
+  return tournaments
+    .filter((t) => +new Date(t.startDate) >= now - UPCOMING_GRACE_MS)
+    .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate))
+    .slice(0, limit);
+}
+
 export async function getUpcomingCalendar(limit = 4): Promise<TournamentBasic[]> {
-  // TODO(backend): add ?limit=/?from= to the tournaments endpoint and drop this client-side slice.
-  const tournaments = await getTournaments();
-  return tournaments.sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate)).slice(0, limit);
+  // TODO(backend): add ?limit=/?from= to the tournaments endpoint and drop this client-side filter.
+  return upcomingCalendar(await getTournaments(), limit);
 }
 
 export async function getTournament(id: number): Promise<Tournament> {
