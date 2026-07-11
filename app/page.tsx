@@ -1,8 +1,9 @@
 import { CtaBand } from "@/components/landing/cta-band";
-import { Features } from "@/components/landing/features";
+import { FeaturesBento } from "@/components/landing/features-bento";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { SectionDivider } from "@/components/landing/section-divider";
+import { MarqueeBand } from "@/components/landing/marquee-band";
+import { PhotoDivider } from "@/components/landing/photo-divider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -14,8 +15,9 @@ export default function Home() {
         {/* Hero carries the live upcoming-tournaments agenda panel — the single
             source of upcoming tournaments on the page. */}
         <Hero />
-        <Features />
-        <SectionDivider />
+        <MarqueeBand />
+        <FeaturesBento />
+        <PhotoDivider />
         <HowItWorks />
         <CtaBand />
       </main>
