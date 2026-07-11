@@ -67,7 +67,7 @@ export function HowItWorks() {
           />
           <div aria-hidden className="absolute inset-0 bg-black/20" />
 
-          <div className="relative grid gap-10 p-6 [text-shadow:0_1px_3px_rgb(0_0_0/0.5)] md:grid-cols-2 md:gap-16 md:p-10">
+          <div className="relative grid gap-10 p-6 [text-shadow:0_1px_4px_rgb(0_0_0/0.6)] md:grid-cols-2 md:gap-16 md:p-10">
             <TrackColumn track={tracks[0]} />
             <TrackColumn track={tracks[1]} />
           </div>
@@ -80,19 +80,23 @@ export function HowItWorks() {
 function TrackColumn({ track }: { track: Track }) {
   return (
     <div>
-      <p className="mb-2 font-display text-sm font-bold uppercase tracking-wide text-white">{track.audience}</p>
+      <p className="mb-3 font-display text-sm font-bold uppercase tracking-wide text-white">{track.audience}</p>
       <ol>
         {track.steps.map((step, i) => (
-          <li key={step.title} className="flex gap-5 border-t border-white/20 py-6">
-            <span aria-hidden="true" className="font-display text-5xl font-black leading-none text-white/25">
+          <li key={step.title} className="flex items-start gap-4 border-t border-white/25 py-5">
+            {/* Solid lime badge — the ghost number read as mud over the photo. */}
+            <span
+              aria-hidden="true"
+              className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ball-bright font-display text-sm font-black text-court-ink [text-shadow:none]"
+            >
               {i + 1}
             </span>
             <div>
               <p className="flex items-center gap-2 font-semibold text-white">
-                <step.icon aria-hidden="true" className="h-5 w-5 text-ball-bright" />
+                <step.icon aria-hidden="true" className="h-4 w-4 text-white/75" />
                 {step.title}
               </p>
-              <p className="mt-1 text-sm text-white/80">{step.body}</p>
+              <p className="mt-1 text-sm text-white/85">{step.body}</p>
             </div>
           </li>
         ))}
