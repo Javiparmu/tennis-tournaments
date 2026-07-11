@@ -43,38 +43,36 @@ const tracks: Track[] = [
   },
 ];
 
-// Editorial index rows over a photographic backdrop: the ball-on-line court
-// photo is the section background — green behind the players column, blue behind
-// the clubs column, and its central white line + ball is the literal divider.
-// White text (plus a soft shadow) keeps the rows legible without a heavy scrim
-// that would mute the green/blue identity.
+// Editorial index rows on a photographic panel: the heading stays on the light
+// page, but the two feature lists sit on the ball-on-line court photo — the
+// players list over the green half, the clubs list over the blue half, and the
+// central white line + ball is the divider between them. White text plus a soft
+// shadow and a light wash keep the rows legible without muting the colors.
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-heading" className="relative overflow-hidden">
-      <Image src={courtLineBall} alt="" fill sizes="100vw" placeholder="blur" className="object-cover object-center" />
-      <div aria-hidden className="absolute inset-0 bg-black/30" />
+    <section aria-labelledby="how-heading" className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
+      <FadeContent>
+        <SectionHeading id="how-heading" eyebrow="Cómo funciona" title="Jugadores y clubes." accent="y clubes." size="lg" />
+      </FadeContent>
 
-      <div className="relative mx-auto w-full max-w-6xl px-6 py-20 [text-shadow:0_1px_3px_rgb(0_0_0/0.45)] md:py-28">
-        <FadeContent>
-          <SectionHeading
-            id="how-heading"
-            eyebrow="Cómo funciona"
-            title="Jugadores y clubes."
-            accent="y clubes."
-            size="lg"
-            tone="dark"
+      <FadeContent delay={0.1}>
+        <div className="relative mt-12 overflow-hidden rounded-3xl shadow-lg">
+          <Image
+            src={courtLineBall}
+            alt=""
+            fill
+            sizes="(min-width: 1152px) 1152px, 100vw"
+            placeholder="blur"
+            className="object-cover object-center"
           />
-        </FadeContent>
+          <div aria-hidden className="absolute inset-0 bg-black/20" />
 
-        <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-20">
-          <FadeContent>
+          <div className="relative grid gap-10 p-6 [text-shadow:0_1px_3px_rgb(0_0_0/0.5)] md:grid-cols-2 md:gap-16 md:p-10">
             <TrackColumn track={tracks[0]} />
-          </FadeContent>
-          <FadeContent delay={0.1}>
             <TrackColumn track={tracks[1]} />
-          </FadeContent>
+          </div>
         </div>
-      </div>
+      </FadeContent>
     </section>
   );
 }
