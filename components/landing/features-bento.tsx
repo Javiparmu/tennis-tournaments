@@ -9,9 +9,10 @@ import racketFlatlay from "@/public/landing/racket-flatlay.webp";
 import { SectionHeading } from "./section-heading";
 
 // Photo bento for the player features: the two photography cells break up the
-// white cards so the grid doesn't read as four identical boxes, and the flat-lay
-// foreshadows the rackets section further down. Cell spans fill the 6-col grid
-// exactly (4+2 / 2+2+tall / 4+tall) — no holes.
+// white cards so the grid doesn't read as four identical boxes. The photos
+// anchor the left column (racket flat-lay tall on top, aerial below) and the
+// cards read down the right, so the grid scans diagonally rather than piling
+// both images on one side. Cell spans fill the 6-col grid exactly — no holes.
 
 const BADGES = ["Primera victoria", "Racha de 5", "Rey de la tierra"];
 
@@ -29,8 +30,19 @@ export function FeaturesBento() {
       </FadeContent>
 
       <div className="mt-10 grid gap-5 md:auto-rows-[240px] md:grid-cols-6">
-        {/* 1 — Elo, the headline feature, gets the widest cell and the spotlight. */}
-        <FadeContent className="md:col-span-4">
+        {/* 1 — Racket flat-lay, tall cell anchoring the left column; foreshadows
+            the rackets section below. */}
+        <FadeContent className="md:col-span-2 md:row-span-2">
+          <PhotoCell
+            image={racketFlatlay}
+            alt="Raqueta de tenis sobre fondo azul"
+            caption="Tu equipo también cuenta"
+            tall
+          />
+        </FadeContent>
+
+        {/* 2 — Elo, the headline feature, gets the widest cell and the spotlight. */}
+        <FadeContent delay={0.05} className="md:col-span-4">
           <SpotlightCard className="h-full rounded-2xl border border-court/10 bg-white shadow-sm">
             <div className="flex h-full flex-col p-6">
               <CardHeader icon={TrendingUp} title="Ranking por Elo" />
@@ -59,11 +71,6 @@ export function FeaturesBento() {
               </svg>
             </div>
           </SpotlightCard>
-        </FadeContent>
-
-        {/* 2 — Aerial photo cell. */}
-        <FadeContent delay={0.05} className="md:col-span-2">
-          <PhotoCell image={aerialCourt} alt="Vista aérea de pistas de tenis" caption="Pistas reales, clubes reales" />
         </FadeContent>
 
         {/* 3 — Logros with decorative badge pills. */}
@@ -97,14 +104,9 @@ export function FeaturesBento() {
           </div>
         </FadeContent>
 
-        {/* 5 — Racket flat-lay, tall cell: foreshadows the rackets section below. */}
-        <FadeContent delay={0.2} className="md:col-span-2 md:row-span-2">
-          <PhotoCell
-            image={racketFlatlay}
-            alt="Raqueta de tenis sobre fondo azul"
-            caption="Tu equipo también cuenta"
-            tall
-          />
+        {/* 5 — Aerial photo cell, closing the left column under the racket. */}
+        <FadeContent delay={0.2} className="md:col-span-2">
+          <PhotoCell image={aerialCourt} alt="Vista aérea de pistas de tenis" caption="Pistas reales, clubes reales" />
         </FadeContent>
 
         {/* 6 — Entrenamientos closes the grid with a wide cell mirroring the Elo row. */}

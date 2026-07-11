@@ -4,7 +4,6 @@ import { motion, useInView, useMotionValueEvent, useReducedMotion, useScroll } f
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { CourtLinesSvg } from "./court-lines-svg";
 
 // Scroll-driven 3D showcase for the racket log. Desktop pins a full-screen
 // stage across 300vh: the copy steps swap at thirds of the scroll and the
@@ -59,7 +58,6 @@ export function RacketSection() {
   return (
     <section ref={sectionRef} aria-labelledby="rackets-heading" className="relative md:h-[300vh]">
       <div className="relative flex items-center overflow-hidden bg-linear-to-b from-court-night to-court-night-deep py-20 text-white md:sticky md:top-0 md:h-screen md:py-0">
-        <CourtLinesSvg className="absolute inset-0 h-full w-full text-white/[0.06]" strokeWidth={2} />
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 md:grid-cols-2">
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-wide text-ball-bright/90">
