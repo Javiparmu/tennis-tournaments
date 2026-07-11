@@ -14,10 +14,16 @@ export function Hero() {
           headline stays high-contrast on the light background. */}
       <div aria-hidden className="glow-court pointer-events-none absolute -right-24 top-10 h-96 w-96" />
 
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-16 md:py-24 lg:grid-cols-12">
+      {/* grid-cols-1 is load-bearing below lg: the agenda's horizontal strip is
+          intrinsically wide, and an implicit auto track would grow to fit it
+          instead of letting it scroll. minmax(0,1fr) caps the track. */}
+      <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-10 px-6 py-16 md:py-24 lg:grid-cols-12">
         <FadeContent className="lg:col-span-7">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-court/15 bg-court/5 px-3.5 py-1.5 text-sm font-medium text-court">
-            <span aria-hidden className="h-2 w-2 rounded-full bg-ball-bright shadow-[0_0_8px_1px] shadow-ball-bright/60" />
+            <span
+              aria-hidden
+              className="h-2 w-2 rounded-full bg-ball-bright shadow-[0_0_8px_1px] shadow-ball-bright/60"
+            />
             Ranking por Elo · Clubes verificados
           </span>
           <h1 className="font-display text-5xl font-black leading-[0.95] tracking-tight text-court-ink md:text-7xl xl:text-8xl">
