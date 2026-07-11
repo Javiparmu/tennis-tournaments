@@ -37,6 +37,15 @@ describe("upcomingCalendar", () => {
     expect(rows.map((t) => t.id)).toEqual([2, 3]);
   });
 
+  it("drops finished or dead tournaments even inside the grace window", () => {
+    const completed = { ...tournament(1, 0), status: "COMPLETED" as const };
+    const cancelled = { ...tournament(2, 5), status: "CANCELLED" as const };
+    const abandoned = { ...tournament(3, 5), status: "ABANDONED" as const };
+    const started = { ...tournament(4, 0), status: "STARTED" as const };
+    const rows = upcomingCalendar([completed, cancelled, abandoned, started, tournament(5, 2)], 10, NOW);
+    expect(rows.map((t) => t.id)).toEqual([4, 5]);
+  });
+
   it("returns empty for an empty feed", () => {
     expect(upcomingCalendar([], 5, NOW)).toEqual([]);
   });

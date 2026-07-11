@@ -26,14 +26,18 @@ export async function getTournaments(): Promise<TournamentBasic[]> {
 // the viewer's time of day.
 const UPCOMING_GRACE_MS = 86_400_000;
 
-/** Pure: drops already-started tournaments (minus grace), sorts soonest-first, truncates. */
+// A tournament that already finished (or died) is never "próximo", even if its
+// start date is within the grace window.
+const ENDED_STATUSES = new Set(["COMPLETED", "CANCELLED", "ABANDONED"]);
+
+/** Pure: keeps future-dated, still-alive tournaments, sorts soonest-first, truncates. */
 export function upcomingCalendar(
   tournaments: TournamentBasic[],
   limit: number,
   now: number = Date.now(),
 ): TournamentBasic[] {
   return tournaments
-    .filter((t) => +new Date(t.startDate) >= now - UPCOMING_GRACE_MS)
+    .filter((t) => !ENDED_STATUSES.has(t.status) && +new Date(t.startDate) >= now - UPCOMING_GRACE_MS)
     .sort((a, b) => +new Date(a.startDate) - +new Date(b.startDate))
     .slice(0, limit);
 }
