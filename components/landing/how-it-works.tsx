@@ -39,37 +39,37 @@ const tracks = [
   },
 ];
 
+// Editorial index rows instead of card chrome: ghost numbers and hairline rules
+// give the section a pricing-table rhythm that matches the redesigned bento.
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-heading" className="mx-auto w-full max-w-6xl px-6 py-16 md:py-20">
+    <section aria-labelledby="how-heading" className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
       <FadeContent>
-        <SectionHeading id="how-heading" eyebrow="Cómo funciona" title="Jugadores y clubes." accent="y clubes." />
+        <SectionHeading id="how-heading" eyebrow="Cómo funciona" title="Jugadores y clubes." accent="y clubes." size="lg" />
       </FadeContent>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
+      <div className="mt-12 grid gap-14 md:grid-cols-2">
         {tracks.map((track, ti) => (
           <FadeContent key={track.audience} delay={ti * 0.1}>
-            <div className="h-full rounded-2xl border border-court/10 bg-white p-6 shadow-sm">
-              <p className={`mb-5 font-display text-sm font-bold uppercase tracking-wide ${track.accent}`}>
-                {track.audience}
-              </p>
-              <ol className="space-y-5">
-                {track.steps.map((step, i) => (
-                  <li key={step.title} className="flex gap-4">
-                    <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-court/5 text-court">
-                      <step.icon className="h-5 w-5" />
-                      <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-court font-display text-[10px] font-black text-ball-bright">
-                        {i + 1}
-                      </span>
-                    </span>
-                    <div>
-                      <p className="font-semibold text-court-ink">{step.title}</p>
-                      <p className="text-sm text-stone-600">{step.body}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <p className={`mb-2 font-display text-sm font-bold uppercase tracking-wide ${track.accent}`}>
+              {track.audience}
+            </p>
+            <ol>
+              {track.steps.map((step, i) => (
+                <li key={step.title} className="flex gap-5 border-t border-court/10 py-6">
+                  <span aria-hidden="true" className="font-display text-5xl font-black leading-none text-court/10">
+                    {i + 1}
+                  </span>
+                  <div>
+                    <p className="flex items-center gap-2 font-semibold text-court-ink">
+                      <step.icon aria-hidden="true" className="h-5 w-5 text-court" />
+                      {step.title}
+                    </p>
+                    <p className="mt-1 text-sm text-stone-600">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </FadeContent>
         ))}
       </div>
