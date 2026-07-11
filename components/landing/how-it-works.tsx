@@ -65,9 +65,10 @@ export function HowItWorks() {
             placeholder="blur"
             className="object-cover object-center"
           />
-          <div aria-hidden className="absolute inset-0 bg-black/20" />
-
-          <div className="relative grid gap-10 p-6 [text-shadow:0_1px_4px_rgb(0_0_0/0.6)] md:grid-cols-2 md:gap-16 md:p-10">
+          {/* No flat overlay — it dulled the court colors. Legibility comes from
+              a layered text shadow that outlines the glyphs without touching the
+              background. */}
+          <div className="relative grid gap-10 p-6 [text-shadow:0_1px_3px_rgb(0_0_0/0.7),0_0_2px_rgb(0_0_0/0.6)] md:grid-cols-2 md:gap-16 md:p-10">
             <TrackColumn track={tracks[0]} />
             <TrackColumn track={tracks[1]} />
           </div>
