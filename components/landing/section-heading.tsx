@@ -5,6 +5,8 @@ type SectionHeadingProps = {
   accent?: string;
   tone?: "light" | "dark";
   align?: "left" | "center";
+  /** Heading scale. "md" is the default; "lg" is the larger editorial size. */
+  size?: "md" | "lg";
   id?: string;
   className?: string;
 };
@@ -18,11 +20,13 @@ export function SectionHeading({
   accent,
   tone = "light",
   align = "left",
+  size = "md",
   id,
   className = "",
 }: SectionHeadingProps) {
   const lead = accent && title.endsWith(accent) ? title.slice(0, title.length - accent.length) : title;
   const dark = tone === "dark";
+  const scale = size === "lg" ? "text-4xl md:text-6xl" : "text-3xl md:text-4xl";
 
   return (
     <div className={`${align === "center" ? "text-center" : ""} ${className}`}>
@@ -35,7 +39,7 @@ export function SectionHeading({
       </p>
       <h2
         id={id}
-        className={`mt-2 font-display text-3xl font-black tracking-tight md:text-4xl ${
+        className={`mt-2 font-display ${scale} font-black tracking-tight ${
           align === "center" ? "mx-auto" : ""
         } ${dark ? "text-white" : "text-court-ink"}`}
       >

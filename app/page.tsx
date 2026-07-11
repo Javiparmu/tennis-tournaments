@@ -11,8 +11,8 @@ export default function Home() {
     <div className="min-h-screen bg-background text-court-ink">
       <SiteHeader />
       <main>
-        {/* Hero carries the live upcoming-tournaments strip — the single source of
-            upcoming tournaments on the page. */}
+        {/* Hero carries the live upcoming-tournaments agenda panel — the single
+            source of upcoming tournaments on the page. */}
         <Hero />
         <Features />
         <SectionDivider />
