@@ -1,7 +1,9 @@
 import {
   getMe,
+  getMyProfileCalendar,
   getUser,
   getUserByUsername,
+  getUserProfileCalendar,
   getUserRatingHistory,
   getUsers,
   getUserTournaments,
@@ -60,6 +62,25 @@ export function useUserTournamentsQuery(userId?: number) {
     queryKey: queryKeys.userTournaments(userId),
     queryFn: () => getUserTournaments(userId as number),
     enabled: userId != null,
+    staleTime: 30_000,
+  });
+}
+
+export function useMyProfileCalendarQuery(from?: string, to?: string, timezone?: string) {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.myProfileCalendar(from, to, timezone),
+    queryFn: async () => getMyProfileCalendar(await getToken(), from as string, to as string, timezone as string),
+    enabled: isLoaded && isSignedIn && Boolean(from) && Boolean(to) && Boolean(timezone),
+    staleTime: 30_000,
+  });
+}
+
+export function useUserProfileCalendarQuery(userId?: number, from?: string, to?: string, timezone?: string) {
+  return useQuery({
+    queryKey: queryKeys.userProfileCalendar(userId, from, to, timezone),
+    queryFn: () => getUserProfileCalendar(userId as number, from as string, to as string, timezone as string),
+    enabled: userId != null && Boolean(from) && Boolean(to) && Boolean(timezone),
     staleTime: 30_000,
   });
 }

@@ -11,10 +11,12 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { Button, Card, Chip, EmptyState, Field, Hero, Skeleton, SurfaceBadge } from "../../components/ui";
+import { Bracket } from "../../components/tournament/bracket";
+import { Button, Card, Chip, EmptyState, Field, Hero, SegmentedTabs, Skeleton, SurfaceBadge } from "../../components/ui";
 import {
   useCreateJoinRequestMutation,
   useMyJoinRequestsQuery,
+  useTournamentBracketQuery,
   useTournamentMatchesQuery,
   useTournamentPlayersQuery,
   useTournamentQuery,
@@ -24,6 +26,10 @@ import { joinStatusTone, statusTone } from "../../lib/status-tone";
 
 const ENDED = new Set(["COMPLETED", "CANCELLED", "ABANDONED"]);
 const STATUS_TONE = { champion: "clay", in: "grass", pending: "muted", out: "neutral" } as const;
+const VIEW_TABS = [
+  { key: "clasificacion" as const, label: "Clasificación" },
+  { key: "cuadro" as const, label: "Cuadro" },
+];
 
 export default function TournamentDetailScreen() {
   const router = useRouter();
@@ -34,7 +40,10 @@ export default function TournamentDetailScreen() {
   const { data: tournament, isLoading, isError } = useTournamentQuery(validId ? tournamentId : undefined);
   const { data: players } = useTournamentPlayersQuery(validId ? tournamentId : undefined);
   const { data: matches } = useTournamentMatchesQuery(validId ? tournamentId : undefined);
+  const { data: bracket } = useTournamentBracketQuery(validId ? tournamentId : undefined);
+  const [view, setView] = useState<"clasificacion" | "cuadro">("clasificacion");
 
+  const hasMatches = Boolean(matches && matches.length > 0);
   const standings = useMemo(
     () => computeStandings(players ?? [], matches ?? [], tournament?.championPlayerId ?? null),
     [players, matches, tournament?.championPlayerId],
@@ -68,29 +77,38 @@ export default function TournamentDetailScreen() {
 
             <JoinSection tournament={tournament} />
 
-            <View className="gap-2">
-              <Text className="text-lg font-semibold text-paper">
-                {matches && matches.length > 0 ? "Clasificación" : "Jugadores"}
-              </Text>
-              {matches && matches.length > 0 ? (
-                standings.map((standing, index) => (
-                  <Card key={standing.player.id}>
-                    <View className="flex-row items-center gap-3">
-                      <Text className="w-6 text-center text-sm font-bold text-paper/40">{index + 1}</Text>
-                      <Text className="flex-1 text-base text-paper" numberOfLines={1}>
-                        {standing.player.name}
-                      </Text>
-                      <Text className="text-sm text-paper/60">
-                        {standing.wins}-{standing.losses}
-                      </Text>
-                      <Chip label={statusLabel(standing.status)} tone={STATUS_TONE[standing.status]} />
-                    </View>
-                  </Card>
-                ))
-              ) : (
+            {hasMatches ? (
+              <View className="gap-3">
+                <SegmentedTabs tabs={VIEW_TABS} value={view} onChange={setView} />
+                {view === "clasificacion" ? (
+                  <View className="gap-2">
+                    {standings.map((standing, index) => (
+                      <Card key={standing.player.id}>
+                        <View className="flex-row items-center gap-3">
+                          <Text className="w-6 text-center text-sm font-bold text-paper/40">{index + 1}</Text>
+                          <Text className="flex-1 text-base text-paper" numberOfLines={1}>
+                            {standing.player.name}
+                          </Text>
+                          <Text className="text-sm text-paper/60">
+                            {standing.wins}-{standing.losses}
+                          </Text>
+                          <Chip label={statusLabel(standing.status)} tone={STATUS_TONE[standing.status]} />
+                        </View>
+                      </Card>
+                    ))}
+                  </View>
+                ) : bracket ? (
+                  <Bracket bracket={bracket} />
+                ) : (
+                  <Skeleton className="h-40 w-full" />
+                )}
+              </View>
+            ) : (
+              <View className="gap-2">
+                <Text className="text-lg font-semibold text-paper">Jugadores</Text>
                 <RosterList players={players} />
-              )}
-            </View>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
