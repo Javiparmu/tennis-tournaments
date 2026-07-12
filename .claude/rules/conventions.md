@@ -1,33 +1,52 @@
 # Project conventions (rules)
 
-These are the established patterns. Follow them; when you add a feature, extend the canonical module rather than re-rolling a variant. Each rule names the file that is the source of truth.
+These are the established patterns. Follow them; when you add a feature, extend the canonical module rather than re-rolling a variant. Each rule names the file or workspace that is the source of truth.
+
+## Monorepo shape
+
+This is a pnpm workspace:
+
+- `apps/web` is the Next.js 16 web app (`@courtrank/web`).
+- `apps/mobile` is the Expo SDK 54 React Native app (`@courtrank/mobile`).
+- `packages/core` is the shared framework-agnostic package (`@courtrank/core`).
+
+Keep the boundary clean: shared models, pure logic, API domain functions, query keys, labels, and optimistic cache helpers live in core; app-specific auth hooks, UI, runtime config wiring, and platform styling live in the relevant app.
 
 ## Next.js version
 
-**This is NOT the Next.js you know.** Next 16 — APIs, conventions, and file layout may differ from training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing routing/metadata/caching code, and heed deprecation notices. Notably: middleware lives in `proxy.ts` (not `middleware.ts`), and dynamic-route `params` is a `Promise` you must `await`.
+**This is NOT the Next.js you know.** Next 16 lives in `apps/web`. APIs, conventions, and file layout may differ from training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing routing/metadata/caching code, and heed deprecation notices. Notably: middleware lives in `apps/web/proxy.ts` (not `middleware.ts`), and dynamic-route `params` is a `Promise` you must `await`.
+
+## Expo / React Native version
+
+The mobile app lives in `apps/mobile` and uses Expo SDK 54, Expo Router, React Native 0.81, Clerk Expo, TanStack Query, and NativeWind. It requires a development build for native modules such as Clerk secure-store; do not assume Expo Go is enough. Device testing needs a LAN IP or tunnel for the backend, not `localhost`.
 
 ## Data layer
 
-Three layers, strictly separated:
+Four layers, strictly separated:
 
-1. **`data/api/*.ts`** — one module per domain (`tournaments`, `trainings`, `users`, …). Each function is a one-liner over the typed helpers in `data/api/client.ts`: `apiGet` / `apiPost` / `apiPut` / `apiPatch` / `apiDelete`.
-   - Authed calls take `token: string | null | undefined` as the **first** argument and pass `requireToken(token)` to the helper. Public calls omit the token (no `Authorization` header).
-   - `data/api/client.ts` is the single fetch boundary: timeout with NaN-guarded default (8000ms), trailing-slash-safe URL join, envelope type guard, and `ApiError` (Spanish message extracted from the backend envelope, plus `status`). Do not fetch outside this module.
+1. **`packages/core/src/api/*.ts`** - one module per domain (`tournaments`, `trainings`, `users`, ...). Each function is a one-liner over the typed helpers in `packages/core/src/api/client.ts`: `apiGet` / `apiPost` / `apiPut` / `apiPatch` / `apiDelete`.
+   - Authed calls take `token: string | null | undefined` as the **first** argument and pass `requireToken(token)` to the helper. Public calls omit the token.
+   - `packages/core/src/api/client.ts` is the single fetch boundary: timeout with NaN-guarded default (8000ms), trailing-slash-safe URL join, envelope type guard, and `ApiError`.
    - Backend envelope shape is `{ status, message, data }`; `request()` unwraps `data` on `status === "SUCCESS"` and throws `ApiError` otherwise.
+   - Core never reads `NEXT_PUBLIC_*` or `EXPO_PUBLIC_*` directly. Host apps inject runtime config with `setApiConfig({ baseUrl, timeoutMs })` from `apps/web/lib/api-init.ts` and `apps/mobile/lib/core-init.ts`.
 
-2. **`data/queries/*.ts`** — `"use client"` React Query hooks wrapping the api functions.
-   - Get the token inside the `queryFn` / `mutationFn`: `async () => fn(await getToken(), …)` via `useAuth()`.
-   - `staleTime: 30_000` is the default; `enabled` guards until required params (and `isLoaded && isSignedIn` for authed queries) are ready.
-   - **Query keys come only from the `queryKeys` factory in `data/queries/keys.ts`.** Never inline a raw array. Add a new key to the factory.
-   - Mutations invalidate via the **broad `*Root` keys** (e.g. `queryKeys.myTrainingsRoot`, `queryKeys.userRoot`). These prefix-match every related key and are intentionally broad — do not narrow them. Invalidation runs in `onSettled`, **not** awaited — see **Optimistic updates** below.
+2. **`packages/core/src/queries/*.ts`** - pure query-key factories and optimistic helpers.
+   - Query keys come only from `packages/core/src/queries/keys.ts`. Never inline a raw array. Add a new key to the factory.
+   - `optimistic()` and its pure helpers live here. The mutation failure notifier is injected per app with `setMutationNotifier`.
 
-3. **Components** consume the query/mutation hooks. They never import from `data/api/*` directly.
+3. **`apps/*/data/queries/*.ts`** - app-specific React Query hooks wrapping the core api functions.
+   - Web hooks use `@clerk/nextjs`; mobile hooks use `@clerk/clerk-expo`.
+   - Get the token inside the `queryFn` / `mutationFn`: `async () => fn(await getToken(), ...)` via the app's `useAuth()`.
+   - `staleTime: 30_000` is the default; `enabled` guards until required params are ready, and until `isLoaded && isSignedIn` for authed queries.
+   - Mutations invalidate via broad `*Root` keys (for example `queryKeys.myTrainingsRoot`, `queryKeys.userRoot`). These prefix-match every related key and are intentionally broad. Invalidation runs in `onSettled`, not awaited.
+
+4. **Components/screens** consume the query/mutation hooks. They never import from `packages/core/src/api/*` directly.
 
 ## Optimistic updates (mutations)
 
-Every create/update/delete mutation is wired for optimistic UX through the shared `optimistic()` factory in `data/queries/optimistic.ts`. Do not hand-roll `onMutate`/`onError`/`onSettled` per hook and do not put an awaited `invalidateQueries` in `onSuccess` (that blocks the modal on a full refetch after the write already succeeded — the bug this pattern replaced).
+Every create/update/delete mutation is wired for optimistic UX through the shared `optimistic()` factory in `packages/core/src/queries/optimistic.ts`. Do not hand-roll `onMutate`/`onError`/`onSettled` per hook and do not put an awaited `invalidateQueries` in `onSuccess`.
 
-Spread the factory into the mutation options and provide `mutationFn` yourself:
+Spread the factory into mutation options and provide `mutationFn` yourself:
 
 ```ts
 return useMutation({
@@ -39,77 +58,88 @@ return useMutation({
 });
 ```
 
-What the factory does: `onMutate` cancels in-flight queries, snapshots each `targets` cache, and paints the optimistic value; `onError` rolls every snapshot back and fires a danger toast via `notifyMutationError`; `onSettled` invalidates the `invalidate` keys **without awaiting** (so `mutateAsync` resolves after one write, not after a refetch).
+What the factory does: `onMutate` cancels in-flight queries, snapshots each `targets` cache, and paints the optimistic value; `onError` rolls every snapshot back and fires the app-injected danger notifier; `onSettled` invalidates the `invalidate` keys without awaiting.
 
 Rules:
-- **Always pass explicit type args** — `optimistic<TVars, TData>(...)`. Omitting them lets contextual inference collapse `TData` and the options fail to type-check. Use `unknown` for `TData` when the hook doesn't read the response (reconcile-only).
-- **`targets` — paint only where a merge is safe and cheap:** single-entity caches (`mergeDefined`) and list deletes (`removeById`) / list-row edits (`updateById`), all pure helpers in `optimistic.ts`. A `patch` that returns `previous` unchanged is skipped (nothing snapshotted). Read a value the mutation vars don't carry (e.g. the old username) via `queryClient.getQueryData` inside `targets`.
-- **Reconcile-only (no `targets`) for fragile caches:** anything keyed by ranges/timezone (trainings, calendar) or with computed fan-out (match score, join-request decisions). The modal still closes fast and the background refetch fills it in — do **not** hand-splice those.
-- **`patch` stays pure** (side-effect free) so it's unit-testable; colocate cases in `optimistic.test.ts`.
 
-**Fire-and-close:** because these callbacks run from the mutation (not the component observer), they still fire after the triggering modal unmounts. So a handler may call `mutate(...)` / start the flow and `onClose()` immediately without awaiting — the paint, rollback, reconcile, and toast all still happen. Keep an awaited `mutateAsync` only when you need the response before closing (e.g. following a server-slugified value to a redirect URL).
-
-**Paint before slow side-effects, never after.** `onMutate` fires when `mutate` is *called*, so if a slow step (an image upload, say) runs before the call, the paint waits on it and stops being instant. Put the slow persistence step *inside* the mutation and paint a local stand-in up front: pass the durable step as a lazy callback the `mutationFn` awaits, and paint an immediately-available preview via a separate optimistic value (a data URL for an image — no revocation, survives unmount). `useUpdateMeMutation` + `profile-edit-modal.tsx` are the reference: the avatar paints from a data URL instantly, the Clerk upload runs in `mutationFn`, and the background refetch swaps in the real CDN URL.
+- Always pass explicit type args: `optimistic<TVars, TData>(...)`. Use `unknown` for `TData` when the hook does not read the response.
+- `targets` paint only where a merge is safe and cheap: single-entity caches (`mergeDefined`) and list deletes (`removeById`) / list-row edits (`updateById`). Use reconcile-only for fragile caches keyed by ranges/timezone or computed fan-out.
+- `patch` stays pure and side-effect free; colocate cases in `packages/core/src/queries/optimistic.test.ts`.
+- Fire-and-close is allowed: callbacks run from the mutation even after the triggering modal/sheet unmounts.
+- Paint before slow side effects. If upload/persistence is slow, put it inside `mutationFn` and paint an immediately available preview value.
 
 ## Errors and user-facing messages
 
 - `request()` throws `ApiError` with a Spanish, user-safe message.
-- To display any caught error, run it through `errorMessage(error)` (`lib/errors.ts`) — always returns a string.
-- Render it with `<FormError message={…} />` (`components/modal-shell.tsx`), gated on the query/mutation's `isError` / `error != null`, **not** on the message being truthy. Use this for pre-submit validation and for modals that stay open on failure.
-- **Mutation failures also raise a danger toast** via `notifyMutationError` (`data/queries/notify.ts`, HeroUI `Toast.Provider` mounted in `app/providers.tsx`). This is the error channel for optimistic **fire-and-close** flows, where the modal is already gone — see **Optimistic updates**. Every mutation gets it through the `optimistic()` factory; do not call it by hand inside a mutation hook.
-- The `QueryClient` sets `defaultOptions.mutations.onError = console.error` (`app/providers.tsx`) as a last-resort floor so a failure is never fully silent. This is not a substitute for surfacing the error in the UI.
+- To display any caught error, run it through `errorMessage(error)` from `@courtrank/core` / `packages/core/src/lib/errors.ts`.
+- Web renders errors with `FormError` from `apps/web/components/modal-shell.tsx`; mobile renders errors with `apps/mobile/components/ui/form-error.tsx`. Gate on `isError` / `error != null`, not on the message being truthy.
+- Mutation failures raise a danger toast through `setMutationNotifier`: web wires HeroUI in `apps/web/app/providers.tsx` via `apps/web/data/queries/notify.ts`; mobile wires its native toast in `apps/mobile/app/_layout.tsx` via `apps/mobile/lib/notify.ts`.
+- Each app's `QueryClient` sets a last-resort `mutations.onError = console.error` floor so a failure is never fully silent. This is not a substitute for surfacing the error in the UI.
 
 ## Shared UI primitives
 
 Reuse these; do not hand-roll equivalents.
 
+### Web
+
 | Need | Use | File |
 | --- | --- | --- |
-| Page frame (header + `<main>` + footer) | `PageScaffold` | `components/page-scaffold.tsx` |
-| Form modal chrome (overlay, backdrop-close, disable-while-submitting) | `ModalShell` | `components/modal-shell.tsx` |
-| Inline validation/submit error | `FormError` | `components/modal-shell.tsx` |
-| Text input styling | `inputClass` | `components/modal-shell.tsx` |
-| Destructive confirmation (replaces `window.confirm`) | `ConfirmDialog` | `components/confirm-dialog.tsx` |
-| Dark gradient hero chrome | `PageHeroFrame` / `PageHero` | `components/page-hero.tsx` |
-| Space-reserving loading state | `PageSkeleton` | `components/page-skeleton.tsx` |
-| Empty/error card | `EmptyState` | `components/empty-state.tsx` |
+| Page frame | `PageScaffold` | `apps/web/components/page-scaffold.tsx` |
+| Form modal chrome | `ModalShell` | `apps/web/components/modal-shell.tsx` |
+| Inline validation/submit error | `FormError` | `apps/web/components/modal-shell.tsx` |
+| Text input styling | `inputClass` | `apps/web/components/modal-shell.tsx` |
+| Destructive confirmation | `ConfirmDialog` | `apps/web/components/confirm-dialog.tsx` |
+| Dark gradient hero chrome | `PageHeroFrame` / `PageHero` | `apps/web/components/page-hero.tsx` |
+| Space-reserving loading state | `PageSkeleton` | `apps/web/components/page-skeleton.tsx` |
+| Empty/error card | `EmptyState` | `apps/web/components/empty-state.tsx` |
+
+### Mobile
+
+Use the NativeWind kit in `apps/mobile/components/ui`: `Screen`, `Card`, `Button`, `Hero`, `FormError`, `EmptyState`, `Skeleton`, `Sheet`, `SegmentedTabs`, `Chip`, and `Toast`. Sheets replace web modals. Use `lucide-react-native` for icons and `react-native-svg` for charts/brackets.
 
 ## Spanish labels
 
-All user-visible enum copy lives in `lib/labels.ts` (`TOURNAMENT_STATUS_LABEL`, `MATCH_STATUS_LABEL`, `PHASE_FORMAT_LABEL`, `JOIN_STATUS_LABEL`, …) and surface copy in `lib/surface.ts` (`SURFACE_LABEL`). The UI is Spanish-only; no i18n. Do not inline label strings in components — import the map.
+All user-visible enum copy lives in `packages/core/src/lib/labels.ts` (`TOURNAMENT_STATUS_LABEL`, `MATCH_STATUS_LABEL`, `PHASE_FORMAT_LABEL`, `JOIN_STATUS_LABEL`, ...) and surface copy in `packages/core/src/lib/surface.ts` (`SURFACE_LABEL`). The UI is Spanish-only; no i18n. Do not inline label strings in components/screens.
 
-Intentional per-context divergences are encoded as separate maps, not silently forked: `TOURNAMENT_STATUS_LABEL` (management copy, DRAFT → "Borrador") vs `TOURNAMENT_STATUS_LABEL_PUBLIC` (player listings, DRAFT → "Próximamente"). If copy must diverge by context, add a named map with a comment saying why.
+Intentional per-context divergences are encoded as separate maps, not silently forked: `TOURNAMENT_STATUS_LABEL` (management copy, DRAFT -> "Borrador") vs `TOURNAMENT_STATUS_LABEL_PUBLIC` (player listings, DRAFT -> "Proximamente"). If copy must diverge by context, add a named map with a comment saying why.
 
 ## Layout (load-bearing)
 
-- Every top-level page renders through `PageScaffold`, whose `<main>` frame is `mx-auto w-full max-w-6xl flex-1 px-6 py-10`. This matches the `SiteHeader` container (`max-w-6xl`) so content edges line up across tabs. **Do not introduce other outer widths** (`max-w-3xl/4xl/5xl`); narrow inner sections may still cap their own width.
-- `html` keeps `overflow-y: scroll` + `scrollbar-gutter: stable` (`app/globals.css`). Keep it — it stops the centered frame shifting horizontally between short (no-scroll) and tall (scroll) pages. `scrollbar-gutter` alone is not enough because `<html>` has `h-full`.
-- **No layout shift from async UI.** Components that appear after auth/data resolves (Clerk `useUser`, React Query) must reserve their space from first paint — render the container at final height with a skeleton inside. Never `return null` then pop in; that shifts content under the cursor and breaks hover states.
+- Web top-level pages render through `PageScaffold`, whose `<main>` frame is `mx-auto w-full max-w-6xl flex-1 px-6 py-10`. This matches the `SiteHeader` container (`max-w-6xl`). Do not introduce other outer widths (`max-w-3xl/4xl/5xl`); narrow inner sections may still cap their own width.
+- Web `html` keeps `overflow-y: scroll` + `scrollbar-gutter: stable` (`apps/web/app/globals.css`). Keep it.
+- Mobile screens use `Screen` from `apps/mobile/components/ui/screen.tsx` for safe-area + scroll framing. Do not import web layout primitives.
+- No layout shift from async UI. Components that appear after auth/data resolves must reserve their space from first paint with skeletons or fixed-height containers. Never `return null` then pop in.
 
 ## Resilience routes
 
-`app/error.tsx`, `app/global-error.tsx`, and `app/not-found.tsx` exist as client fallbacks (Spanish copy, "Reintentar" → `reset()`). Loading branches use space-reserving skeletons, not bare "Cargando…" text. No `loading.tsx` files (client pages + React Query rarely trigger route suspense).
+Web `apps/web/app/error.tsx`, `apps/web/app/global-error.tsx`, and `apps/web/app/not-found.tsx` exist as client fallbacks with Spanish copy. Loading branches use space-reserving skeletons, not bare "Cargando..." text. Do not add web `loading.tsx` files unless route suspense is intentionally introduced.
 
 ## Auth
 
-- `proxy.ts` runs `clerkMiddleware` with `createRouteMatcher(["/admin(.*)", "/host(.*)"])` → anonymous visitors to those trees are redirected to sign-in. `/players` and `/tournaments` stay public (shareable).
-- Role gating is client + backend: the role comes from `/users/me`, not session claims. The backend authorizes every mutation — client gating is UI-only.
+- `apps/web/proxy.ts` runs `clerkMiddleware` with `createRouteMatcher(["/admin(.*)", "/host(.*)"])`; anonymous visitors to those trees are redirected to sign-in. `/players` and `/tournaments` stay public.
+- `apps/mobile` uses Clerk Expo in the root layout and Expo Router guards. Player/tournament detail routes should remain public/deep-linkable where the backend allows it; owner-only tools require a signed-in player.
+- Role gating is client + backend: the role comes from `/users/me`, not session claims. The backend authorizes every mutation; client gating is UI-only.
 
 ## Metadata / SEO
 
-Client pages cannot export `metadata`, so:
+Client pages cannot export `metadata`, so web follows these rules:
 
-- Root `app/layout.tsx` sets `title: { default, template: "%s · CourtRank" }`.
-- Each client-page segment has a server `layout.tsx` exporting static `metadata` (title + Spanish description).
-- Public dynamic routes (`tournaments/[id]`, `players/[id]`) are thin server `page.tsx` files that export `generateMetadata` (`await params`) and render `_components/*-page-client.tsx`. Metadata fetches use `requestForMetadata()` (cached, `revalidate: 300`, no token) — **not** `request()` (which is `no-store`). On invalid id or fetch error, return fallback metadata; `generateMetadata` must never throw. Page data still flows through React Query in the client component (no double-fetch in the render path).
+- Root `apps/web/app/layout.tsx` sets `title: { default, template: "%s · CourtRank" }`.
+- Each client-page segment has a server `layout.tsx` exporting static `metadata` with title + Spanish description.
+- Public dynamic routes (`tournaments/[id]`, `players/[id]`) are thin server `page.tsx` files that export `generateMetadata` (`await params`) and render `_components/*-page-client.tsx`.
+- Metadata fetches use `requestForMetadata()` after importing `@/lib/api-init`, not `request()`. On invalid id or fetch error, return fallback metadata; `generateMetadata` must never throw.
 
 ## Testing
 
-Vitest, `node` environment, pure logic only (no jsdom / component tests — poor ROI). Tests are colocated as `*.test.ts` next to the module. Run with `pnpm test`; wired into husky **pre-push** (not pre-commit). For code that reads env at module-load (`data/api/client.ts`), exercise it via `vi.resetModules()` + `vi.stubEnv` + dynamic `import()`.
+- Root `pnpm test` runs workspace tests recursively.
+- Core and web use Vitest, `node` environment, pure logic only unless a component test is explicitly justified. Tests are colocated as `*.test.ts`.
+- Mobile currently uses `tsc -p apps/mobile/tsconfig.json --noEmit` as its `test` script. Add pure tests only when the mobile test harness exists; otherwise keep platform behavior verified manually.
+- For runtime config injection, prefer testing the core client with `setApiConfig`/`getApiConfig` instead of module-load env stubbing.
 
 ## Tooling & commits
 
-- **Biome is the only linter/formatter** (`pnpm check`, `pnpm lint`, `pnpm format`). ESLint is gone.
-- Package manager is **pnpm**.
-- Conventional commits: subject ≤ 50 chars, one logical change per commit. End the body with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
-- The repo has pre-existing repo-wide Biome CRLF/`.vscode` format diffs in untouched files — leave them alone; keep your touched files clean.
+- Biome is the only linter/formatter at the repo root (`pnpm check`, `pnpm lint`, `pnpm format`). ESLint is gone.
+- Package manager is pnpm.
+- Root scripts delegate to workspaces: `pnpm dev` -> web, `pnpm mobile` -> Expo, `pnpm build` -> web build, `pnpm test` -> recursive workspace tests.
+- Conventional commits: subject <= 50 chars, one logical change per commit. End the body with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
+- The repo may have pre-existing repo-wide Biome CRLF/`.vscode` format diffs in untouched files. Leave them alone; keep your touched files clean.
