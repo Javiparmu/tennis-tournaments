@@ -1,14 +1,33 @@
-import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { ScrollView, View } from "react-native";
+import { EmptyState, Hero, Skeleton } from "../../components/ui";
+import { TournamentRow } from "../../components/tournament-row";
+import { useUpcomingCalendarQuery } from "../../data/queries/tournaments";
 
-// Placeholder — Phase 5 renders the upcoming-tournaments agenda (getUpcomingCalendar).
 export default function HomeScreen() {
+  const router = useRouter();
+  const { data, isLoading, isError } = useUpcomingCalendarQuery(8);
+
   return (
-    <SafeAreaView className="flex-1 bg-ink">
-      <View className="flex-1 justify-center px-6">
-        <Text className="text-2xl font-bold text-paper">Inicio</Text>
-        <Text className="mt-2 text-paper/60">Próximos torneos (próximamente).</Text>
-      </View>
-    </SafeAreaView>
+    <View className="flex-1 bg-ink">
+      <Hero title="Próximos torneos" subtitle="Inscríbete y sigue tu progreso." />
+      <ScrollView contentContainerClassName="gap-3 px-5 py-4" showsVerticalScrollIndicator={false}>
+        {isLoading ? (
+          [0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)
+        ) : isError ? (
+          <EmptyState title="No se pudieron cargar los torneos" description="Inténtalo de nuevo más tarde." />
+        ) : !data || data.length === 0 ? (
+          <EmptyState title="Sin torneos próximos" description="Vuelve pronto para ver nuevos torneos." />
+        ) : (
+          data.map((tournament) => (
+            <TournamentRow
+              key={tournament.id}
+              tournament={tournament}
+              onPress={() => router.push(`/tournament/${tournament.id}`)}
+            />
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }

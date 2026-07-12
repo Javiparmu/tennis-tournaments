@@ -1,13 +1,12 @@
 import { errorMessage } from "@courtrank/core";
-import { Alert } from "react-native";
+import { showToast } from "../components/ui/toast";
 
-// The danger channel for fire-and-close mutation failures (wired into the core
-// optimistic factory via setMutationNotifier). A native Alert for now; Phase 4
-// replaces it with an in-app Toast.
+// The danger/success channels wired into the core optimistic factory via
+// setMutationNotifier, and used by fire-and-close flows once their sheet closes.
 export function notifyMutationError(error: unknown): void {
-  Alert.alert("Error", errorMessage(error));
+  showToast("danger", errorMessage(error));
 }
 
 export function notifySuccess(message: string): void {
-  Alert.alert("Listo", message);
+  showToast("success", message);
 }

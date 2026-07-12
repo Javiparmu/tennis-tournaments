@@ -1,3 +1,7 @@
+# React Native's Metro bundler can't follow pnpm's default isolated node_modules,
+# so RN transitive deps (react-native-css-interop, …) fail to resolve. A hoisted
+# layout is the standard fix for Expo + pnpm; Next.js handles it fine too.
+nodeLinker: hoisted
 packages:
   - "apps/*"
   - "packages/*"

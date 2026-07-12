@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ToastHost } from "../components/ui";
 import { notifyMutationError } from "../lib/notify";
 import { QueryProvider } from "../lib/query/query-provider";
 
@@ -52,6 +53,7 @@ export default function RootLayout() {
             <StatusBar style="auto" />
           </QueryProvider>
         </ClerkProvider>
+        <ToastHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

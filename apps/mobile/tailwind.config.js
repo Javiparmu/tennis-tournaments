@@ -11,7 +11,9 @@ module.exports = {
         grass: "#16a34a",
         // Brand ink/paper (dark-first, mirroring the web hero chrome).
         ink: "#0a0a0a",
+        inkSoft: "#161615",
         paper: "#faf9f7",
+        muted: "#9ca3af",
       },
     },
   },
