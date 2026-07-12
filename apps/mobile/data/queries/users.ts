@@ -5,9 +5,13 @@ import {
   getUserRatingHistory,
   getUsers,
   getUserTournaments,
+  optimistic,
+  type OptimisticTarget,
   queryKeys,
+  updateMe,
+  type User,
 } from "@courtrank/core";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../lib/auth/clerk";
 
 export function useUsersQuery() {
@@ -57,5 +61,34 @@ export function useUserTournamentsQuery(userId?: number) {
     queryFn: () => getUserTournaments(userId as number),
     enabled: userId != null,
     staleTime: 30_000,
+  });
+}
+
+// Name/username edit (avatar upload is a follow-up). Paints the me + by-username
+// caches optimistically; userRoot invalidation reconciles the slugified username.
+type UpdateMeVars = { name?: string | null; username?: string | null };
+
+export function useUpdateMeMutation() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (vars: UpdateMeVars) => updateMe(await getToken(), vars),
+    ...optimistic<UpdateMeVars, User>(queryClient, {
+      targets: (vars) => {
+        const me = queryClient.getQueryData<User>(queryKeys.me);
+        const patch = (previous: unknown) =>
+          previous
+            ? {
+                ...(previous as User),
+                ...(vars.name !== undefined ? { name: vars.name } : {}),
+                ...(vars.username !== undefined ? { username: vars.username } : {}),
+              }
+            : previous;
+        const targets: OptimisticTarget<UpdateMeVars>[] = [{ key: queryKeys.me, patch }];
+        if (me?.username) targets.push({ key: queryKeys.userByUsername(me.username), patch });
+        return targets;
+      },
+      invalidate: () => [queryKeys.userRoot],
+    }),
   });
 }

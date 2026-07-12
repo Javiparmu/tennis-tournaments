@@ -4,6 +4,7 @@ import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { SocialButtons } from "../../components/social-buttons";
 
 // Minimal email/password sign-up with email-code verification (Phase 5 adds SSO
 // + polish).
@@ -95,6 +96,12 @@ export default function SignUpScreen() {
             <Pressable className="mt-2 items-center rounded-xl bg-clay py-3 active:opacity-80" onPress={onSubmit} disabled={submitting}>
               {submitting ? <ActivityIndicator color="#fff" /> : <Text className="text-base font-semibold text-white">Continuar</Text>}
             </Pressable>
+            <View className="my-2 flex-row items-center gap-3">
+              <View className="h-px flex-1 bg-paper/15" />
+              <Text className="text-xs text-paper/40">o</Text>
+              <View className="h-px flex-1 bg-paper/15" />
+            </View>
+            <SocialButtons />
             <View className="mt-4 flex-row justify-center gap-1">
               <Text className="text-paper/60">¿Ya tienes cuenta?</Text>
               <Link href="/sign-in" className="font-semibold text-clay">

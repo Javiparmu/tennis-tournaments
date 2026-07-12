@@ -12,7 +12,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.courtrank.mobile"
+      "bundleIdentifier": "app.courtrank.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.courtrank.mobile",
@@ -41,8 +44,10 @@
     },
     "extra": {
       "eas": {
-        "projectId": ""
-      }
-    }
+        "projectId": "88d8dbed-adf5-4515-a12d-1ec978f0dfe6"
+      },
+      "router": {}
+    },
+    "owner": "javiparmu"
   }
 }
