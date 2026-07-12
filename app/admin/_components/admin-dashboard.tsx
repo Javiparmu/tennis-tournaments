@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { Button, Form } from "@heroui/react";
 import {
+  AtSign,
   BarChart3,
   Building2,
   CircleAlert,
@@ -33,6 +34,7 @@ import {
   useMeQuery,
   useUserByUsernameQuery,
 } from "@/data/queries";
+import { notifySuccess } from "@/data/queries/notify";
 import { errorMessage } from "@/lib/errors";
 import type { AdminClubContactRequest, AdminClubSummary, AdminOverview } from "@/models";
 
@@ -256,6 +258,12 @@ function ContactRequestRow({
             {request.contactName} · {dateFormatter.format(new Date(request.createdAt))}
           </p>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-stone-600">
+            {request.ownerUsername ? (
+              <span className="inline-flex items-center gap-1.5 font-medium text-court-ink">
+                <AtSign className="h-3.5 w-3.5 text-court" />
+                {request.ownerUsername}
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-court" />
               {request.email}
@@ -382,48 +390,16 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
   const [name, setName] = useState(request.clubName);
   const [phoneNumber, setPhoneNumber] = useState(request.phone ?? "");
   const [address, setAddress] = useState("");
-  const [ownerUsername, setOwnerUsername] = useState("");
+  // The requester's handle rides along on the request (captured read-only at
+  // submit time). Prefill + lock it so the admin never retypes or hunts for it;
+  // fall back to a manual input only for legacy requests that predate the field.
+  const [ownerUsername, setOwnerUsername] = useState(request.ownerUsername ?? "");
+  const ownerLocked = Boolean(request.ownerUsername);
   const [formError, setFormError] = useState<string | null>(null);
-  const [createdClubName, setCreatedClubName] = useState<string | null>(null);
   const ownerUsernameValue = ownerUsername.trim();
   const ownerQuery = useUserByUsernameQuery(ownerUsernameValue || undefined);
 
   const isPending = createClub.isPending || deleteRequest.isPending || ownerQuery.isFetching;
-
-  if (createdClubName) {
-    return (
-      <ModalShell title="Club dado de alta" onClose={onClose}>
-        <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <UserCheck className="h-10 w-10 text-court" />
-          <p className="font-display text-lg font-bold text-court-ink">{createdClubName} ya está en la plataforma</p>
-          <p className="max-w-sm text-sm text-stone-600">
-            El club aparece ya en la zona de organizador de su propietario. Puedes eliminar la solicitud atendida.
-          </p>
-          <div className="mt-2 flex gap-3">
-            <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose}>
-              Cerrar
-            </Button>
-            <Button
-              type="button"
-              className="bg-court text-ball-bright hover:bg-court-hover"
-              isDisabled={deleteRequest.isPending}
-              onPress={async () => {
-                try {
-                  await deleteRequest.mutateAsync(request.id);
-                  onClose();
-                } catch {
-                  // surfaced via mutation error below
-                }
-              }}
-            >
-              Eliminar solicitud
-            </Button>
-          </div>
-          <FormError message={deleteRequest.error ? errorMessage(deleteRequest.error) : null} />
-        </div>
-      </ModalShell>
-    );
-  }
 
   return (
     <ModalShell
@@ -453,7 +429,12 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
               address: address.trim() || null,
               ownerUserId: owner.id,
             });
-            setCreatedClubName(club.name);
+            // Club created: clear the attended request from the queue
+            // (fire-and-close — the optimistic delete removes the row and toasts
+            // on error even after this modal unmounts) and confirm via toast.
+            deleteRequest.mutate(request.id);
+            notifySuccess(`Club "${club.name}" dado de alta`);
+            onClose();
           } catch {
             setFormError("No se pudo crear el club. Inténtalo de nuevo.");
           }
@@ -463,15 +444,25 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
           <span>Nombre del club</span>
           <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </label>
-        <label className="block space-y-2 text-sm font-medium text-stone-700">
+        <label htmlFor="club-owner-username" className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Usuario propietario</span>
-          <input
-            required
-            value={ownerUsername}
-            onChange={(e) => setOwnerUsername(e.target.value)}
-            placeholder="nombre-de-usuario"
-            className={inputClass}
-          />
+          {ownerLocked ? (
+            <input
+              id="club-owner-username"
+              readOnly
+              value={`@${ownerUsername}`}
+              className={`${inputClass} cursor-not-allowed bg-stone-50 text-stone-500`}
+            />
+          ) : (
+            <input
+              id="club-owner-username"
+              required
+              value={ownerUsername}
+              onChange={(e) => setOwnerUsername(e.target.value)}
+              placeholder="nombre-de-usuario"
+              className={inputClass}
+            />
+          )}
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-2 text-sm font-medium text-stone-700">

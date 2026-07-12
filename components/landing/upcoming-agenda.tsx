@@ -1,27 +1,21 @@
 "use client";
 
-import { ArrowRight, CalendarDays } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useClubNameMap, useUpcomingCalendarQuery } from "@/data/queries";
 import { countdown, dayMonth } from "@/lib/format";
 import { surfaceStyle } from "@/lib/surface";
 
-// The upcoming-tournaments agenda: a dark brand panel sitting inside the light
-// hero. It reads like a real calendar object — rows grouped under month headers,
-// the nearest date ringed in lime — rather than a generic card strip. The panel
-// chrome (radius, background, header) paints on first render and the body
-// reserves a fixed height, so the skeleton→data swap causes zero layout shift.
+// The upcoming-tournaments agenda: a single horizontal snap-strip rail used at
+// every breakpoint. It rides the bottom of the dark night-stadium hero, over
+// the grass, so the cards are glass — a dark blurred fill so they stay legible
+// on the photo. The nearest tournament is promoted to a flat lime feature card
+// (the same ball-bright as the marquee band right below the hero, so they read
+// as one system); the rest follow as glass cards you swipe through.
 
-// Full month name for the group headers ("JULIO", "AGOSTO"). lib/format only
-// exposes the short form used inside a row's date block, so the long label is
-// formatted locally here.
-const MONTH_LONG = new Intl.DateTimeFormat("es-ES", { month: "long" });
-
-function monthKey(date: string): string {
-  const d = new Date(date);
-  return `${d.getFullYear()}-${d.getMonth()}`;
-}
+const ARROW_BTN =
+  "grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-colors hover:border-ball-bright/50 hover:text-ball-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright disabled:pointer-events-none disabled:opacity-30";
 
 export function UpcomingAgenda() {
   const { data = [], isLoading } = useUpcomingCalendarQuery(6);
@@ -29,104 +23,115 @@ export function UpcomingAgenda() {
 
   // The feed arrives future-only and soonest-first from getUpcomingCalendar.
   const rows = useMemo(() => data.slice(0, 5), [data]);
-  // Only label months when the list actually spans more than one — a single-month
-  // agenda reads cleaner without a redundant header.
-  const showMonths = useMemo(() => new Set(rows.map((t) => monthKey(t.startDate))).size > 1, [rows]);
-  const nearestId = rows[0]?.id;
+
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const updateArrows = useCallback(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  // The strip only exists in the loaded branch, so re-attach when it mounts.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-attach when the loaded strip mounts
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    updateArrows();
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [updateArrows, isLoading, rows.length]);
+
+  // Arrows exist because the scrollbar is hidden — mouse users otherwise can't
+  // reach cards past the fold of the strip. Scroll one card per click (280px
+  // card + 12px gap).
+  const scrollByCard = (dir: -1 | 1) => stripRef.current?.scrollBy({ left: dir * 292, behavior: "smooth" });
 
   return (
-    <div className="rounded-3xl bg-court-night-deep p-5 shadow-xl md:p-6">
+    <div>
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <h2 className="font-display text-lg font-black tracking-tight text-white md:text-xl">Próximos torneos</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-display text-xs font-bold uppercase tracking-widest text-ball-bright/90">
+            Próximos torneos
+          </h2>
           {!isLoading && rows.length > 0 ? (
-            <span className="rounded-full bg-ball-bright/15 px-2 py-0.5 text-xs font-bold text-ball-bright">
+            <span className="rounded-full bg-ball-bright/15 px-2 py-0.5 text-[10px] font-bold text-ball-bright">
               {rows.length}
             </span>
           ) : null}
         </div>
-        <Link
-          href="/tournaments"
-          className="group inline-flex items-center gap-1 rounded-md text-sm font-semibold text-ball-bright hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
+        <div className="flex items-center gap-4">
+          <Link
+            href="/tournaments"
+            className="group inline-flex items-center gap-1 rounded-md text-sm font-semibold text-white/70 hover:text-ball-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright"
+          >
+            Ver todos
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+          </Link>
+          {!isLoading && rows.length > 0 && (canPrev || canNext) ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <button
+                type="button"
+                aria-label="Anteriores"
+                disabled={!canPrev}
+                onClick={() => scrollByCard(-1)}
+                className={ARROW_BTN}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Siguientes"
+                disabled={!canNext}
+                onClick={() => scrollByCard(1)}
+                className={ARROW_BTN}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* The rail body is a fixed 120px tall across loading, empty, and loaded
+          states so the skeleton→data swap causes zero layout shift. */}
+      {isLoading ? (
+        <div className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-1 scroll-px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
+              key={i}
+              className="h-[120px] w-[280px] shrink-0 animate-pulse rounded-2xl border border-white/15 bg-white/[0.08]"
+            />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <EmptyAgenda className="h-[120px]" />
+      ) : (
+        <div
+          ref={stripRef}
+          className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-1 scroll-px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          Ver todos
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
-        </Link>
-      </div>
-
-      {/* Desktop: vertical agenda. Fixed-height body (5 × 70px rows + gaps) so the
-          skeleton and the loaded list occupy the same space. */}
-      <div className="hidden md:block">
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
-                key={i}
-                className="h-[70px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.05]"
-              />
-            ))}
-          </div>
-        ) : rows.length === 0 ? (
-          <EmptyAgenda className="h-[382px]" />
-        ) : (
-          <ol className="space-y-2">
-            {rows.map((t, i) => {
-              const prev = rows[i - 1];
-              const startsMonth = showMonths && (!prev || monthKey(prev.startDate) !== monthKey(t.startDate));
-              return (
-                <li key={t.id}>
-                  {startsMonth ? (
-                    <p className="mb-1.5 mt-1 px-1 text-[10px] font-bold uppercase tracking-widest text-white/40">
-                      {MONTH_LONG.format(new Date(t.startDate)).toUpperCase()}
-                    </p>
-                  ) : null}
-                  <AgendaRow
-                    id={t.id}
-                    name={t.name}
-                    club={clubNames.get(t.clubId) ?? "Club anfitrión"}
-                    surface={t.surface}
-                    startDate={t.startDate}
-                    highlighted={t.id === nearestId}
-                  />
-                </li>
-              );
-            })}
-          </ol>
-        )}
-      </div>
-
-      {/* Mobile: horizontal snap strip — swipeable cards instead of the vertical
-          list, which would push the hero too tall on a phone. */}
-      <div className="md:hidden">
-        {isLoading ? (
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: static skeletons
-                key={i}
-                className="h-[120px] w-[280px] shrink-0 animate-pulse rounded-2xl border border-white/10 bg-white/[0.05]"
-              />
-            ))}
-          </div>
-        ) : rows.length === 0 ? (
-          <EmptyAgenda className="h-[120px]" />
-        ) : (
-          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {rows.map((t) => (
-              <AgendaCard
-                key={t.id}
-                id={t.id}
-                name={t.name}
-                club={clubNames.get(t.clubId) ?? "Club anfitrión"}
-                surface={t.surface}
-                startDate={t.startDate}
-                highlighted={t.id === nearestId}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {rows.map((t, i) => (
+            <AgendaCard
+              key={t.id}
+              id={t.id}
+              name={t.name}
+              club={clubNames.get(t.clubId) ?? "Club anfitrión"}
+              surface={t.surface}
+              startDate={t.startDate}
+              featured={i === 0}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -137,65 +142,53 @@ type RowProps = {
   club: string;
   surface: string | null;
   startDate: string;
-  highlighted: boolean;
 };
 
-function AgendaRow({ id, name, club, surface, startDate, highlighted }: RowProps) {
+// The only card in the rail. The featured (soonest) one is a flat lime object;
+// the rest are glass — backdrop-blur over a dark fill so they stay legible on
+// the bright grass of the hero photo behind them.
+function AgendaCard({ id, name, club, surface, startDate, featured }: RowProps & { featured: boolean }) {
   const s = surfaceStyle(surface);
   const { day, month } = dayMonth(startDate);
   return (
     <Link
       href={`/tournaments/${id}`}
-      className={`group flex h-[70px] items-center gap-3 rounded-2xl border px-3 transition-all hover:-translate-y-0.5 hover:bg-white/[0.07] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
-        highlighted
-          ? "border-transparent bg-white/[0.06] ring-1 ring-ball-bright/50"
-          : "border-white/10 bg-white/[0.04] hover:border-white/20"
-      }`}
-    >
-      <span aria-hidden className="h-9 w-1 shrink-0 rounded-full" style={{ background: s.hex }} />
-      <div className="flex w-9 shrink-0 flex-col items-center">
-        <span className="font-display text-2xl font-black leading-none text-white">{day}</span>
-        <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-white/45">{month}</span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-display text-sm font-bold text-white group-hover:text-ball-bright">{name}</p>
-        <div className="mt-1 flex items-center gap-1.5">
-          <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: s.hex }} />
-          <span className="text-[11px] text-white/55">{s.label}</span>
-          <span className="text-white/25">·</span>
-          <span className="truncate text-[11px] text-white/45">{club}</span>
-        </div>
-      </div>
-      <span className="shrink-0 text-xs font-semibold text-ball-bright">{countdown(startDate)}</span>
-    </Link>
-  );
-}
-
-function AgendaCard({ id, name, club, surface, startDate, highlighted }: RowProps) {
-  const s = surfaceStyle(surface);
-  const { day, month } = dayMonth(startDate);
-  return (
-    <Link
-      href={`/tournaments/${id}`}
-      className={`flex h-[120px] w-[280px] shrink-0 snap-start flex-col justify-between rounded-2xl border p-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright ${
-        highlighted ? "border-transparent bg-white/[0.06] ring-1 ring-ball-bright/50" : "border-white/10 bg-white/[0.04]"
+      className={`flex h-[120px] w-[280px] shrink-0 snap-start flex-col justify-between rounded-2xl p-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ball-bright ${
+        featured
+          ? "bg-ball-bright text-court-ink shadow-xl shadow-black/40"
+          : "border border-white/15 bg-court-night-deep/80 text-white backdrop-blur-xl shadow-xl shadow-black/40 hover:border-ball-bright/50 hover:bg-court-night-deep/90"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-baseline gap-1.5">
-          <span aria-hidden className="mr-1 h-8 w-1 self-center rounded-full" style={{ background: s.hex }} />
-          <span className="font-display text-2xl font-black leading-none text-white">{day}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">{month}</span>
+          {/* Lime date on the glass cards: the rail is a calendar, so the date is
+              the anchor — and it echoes the featured card without competing. */}
+          <span className={`font-display text-2xl font-black leading-none ${featured ? "" : "text-ball-bright"}`}>
+            {day}
+          </span>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider ${featured ? "text-court-ink/60" : "text-white/45"}`}
+          >
+            {month}
+          </span>
         </div>
-        <span className="text-xs font-semibold text-ball-bright">{countdown(startDate)}</span>
+        {featured ? (
+          <span className="rounded-full bg-court-ink px-2 py-0.5 text-[11px] font-bold text-ball-bright">
+            {countdown(startDate)}
+          </span>
+        ) : (
+          <span className="text-xs font-semibold text-ball-bright">{countdown(startDate)}</span>
+        )}
       </div>
       <div className="min-w-0">
-        <p className="truncate font-display text-sm font-bold text-white">{name}</p>
-        <div className="mt-1 flex items-center gap-1.5">
+        <p className="truncate font-display text-sm font-bold">{name}</p>
+        <div
+          className={`mt-1 flex items-center gap-1.5 text-[11px] ${featured ? "text-court-ink/70" : "text-white/55"}`}
+        >
           <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: s.hex }} />
-          <span className="text-[11px] text-white/55">{s.label}</span>
-          <span className="text-white/25">·</span>
-          <span className="truncate text-[11px] text-white/45">{club}</span>
+          <span>{s.label}</span>
+          <span className={featured ? "text-court-ink/40" : "text-white/25"}>·</span>
+          <span className={`truncate ${featured ? "" : "text-white/45"}`}>{club}</span>
         </div>
       </div>
     </Link>
@@ -205,7 +198,7 @@ function AgendaCard({ id, name, club, surface, startDate, highlighted }: RowProp
 function EmptyAgenda({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 px-4 text-center ${className}`}
+      className={`flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 bg-court-night-deep/40 px-4 text-center backdrop-blur-sm ${className}`}
     >
       <CalendarDays aria-hidden className="h-7 w-7 text-white/30" />
       <p className="text-sm text-white/70">Aún no hay torneos próximos.</p>

@@ -1,9 +1,8 @@
-import { Dumbbell, Medal, Target, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import Image from "next/image";
+import { Dumbbell, Medal, Target, TrendingUp } from "lucide-react";
 import type { StaticImageData } from "next/image";
+import Image from "next/image";
 import { FadeContent } from "@/components/react-bits/FadeContent";
-import { SpotlightCard } from "@/components/react-bits/SpotlightCard";
 import aerialCourt from "@/public/landing/aerial-court.webp";
 import racketFlatlay from "@/public/landing/racket-flatlay.webp";
 import { SectionHeading } from "./section-heading";
@@ -15,6 +14,15 @@ import { SectionHeading } from "./section-heading";
 // both images on one side. Cell spans fill the 6-col grid exactly — no holes.
 
 const BADGES = ["Primera victoria", "Racha de 5", "Rey de la tierra"];
+
+const ELO_POINTS = [
+  { x: 1, y: 78, elo: 1168 },
+  { x: 21, y: 57, elo: 1196 },
+  { x: 41, y: 65, elo: 1184 },
+  { x: 60, y: 40, elo: 1221 },
+  { x: 79, y: 28, elo: 1247 },
+  { x: 98, y: 9, elo: 1284 },
+];
 
 export function FeaturesBento() {
   return (
@@ -30,36 +38,54 @@ export function FeaturesBento() {
       </FadeContent>
 
       <div className="mt-10 grid gap-5 md:auto-rows-[240px] md:grid-cols-6">
-        {/* 1 — Elo, the headline feature, gets the widest cell and the spotlight. */}
+        {/* 1 — Elo, the headline feature, gets the widest cell. */}
         <FadeContent className="md:col-span-4">
-          <SpotlightCard className="h-full rounded-2xl border border-court/10 bg-white shadow-sm">
-            <div className="flex h-full flex-col p-6">
-              <CardHeader icon={TrendingUp} title="Ranking por Elo" />
-              <p className="mt-2 max-w-md text-sm text-stone-600">
-                Tu rating sube y baja con cada resultado. Sigue tu progresión partido a partido y compárate en la
-                clasificación.
-              </p>
-              {/* Decorative rating sparkline — an upward Elo curve ending on the ball. */}
+          <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-court/10 bg-white p-6 shadow-sm shadow-court/5">
+            <CardHeader icon={TrendingUp} title="Ranking por Elo" />
+            <p className="mt-2 max-w-md text-sm text-stone-600">
+              Tu rating sube y baja con cada resultado. Sigue tu progresión partido a partido y compárate en la
+              clasificación.
+            </p>
+
+            <div className="relative mt-auto h-20 w-full">
               <svg
                 aria-hidden="true"
                 role="presentation"
-                viewBox="0 0 300 64"
+                viewBox="0 0 100 88"
                 fill="none"
                 preserveAspectRatio="none"
-                className="mt-auto h-14 w-full text-court"
+                className="absolute inset-0 h-full w-full text-court"
               >
-                <path
-                  d="M4 54 L44 46 L84 50 L124 34 L164 39 L204 20 L244 25 L288 8"
+                <polyline
+                  points={ELO_POINTS.map(({ x, y }) => `${x},${y}`).join(" ")}
                   stroke="currentColor"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="opacity-25"
+                  vectorEffect="non-scaling-stroke"
                 />
-                <circle cx="288" cy="8" r="4.5" className="fill-ball-bright" />
               </svg>
+
+              {ELO_POINTS.map(({ x, y, elo }) => (
+                <button
+                  key={elo}
+                  type="button"
+                  aria-label={`${elo} pts`}
+                  className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-default appearance-none border-0 bg-transparent p-0 outline-none"
+                  style={{ left: `${x}%`, top: `${(y / 88) * 100}%` }}
+                >
+                  <span className="block h-3 w-3 rounded-full border-2 border-court bg-ball-bright shadow-sm transition-transform group-hover:scale-125 group-focus-visible:scale-125" />
+                  <span
+                    className={`pointer-events-none absolute bottom-full mb-2 rounded-md bg-court-ink px-2 py-1 font-mono text-[11px] font-semibold whitespace-nowrap text-white opacity-0 shadow-md transition-[opacity,transform] group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-translate-y-0.5 group-focus-visible:opacity-100 ${
+                      x < 10 ? "left-0" : x > 90 ? "right-0" : "left-1/2 -translate-x-1/2"
+                    }`}
+                  >
+                    {elo} pts
+                  </span>
+                </button>
+              ))}
             </div>
-          </SpotlightCard>
+          </div>
         </FadeContent>
 
         {/* 2 — Aerial photo cell, top-right. */}
@@ -103,8 +129,7 @@ export function FeaturesBento() {
           <div className="flex h-full flex-col rounded-2xl border border-court/10 bg-white p-6 shadow-sm">
             <CardHeader icon={Target} title="Raquetas y encordados" />
             <p className="mt-2 text-sm text-stone-600">
-              Registra tus raquetas y todo su historial de encordados: tensiones, cuerdas y notas de cómo jugó cada
-              uno.
+              Registra tus raquetas y todo su historial de encordados: tensiones, cuerdas y notas de cómo jugó cada uno.
             </p>
           </div>
         </FadeContent>

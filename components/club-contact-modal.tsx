@@ -1,10 +1,12 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { Button, Form } from "@heroui/react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, LogIn } from "lucide-react";
+import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import { inputClass, ModalShell } from "@/components/modal-shell";
-import { useClubContactRequestMutation } from "@/data/queries";
+import { useClubContactRequestMutation, useMeQuery } from "@/data/queries";
 import { CLUB_CONTACT_EMAIL } from "@/lib/contact";
 
 type ClubContactCtaProps = {
@@ -30,6 +32,8 @@ export function ClubContactCta({ className, children }: ClubContactCtaProps) {
 }
 
 function ClubContactModal({ onClose }: { onClose: () => void }) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const me = useMeQuery();
   const contactRequest = useClubContactRequestMutation();
   const [clubName, setClubName] = useState("");
   const [contactName, setContactName] = useState("");
@@ -38,10 +42,50 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  const username = me.data?.username;
   const submitError =
     contactRequest.error instanceof Error
       ? "No se pudo enviar la solicitud. Inténtalo de nuevo o escríbenos por email."
       : null;
+
+  // Provisioning makes the requester the club owner, so the request must carry a
+  // real account handle. Gate the form on sign-in; anonymous visitors get a
+  // sign-in prompt (plus the email fallback) instead of a free-typed username.
+  if (isLoaded && !isSignedIn) {
+    return (
+      <ModalShell
+        title="Inicia sesión para dar de alta tu club"
+        subtitle="Asociaremos la solicitud a tu cuenta, que será la propietaria del club."
+        onClose={onClose}
+      >
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <LogIn className="h-10 w-10 text-court" />
+          <p className="max-w-sm text-sm text-stone-600">
+            Necesitas una cuenta de CourtRank para que podamos dar de alta tu club a tu nombre. Inicia sesión o
+            regístrate y vuelve a abrir este formulario.
+          </p>
+          <div className="mt-2 flex gap-3">
+            <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose}>
+              Cancelar
+            </Button>
+            <Link
+              href="/sign-in"
+              className="inline-flex items-center gap-2 rounded-xl bg-court px-4 py-2 text-sm font-semibold text-ball-bright hover:bg-court-hover"
+            >
+              <LogIn className="h-4 w-4" />
+              Iniciar sesión
+            </Link>
+          </div>
+          <p className="mt-1 text-xs text-stone-400">
+            ¿Prefieres escribirnos?{" "}
+            <a href={`mailto:${CLUB_CONTACT_EMAIL}`} className="font-medium text-court hover:text-court-hover">
+              {CLUB_CONTACT_EMAIL}
+            </a>
+          </p>
+        </div>
+      </ModalShell>
+    );
+  }
 
   if (contactRequest.isSuccess) {
     return (
@@ -77,6 +121,10 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
             setValidationError("Nombre del club, tu nombre y email son obligatorios.");
             return;
           }
+          if (!username) {
+            setValidationError("No pudimos leer tu usuario. Recarga la página e inténtalo de nuevo.");
+            return;
+          }
           try {
             await contactRequest.mutateAsync({
               clubName: clubName.trim(),
@@ -84,12 +132,25 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
               email: email.trim(),
               phone: phone.trim() || null,
               message: message.trim() || null,
+              ownerUsername: username,
             });
           } catch {
             // surfaced via mutation error
           }
         }}
       >
+        <label className="block space-y-2 text-sm font-medium text-stone-700">
+          <span>Usuario propietario</span>
+          <input
+            readOnly
+            value={username ? `@${username}` : "Cargando…"}
+            aria-label="Tu usuario de CourtRank"
+            className={`${inputClass} cursor-not-allowed bg-stone-50 text-stone-500`}
+          />
+          <span className="block text-xs font-normal text-stone-400">
+            Tu cuenta será la propietaria del club. No es editable.
+          </span>
+        </label>
         <label className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Nombre del club</span>
           <input
@@ -167,7 +228,7 @@ function ClubContactModal({ onClose }: { onClose: () => void }) {
             <Button
               type="submit"
               className="bg-court text-ball-bright hover:bg-court-hover"
-              isDisabled={contactRequest.isPending}
+              isDisabled={contactRequest.isPending || !username}
             >
               {contactRequest.isPending ? "Enviando…" : "Enviar solicitud"}
             </Button>
