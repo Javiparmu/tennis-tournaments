@@ -13,13 +13,14 @@
       "!.agents",
       "!.cursor",
       "!.heroui-docs",
-      "!.next",
-      "!build",
-      "!coverage",
-      "!node_modules",
-      "!out",
+      "!**/.next",
+      "!**/.expo",
+      "!**/build",
+      "!**/coverage",
+      "!**/node_modules",
+      "!**/out",
       "!pnpm-lock.yaml",
-      "!public"
+      "!**/public"
     ]
   },
   "formatter": {
@@ -65,5 +66,17 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
+          }
+        }
+      }
+    }
+  ]
 }
