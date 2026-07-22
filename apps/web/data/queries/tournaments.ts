@@ -11,6 +11,7 @@ import {
   createTournament,
   deleteTournament,
   getMyJoinRequests,
+  getMyTournaments,
   getTournament,
   getTournamentBracket,
   getTournamentJoinRequests,
@@ -19,6 +20,7 @@ import {
   getTournamentPlayers,
   getTournaments,
   getUpcomingCalendar,
+  joinTournamentByCode,
   rejectJoinRequest,
   removeTournamentPlayer,
   resetTournament,
@@ -33,6 +35,7 @@ import type {
   CreateTournamentJoinRequest,
   CreateTournamentRequest,
   DecideTournamentJoinRequest,
+  JoinTournamentByCodeRequest,
   Player,
   Tournament,
   TournamentBasic,
@@ -59,57 +62,76 @@ export function useUpcomingCalendarQuery(limit = 4) {
 }
 
 export function useTournamentQuery(id?: number) {
+  // Optionally authed: pass the token so PRIVATE tournaments authorize for
+  // members, while public tournament pages still load for anonymous visitors.
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournament(id),
-    queryFn: () => getTournament(id as number),
+    queryFn: async () => getTournament(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentPhasesQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentPhases(id),
-    queryFn: () => getTournamentPhases(id as number),
+    queryFn: async () => getTournamentPhases(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentPlayersQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentPlayers(id),
-    queryFn: () => getTournamentPlayers(id as number),
+    queryFn: async () => getTournamentPlayers(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentMatchesQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentMatches(id),
-    queryFn: () => getTournamentMatches(id as number),
+    queryFn: async () => getTournamentMatches(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentBracketQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentBracket(id),
-    queryFn: () => getTournamentBracket(id as number),
+    queryFn: async () => getTournamentBracket(await getToken(), id as number),
     enabled: id != null,
+    staleTime: 30_000,
+  });
+}
+
+export function useMyTournamentsQuery() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+
+  return useQuery({
+    queryKey: queryKeys.myTournaments,
+    queryFn: async () => getMyTournaments(await getToken()),
+    enabled: isLoaded && isSignedIn,
     staleTime: 30_000,
   });
 }
 
 // Query keys touched by a tournament write, for background reconcile on settle.
 function tournamentKeys(id?: number): QueryKey[] {
-  const keys: QueryKey[] = [queryKeys.tournaments];
+  const keys: QueryKey[] = [queryKeys.tournaments, queryKeys.myTournaments];
   if (id != null) {
     keys.push(
       queryKeys.tournament(id),
       queryKeys.tournamentBracket(id),
+      queryKeys.tournamentMatches(id),
       queryKeys.tournamentPlayers(id),
       queryKeys.tournamentPhases(id),
     );
@@ -173,6 +195,18 @@ export function useDeleteTournamentMutation() {
         { key: queryKeys.tournaments, patch: (prev) => removeById(prev as TournamentBasic[] | undefined, id) },
       ],
       invalidate: () => tournamentKeys(),
+    }),
+  });
+}
+
+export function useJoinTournamentByCodeMutation() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (payload: JoinTournamentByCodeRequest) => joinTournamentByCode(await getToken(), payload),
+    ...optimistic<JoinTournamentByCodeRequest, Tournament>(queryClient, {
+      invalidate: (_vars, tournament) => tournamentKeys(tournament?.id),
     }),
   });
 }

@@ -52,18 +52,34 @@ export function HowItWorks() {
   return (
     <section aria-labelledby="how-heading" className="mx-auto w-full max-w-6xl px-6 py-20 md:py-28">
       <FadeContent>
-        <SectionHeading id="how-heading" eyebrow="Cómo funciona" title="Jugadores y clubes." accent="y clubes." size="lg" />
+        <SectionHeading
+          id="how-heading"
+          eyebrow="Cómo funciona"
+          title="Jugadores y clubes."
+          accent="y clubes."
+          size="lg"
+        />
       </FadeContent>
 
       <FadeContent delay={0.1}>
         <div className="relative mt-12 overflow-hidden rounded-3xl shadow-lg">
+          <div className="absolute left-1/2 top-1/2 h-[calc(100vw+3rem)] w-[260%] -translate-x-1/2 -translate-y-1/2 rotate-90 md:hidden">
+            <Image
+              src={courtLineBall}
+              alt=""
+              fill
+              sizes="210vw"
+              placeholder="blur"
+              className="object-cover object-center"
+            />
+          </div>
           <Image
             src={courtLineBall}
             alt=""
             fill
             sizes="(min-width: 1152px) 1152px, 100vw"
             placeholder="blur"
-            className="object-cover object-center"
+            className="hidden object-cover object-center md:block"
           />
           {/* No flat overlay — it dulled the court colors. Legibility comes from
               a layered text shadow that outlines the glyphs without touching the

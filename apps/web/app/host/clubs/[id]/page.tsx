@@ -142,7 +142,7 @@ export default function ClubManagePage() {
               </div>
 
               {createTournament.error ? (
-                <p className="mb-3 text-sm text-rose-600">{errorMessage(createTournament.error)}</p>
+                <p className="mb-3 text-sm text-rose-600">{errorMessage(createTournament.error, "tournament.create")}</p>
               ) : null}
 
               {clubTournaments.length === 0 ? (
@@ -230,7 +230,9 @@ export default function ClubManagePage() {
                     </button>
                   </form>
                 ) : null}
-                {addAdmin.error ? <p className="mt-2 text-sm text-rose-600">{errorMessage(addAdmin.error)}</p> : null}
+                {addAdmin.error ? (
+                  <p className="mt-2 text-sm text-rose-600">{errorMessage(addAdmin.error, "club.update")}</p>
+                ) : null}
               </div>
             </aside>
           </div>
@@ -246,7 +248,7 @@ export default function ClubManagePage() {
           }}
           onSubmit={handleClubUpdate}
           isSubmitting={updateClub.isPending}
-          submitError={updateClub.error ? errorMessage(updateClub.error) : null}
+          submitError={updateClub.error ? errorMessage(updateClub.error, "club.update") : null}
         />
       ) : null}
 
@@ -259,7 +261,7 @@ export default function ClubManagePage() {
           }}
           onSubmit={handleCreateTournament}
           isSubmitting={createTournament.isPending}
-          submitError={createTournament.error ? errorMessage(createTournament.error) : null}
+          submitError={createTournament.error ? errorMessage(createTournament.error, "tournament.create") : null}
         />
       ) : null}
     </PageScaffold>

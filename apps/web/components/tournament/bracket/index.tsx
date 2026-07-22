@@ -1,12 +1,15 @@
 import type { Match, TournamentBracket } from "@courtrank/core/models";
+import type { MatchSelectionState } from "./match-card";
 import { PhaseBlock } from "./phase-block";
 
 export function Bracket({
   bracket,
   onSelectMatch,
+  getMatchSelectionState,
 }: {
   bracket: TournamentBracket;
   onSelectMatch?: (match: Match) => void;
+  getMatchSelectionState?: (match: Match) => MatchSelectionState;
 }) {
   const phases = bracket.phases ?? [];
   if (phases.length === 0 || phases.every((p) => (p.rounds ?? []).length === 0)) {
@@ -20,7 +23,12 @@ export function Bracket({
   return (
     <div className="space-y-10">
       {phases.map((phase) => (
-        <PhaseBlock key={phase.id} phase={phase} onSelectMatch={onSelectMatch} />
+        <PhaseBlock
+          key={phase.id}
+          phase={phase}
+          onSelectMatch={onSelectMatch}
+          getMatchSelectionState={getMatchSelectionState}
+        />
       ))}
     </div>
   );

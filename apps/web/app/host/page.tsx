@@ -24,7 +24,7 @@ export default function HostDashboardPage() {
   const managedClubIds = me.data?.managedClubIds ?? [];
   const myClubs = (clubsQuery.data ?? []).filter((club) => managedClubIds.includes(club.id));
   const isLoading = me.isLoading || clubsQuery.isLoading;
-  const submitError = updateClub.error ? errorMessage(updateClub.error) : null;
+  const submitError = updateClub.error ? errorMessage(updateClub.error, "club.update") : null;
 
   async function handleSubmit(payload: ClubFormValues) {
     if (!editingClub) return;

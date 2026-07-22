@@ -20,6 +20,7 @@ type TournamentFormModalProps = {
   onSubmit: (values: TournamentFormValues) => Promise<void>;
   isSubmitting: boolean;
   submitError: string | null;
+  subtitle?: string;
 };
 
 // ISO instant <-> <input type="datetime-local"> value (local time, no zone suffix).
@@ -38,6 +39,7 @@ export function TournamentFormModal({
   onSubmit,
   isSubmitting,
   submitError,
+  subtitle,
 }: TournamentFormModalProps) {
   const [name, setName] = useState(tournament?.name ?? "");
   const [description, setDescription] = useState(tournament?.description ?? "");
@@ -50,7 +52,7 @@ export function TournamentFormModal({
   return (
     <ModalShell
       title={isEditing ? "Editar torneo" : "Crear torneo"}
-      subtitle="Los jugadores lo verán en el listado de torneos."
+      subtitle={subtitle ?? "Los jugadores lo verán en el listado de torneos."}
       onClose={onClose}
       disabled={isSubmitting}
     >

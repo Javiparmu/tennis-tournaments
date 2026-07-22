@@ -5,6 +5,7 @@ import { Button } from "@heroui/react";
 import { ImageUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { errorMessage } from "@courtrank/core/lib/errors";
 import { FormError, inputClass, ModalShell } from "@/components/modal-shell";
 import { useUpdateMeMutation } from "@/data/queries";
 import { notifyMutationError } from "@/data/queries/notify";
@@ -167,8 +168,10 @@ export function ProfileEditModal({ initialName, initialUsername, initialImageUrl
       });
       // Backend slugifies the username, so follow the response to the canonical URL.
       if (usernameChanged) router.replace(`/players/${encodeURIComponent(updated.username)}`);
-    } catch {
-      // updateMe.onError already rolled the optimistic cache back and toasted.
+    } catch (submitError) {
+      // updateMe.onError already rolled the optimistic cache back and toasted;
+      // surface the specific copy inline too (e.g. a taken username).
+      setError(errorMessage(submitError, "user.update"));
     }
   }
 

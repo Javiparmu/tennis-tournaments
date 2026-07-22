@@ -31,6 +31,21 @@ function pointColor(point: RatingChartPoint): string {
   return LIME;
 }
 
+function countRatingOutcomes(points: RatingChartPoint[]): { wins: number; losses: number } {
+  return points.reduce(
+    (acc, point) => {
+      if (point.isOrigin) return acc;
+      if (point.reason === "GUEST_WIN" || (point.reason === "MATCH" && (point.delta ?? 0) > 0)) {
+        acc.wins += 1;
+      } else if (point.reason === "GUEST_LOSS" || (point.reason === "MATCH" && (point.delta ?? 0) < 0)) {
+        acc.losses += 1;
+      }
+      return acc;
+    },
+    { wins: 0, losses: 0 },
+  );
+}
+
 export function RatingProgressCard({ userId, currentRating }: { userId?: number; currentRating: number }) {
   const reduceMotion = useReducedMotion();
   const gradientId = useId();
@@ -85,6 +100,7 @@ export function RatingProgressCard({ userId, currentRating }: { userId?: number;
   const activePoint = activeIndex != null ? points[activeIndex] : null;
   const keyboardPoint = activePoint ?? endPoint;
   const showAllDots = points.length <= 14;
+  const ratingOutcomes = countRatingOutcomes(points);
 
   function handleMove(clientX: number) {
     const svg = svgRef.current;
@@ -134,9 +150,10 @@ export function RatingProgressCard({ userId, currentRating }: { userId?: number;
             <NetChangePill value={netChange} />
           </div>
         </div>
-        <div className="flex gap-5 text-right">
+        <div className="flex flex-wrap justify-end gap-x-5 gap-y-3 text-right">
           <MiniStat label="Máximo" value={peakPoint.rating} />
-          <MiniStat label="Cambios" value={points.length - 1} />
+          <MiniStat label="Victorias" value={ratingOutcomes.wins} />
+          <MiniStat label="Derrotas" value={ratingOutcomes.losses} />
         </div>
       </div>
 

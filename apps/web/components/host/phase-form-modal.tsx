@@ -1,9 +1,9 @@
 "use client";
 
+import type { CreatePhaseRequest, PhaseConfiguration, PhaseFormat, SeedingStrategy } from "@courtrank/core/models";
 import { Button, Form } from "@heroui/react";
 import { useState } from "react";
 import { inputClass, ModalShell } from "@/components/modal-shell";
-import type { CreatePhaseRequest, PhaseConfiguration, PhaseFormat, SeedingStrategy } from "@courtrank/core/models";
 
 type PhaseFormModalProps = {
   defaultOrder: number;
@@ -34,7 +34,7 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
   // Knockout
   const [thirdPlacePlayoff, setThirdPlacePlayoff] = useState(false);
   const [qualifiers, setQualifiers] = useState("1");
-  const [seedingStrategy, setSeedingStrategy] = useState<SeedingStrategy>("INPUT_ORDER");
+  const [seedingStrategy, setSeedingStrategy] = useState<SeedingStrategy>("RANDOM");
   // Group
   const [groupCount, setGroupCount] = useState("2");
   const [teamsPerGroup, setTeamsPerGroup] = useState("4");
@@ -132,6 +132,10 @@ export function PhaseFormModal({ defaultOrder, onClose, onSubmit, isSubmitting, 
                   </option>
                 ))}
               </select>
+              <span className="text-xs font-normal text-stone-500">
+                Aleatorio: sorteo al azar. Parcialmente sembrado: respeta los cabezas de serie (sembrados por Elo cuando
+                el jugador tiene cuenta). Orden de entrada: según se añadieron.
+              </span>
             </label>
             <label className="flex items-center gap-2 text-sm font-medium text-stone-700 md:col-span-2">
               <input

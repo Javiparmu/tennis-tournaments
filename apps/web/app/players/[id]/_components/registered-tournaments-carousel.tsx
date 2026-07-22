@@ -80,7 +80,9 @@ export function RegisteredTournamentsCarousel({ userId }: { userId?: number }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-court-ink">{t.name}</p>
-                  <p className="truncate text-xs text-stone-500">Club #{t.clubId}</p>
+                  <p className="truncate text-xs text-stone-500">
+                    {t.clubId == null ? "Torneo privado" : `Club #${t.clubId}`}
+                  </p>
                   <div className="mt-2 flex items-center gap-2">
                     <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} border ${s.border}`}>
                       {s.label}

@@ -2,9 +2,18 @@ import type { BracketPhase, Match } from "@courtrank/core/models";
 import { GroupPhase } from "./group-phase";
 import { KnockoutTree } from "./knockout-tree";
 import { PHASE_FORMAT_LABEL } from "./labels";
+import type { MatchSelectionState } from "./match-card";
 import { SwissPhase } from "./swiss-phase";
 
-export function PhaseBlock({ phase, onSelectMatch }: { phase: BracketPhase; onSelectMatch?: (match: Match) => void }) {
+export function PhaseBlock({
+  phase,
+  onSelectMatch,
+  getMatchSelectionState,
+}: {
+  phase: BracketPhase;
+  onSelectMatch?: (match: Match) => void;
+  getMatchSelectionState?: (match: Match) => MatchSelectionState;
+}) {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -15,11 +24,11 @@ export function PhaseBlock({ phase, onSelectMatch }: { phase: BracketPhase; onSe
       </div>
 
       {phase.format === "KNOCKOUT" ? (
-        <KnockoutTree phase={phase} onSelectMatch={onSelectMatch} />
+        <KnockoutTree phase={phase} onSelectMatch={onSelectMatch} getMatchSelectionState={getMatchSelectionState} />
       ) : phase.format === "GROUP" ? (
-        <GroupPhase phase={phase} onSelectMatch={onSelectMatch} />
+        <GroupPhase phase={phase} onSelectMatch={onSelectMatch} getMatchSelectionState={getMatchSelectionState} />
       ) : (
-        <SwissPhase phase={phase} onSelectMatch={onSelectMatch} />
+        <SwissPhase phase={phase} onSelectMatch={onSelectMatch} getMatchSelectionState={getMatchSelectionState} />
       )}
     </div>
   );

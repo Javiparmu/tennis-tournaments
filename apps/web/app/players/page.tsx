@@ -53,13 +53,7 @@ export default function ProfilePage() {
   return (
     <PageScaffold>
       <div className="mb-6">
-        <PageHero
-          compact
-          eyebrow="Jugadores"
-          title="Ranking de jugadores"
-          accent=" jugadores"
-          subtitle="Los mejores jugadores de la plataforma. Abre un perfil para ver su historial."
-        >
+        <PageHero compact eyebrow="Jugadores" title="Ranking de jugadores" accent=" jugadores">
           <RankingCta />
         </PageHero>
       </div>

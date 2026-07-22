@@ -5,6 +5,7 @@ import { Button, Chip } from "@heroui/react";
 import { Check, Clock, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useCreateJoinRequestMutation, useMyJoinRequestsQuery, useWithdrawJoinRequestMutation } from "@/data/queries";
+import { errorMessage } from "@courtrank/core/lib/errors";
 import type { TournamentJoinRequestStatus, TournamentStatus } from "@courtrank/core/models";
 
 const STATUS_LABEL: Record<TournamentJoinRequestStatus, string> = {
@@ -19,10 +20,6 @@ const STATUS_LABEL: Record<TournamentJoinRequestStatus, string> = {
 const ACTIVE: TournamentJoinRequestStatus[] = ["PENDING", "ACCEPTED"];
 
 const OPEN_STATUSES: TournamentStatus[] = ["DRAFT", "STARTED"];
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : null;
-}
 
 export function JoinTournament({
   tournamentId,
@@ -86,7 +83,9 @@ export function JoinTournament({
               >
                 Retirar solicitud
               </Button>
-              {withdraw.error && <p className="mt-2 text-sm text-rose-600">{errorMessage(withdraw.error)}</p>}
+              {withdraw.error && (
+                <p className="mt-2 text-sm text-rose-600">{errorMessage(withdraw.error, "joinRequest.withdraw")}</p>
+              )}
             </div>
           ) : null
         ) : isOpen ? (
@@ -111,7 +110,9 @@ export function JoinTournament({
               <UserPlus className="mr-1 h-4 w-4" />
               {mine ? "Inscribirse de nuevo" : "Inscribirse para jugar"}
             </Button>
-            {create.error && <p className="text-sm text-rose-600">{errorMessage(create.error)}</p>}
+            {create.error && (
+              <p className="text-sm text-rose-600">{errorMessage(create.error, "joinRequest.create")}</p>
+            )}
           </div>
         ) : (
           <p className="mt-2 text-sm text-stone-500">La inscripción está cerrada para este torneo.</p>

@@ -13,8 +13,9 @@ import { useMeQuery } from "@/data/queries";
 const navItems = [
   { href: "/", label: "Inicio" },
   { href: "/tournaments", label: "Torneos" },
-  { href: "/host", label: "Organizar" },
   { href: "/players", label: "Jugadores" },
+  { href: "/competitions", label: "Ligas" },
+  { href: "/host", label: "Organizar" },
 ];
 
 function isNavActive(pathname: string, href: string) {
@@ -87,7 +88,7 @@ export function SiteHeader() {
             </Link>
             <Link
               href="/sign-in"
-              className="rounded-lg bg-court px-4 py-2 text-sm font-semibold text-ball-bright shadow-sm transition-colors hover:bg-court-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court"
+              className="hidden rounded-lg bg-court px-4 py-2 text-sm font-semibold text-ball-bright shadow-sm transition-colors hover:bg-court-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court sm:inline-flex"
             >
               Empezar
             </Link>

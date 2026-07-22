@@ -390,13 +390,12 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
   const [name, setName] = useState(request.clubName);
   const [phoneNumber, setPhoneNumber] = useState(request.phone ?? "");
   const [address, setAddress] = useState("");
-  // The requester's handle rides along on the request (captured read-only at
-  // submit time). Prefill + lock it so the admin never retypes or hunts for it;
-  // fall back to a manual input only for legacy requests that predate the field.
-  const [ownerUsername, setOwnerUsername] = useState(request.ownerUsername ?? "");
-  const ownerLocked = Boolean(request.ownerUsername);
+  // The requester's handle rides along on the request (captured read-only at submit
+  // time). It is always prefilled and read-only — the admin never types or hunts for
+  // it, since they may not know the owner's username.
+  const ownerUsername = (request.ownerUsername ?? "").trim();
   const [formError, setFormError] = useState<string | null>(null);
-  const ownerUsernameValue = ownerUsername.trim();
+  const ownerUsernameValue = ownerUsername;
   const ownerQuery = useUserByUsernameQuery(ownerUsernameValue || undefined);
 
   const isPending = createClub.isPending || deleteRequest.isPending || ownerQuery.isFetching;
@@ -446,23 +445,13 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
         </label>
         <label htmlFor="club-owner-username" className="block space-y-2 text-sm font-medium text-stone-700">
           <span>Usuario propietario</span>
-          {ownerLocked ? (
-            <input
-              id="club-owner-username"
-              readOnly
-              value={`@${ownerUsername}`}
-              className={`${inputClass} cursor-not-allowed bg-stone-50 text-stone-500`}
-            />
-          ) : (
-            <input
-              id="club-owner-username"
-              required
-              value={ownerUsername}
-              onChange={(e) => setOwnerUsername(e.target.value)}
-              placeholder="nombre-de-usuario"
-              className={inputClass}
-            />
-          )}
+          <input
+            id="club-owner-username"
+            readOnly
+            value={ownerUsername ? `@${ownerUsername}` : ""}
+            placeholder="Sin usuario en la solicitud"
+            className={`${inputClass} cursor-not-allowed bg-stone-50 text-stone-500`}
+          />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-2 text-sm font-medium text-stone-700">
@@ -476,7 +465,7 @@ function ProvisionClubModal({ request, onClose }: { request: AdminClubContactReq
         </div>
 
         <FormError message={formError} />
-        <FormError message={createClub.error ? errorMessage(createClub.error) : null} />
+        <FormError message={createClub.error ? errorMessage(createClub.error, "club.create") : null} />
 
         <div className="flex justify-end gap-3">
           <Button type="button" variant="ghost" className="text-stone-700" onPress={onClose} isDisabled={isPending}>

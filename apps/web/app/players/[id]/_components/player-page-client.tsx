@@ -181,15 +181,15 @@ export default function UserPage() {
   const calendarLoading = calendarQuery.isLoading;
 
   const trainingError = createTrainingMutation.error ?? updateTrainingMutation.error;
-  const trainingSubmitError = trainingError ? errorMessage(trainingError) : null;
+  const trainingSubmitError = trainingError ? errorMessage(trainingError, "training.save") : null;
   const racketError = createRacketMutation.error ?? updateRacketMutation.error;
   const deleteError =
     pendingDelete?.type === "training"
-      ? deleteTrainingMutation.error && errorMessage(deleteTrainingMutation.error)
+      ? deleteTrainingMutation.error && errorMessage(deleteTrainingMutation.error, "training.delete")
       : pendingDelete?.type === "racket"
-        ? deleteRacketMutation.error && errorMessage(deleteRacketMutation.error)
+        ? deleteRacketMutation.error && errorMessage(deleteRacketMutation.error, "racket.delete")
         : null;
-  const racketSubmitError = racketError ? errorMessage(racketError) : null;
+  const racketSubmitError = racketError ? errorMessage(racketError, "racket.save") : null;
 
   if (!username) {
     return (

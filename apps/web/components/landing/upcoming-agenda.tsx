@@ -124,7 +124,7 @@ export function UpcomingAgenda() {
               key={t.id}
               id={t.id}
               name={t.name}
-              club={clubNames.get(t.clubId) ?? "Club anfitrión"}
+              club={t.clubId == null ? "Torneo privado" : (clubNames.get(t.clubId) ?? "Club anfitrión")}
               surface={t.surface}
               startDate={t.startDate}
               featured={i === 0}

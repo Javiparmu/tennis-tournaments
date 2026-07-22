@@ -44,7 +44,7 @@ export default function TournamentsPage() {
         className="mb-6"
       />
 
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {isLoading &&
           Array.from({ length: 6 }).map((_, i) => (
             <div
@@ -59,30 +59,34 @@ export default function TournamentsPage() {
             const s = surfaceStyle(tournament.surface);
             const { day, month } = dayMonth(tournament.startDate);
             return (
-              <FadeContent key={tournament.id} delay={(i % 3) * 0.08}>
+              <FadeContent key={tournament.id} delay={(i % 3) * 0.08} className="min-w-0">
                 <Link
                   href={`/tournaments/${tournament.id}`}
-                  className="block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court"
+                  className="block h-full min-w-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-court"
                 >
-                  <SpotlightCard className="relative h-full rounded-2xl border border-court/10 bg-white shadow-sm transition-shadow hover:shadow-md">
+                  <SpotlightCard className="relative h-full min-w-0 rounded-2xl border border-court/10 bg-white shadow-sm transition-shadow hover:shadow-md">
                     <span
                       aria-hidden
                       className="absolute inset-x-0 top-0 h-1 rounded-t-2xl"
                       style={{ background: s.hex }}
                     />
                     <div className="flex h-full flex-col gap-4 p-5">
-                      <div className="flex items-start gap-4">
+                      <div className="flex min-w-0 flex-wrap items-start gap-3">
                         <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-court/5 py-2">
                           <span className="font-display text-2xl font-black leading-none text-court-ink">{day}</span>
                           <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-stone-500">
                             {month}
                           </span>
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 basis-[calc(100%-4.25rem)] sm:basis-0">
                           <h2 className="truncate font-display text-lg font-bold text-court-ink">{tournament.name}</h2>
-                          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-stone-500">
+                          <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-stone-500">
                             <Building2 className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{clubNames.get(tournament.clubId) ?? "Club anfitrión"}</span>
+                            <span className="min-w-0 truncate">
+                              {tournament.clubId == null
+                                ? "Torneo privado"
+                                : (clubNames.get(tournament.clubId) ?? "Club anfitrión")}
+                            </span>
                           </p>
                         </div>
                         <Chip size="sm" variant="soft" className={`${s.bg} ${s.text} shrink-0 border ${s.border}`}>
@@ -91,18 +95,20 @@ export default function TournamentsPage() {
                       </div>
 
                       <div className="mt-auto space-y-2 text-sm text-stone-600">
-                        <p className="flex items-center gap-2">
+                        <p className="flex min-w-0 items-center gap-2">
                           <Info className="h-4 w-4 shrink-0 text-court" />
                           <span className="truncate">
                             {tournament.description ?? "Detalles en la página del torneo"}
                           </span>
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-xs text-stone-500">
+                        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                          <span className="flex min-w-0 items-center gap-2 text-xs text-stone-500">
                             <CalendarDays className="h-4 w-4 shrink-0 text-court" />
-                            {formatDateRange(tournament.startDate, tournament.endDate)}
+                            <span className="min-w-0 truncate">
+                              {formatDateRange(tournament.startDate, tournament.endDate)}
+                            </span>
                           </span>
-                          <span className="rounded-full bg-court/5 px-2 py-0.5 text-xs font-semibold text-court">
+                          <span className="shrink-0 rounded-full bg-court/5 px-2 py-0.5 text-xs font-semibold text-court">
                             {tournament.status === "DRAFT"
                               ? countdown(tournament.startDate)
                               : TOURNAMENT_STATUS_LABEL_PUBLIC[tournament.status]}

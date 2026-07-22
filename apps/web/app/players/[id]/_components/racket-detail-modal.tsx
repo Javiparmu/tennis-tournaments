@@ -216,7 +216,7 @@ export function RacketDetailModal({
           }}
           onSubmit={handleFormSubmit}
           isSubmitting={createStringing.isPending || updateStringing.isPending}
-          submitError={formError ? errorMessage(formError) : null}
+          submitError={formError ? errorMessage(formError, "stringing.save") : null}
         />
       ) : null}
 
@@ -228,7 +228,7 @@ export function RacketDetailModal({
         }
         confirmLabel="Eliminar"
         isPending={deleteStringing.isPending}
-        error={deleteStringing.error ? errorMessage(deleteStringing.error) : null}
+        error={deleteStringing.error ? errorMessage(deleteStringing.error, "stringing.delete") : null}
         onConfirm={handleConfirmDelete}
         onClose={() => {
           deleteStringing.reset();

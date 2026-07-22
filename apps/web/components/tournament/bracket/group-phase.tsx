@@ -1,11 +1,20 @@
 import { computeStandings } from "@courtrank/core/lib/standings";
 import type { BracketPhase, Match } from "@courtrank/core/models";
+import type { MatchSelectionState } from "./match-card";
 import { MatchCard } from "./match-card";
 import { StandingsTable } from "./standings-table";
 
 // GROUP phase: matches carry a groupId; bucket them into per-group cards, each
 // with a mini standings table plus that group's fixtures.
-export function GroupPhase({ phase, onSelectMatch }: { phase: BracketPhase; onSelectMatch?: (match: Match) => void }) {
+export function GroupPhase({
+  phase,
+  onSelectMatch,
+  getMatchSelectionState,
+}: {
+  phase: BracketPhase;
+  onSelectMatch?: (match: Match) => void;
+  getMatchSelectionState?: (match: Match) => MatchSelectionState;
+}) {
   const matches = (phase.rounds ?? []).flatMap((r) => r.matches ?? []);
 
   const groups = new Map<number | null, Match[]>();
@@ -39,7 +48,12 @@ export function GroupPhase({ phase, onSelectMatch }: { phase: BracketPhase; onSe
           <StandingsTable rows={computeStandings([], groupMatches)} />
           <div className="mt-4 grid gap-3">
             {groupMatches.map((match) => (
-              <MatchCard key={match.id} match={match} onSelect={onSelectMatch} />
+              <MatchCard
+                key={match.id}
+                match={match}
+                onSelect={onSelectMatch}
+                selectionState={getMatchSelectionState?.(match)}
+              />
             ))}
           </div>
         </div>

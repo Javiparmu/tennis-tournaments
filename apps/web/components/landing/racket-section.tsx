@@ -74,7 +74,7 @@ export function RacketSection() {
 
   return (
     <section ref={sectionRef} aria-labelledby="courtrank-heading" className="relative md:h-[400vh]">
-      <div className="relative flex flex-col justify-center overflow-hidden bg-court-night px-6 py-20 text-white md:sticky md:top-0 md:h-screen md:py-0">
+      <div className="relative flex flex-col justify-center overflow-hidden bg-court-night px-6 py-16 text-white md:sticky md:top-0 md:h-screen md:py-0">
         <NightMatchBackdrop />
 
         <div className="relative mx-auto w-full max-w-6xl">
@@ -96,7 +96,7 @@ export function RacketSection() {
             </div>
 
             {/* Fixed-size stage: space is reserved before the chunk/GLB load. */}
-            <div className="relative order-first mx-auto h-[410px] w-full max-w-[380px] md:order-0 md:h-[560px] md:max-w-[440px]">
+            <div className="relative order-first mx-auto h-[340px] w-full max-w-[340px] md:order-0 md:h-[560px] md:max-w-[440px]">
               <RacketStage>
                 {nearView ? (
                   <RacketCanvas progress={isDesktop ? scrollYProgress : undefined} reduced={reduced} />
@@ -165,7 +165,7 @@ export function RacketSection() {
           </div>
 
           {/* Mobile: racket first, then a compact editorial stack. */}
-          <div className="md:hidden">
+          <div className="mt-10 md:hidden">
             <div className="rounded-[2rem] border border-white/12 bg-white/[0.07] p-5 shadow-2xl shadow-black/25 backdrop-blur-xl">
               <p className="font-mono text-xs font-semibold uppercase tracking-[0.28em] text-ball-bright">
                 En competición

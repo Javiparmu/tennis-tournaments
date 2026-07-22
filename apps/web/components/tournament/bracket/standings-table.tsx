@@ -10,8 +10,8 @@ export function StandingsTable({ rows }: { rows: PlayerStanding[] }) {
     );
   }
   return (
-    <div className="overflow-hidden rounded-lg border border-court/10">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto overflow-y-hidden rounded-lg border border-court/10">
+      <table className="w-full min-w-72 table-fixed text-sm">
         <thead>
           <tr className="bg-court/5 text-[11px] uppercase tracking-wide text-stone-500">
             <th className="px-3 py-1.5 text-left font-semibold">Jugador</th>
