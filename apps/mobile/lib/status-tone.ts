@@ -4,27 +4,29 @@ import type { ChipTone } from "../components/ui/chip";
 export function statusTone(status: TournamentStatus): ChipTone {
   switch (status) {
     case "STARTED":
-      return "grass";
+      return "live";
     case "COMPLETED":
-      return "hard";
+      return "info";
     case "CANCELLED":
     case "ABANDONED":
-      return "clay";
+      return "danger";
     default:
-      return "muted";
+      // DRAFT — "Proximamente" to players, so it reads as pending, not alarming.
+      return "neutral";
   }
 }
 
 export function joinStatusTone(status: TournamentJoinRequestStatus): ChipTone {
   switch (status) {
     case "ACCEPTED":
-      return "grass";
+      return "success";
+    case "PENDING":
+      return "live";
     case "REJECTED":
     case "EXPIRED":
-      return "clay";
-    case "PENDING":
-      return "hard";
+    case "WITHDRAWN":
+      return "danger";
     default:
-      return "muted";
+      return "neutral";
   }
 }

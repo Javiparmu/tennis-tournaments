@@ -18,12 +18,12 @@ CourtRank is a pnpm monorepo for tennis tournaments:
 
 - **Players** browse tournaments, sign up, follow brackets/standings, and get a gamified profile with Elo-style rating, achievements, calendar, trainings, rackets, and stringing history.
 - **Hosts (clubs)** create and manage tournaments from the web app. Club accounts are **provisioned manually by the platform operator**; there is no self-service club creation, and club-facing CTAs point to the contact mailto in `packages/core/src/lib/contact.ts`.
-- **Admins** use the web-only `/admin` area to review club contact requests and provision clubs.
+- **Admins** use the `/admin` area to review club contact requests and provision clubs. It is available on both web and mobile (mobile reaches it from the Perfil tab, behind a `PLATFORM_ADMIN` gate).
 
 ## Monorepo Map
 
 - `apps/web` - Next.js 16 web app (`@courtrank/web`). Includes club/host/admin flows, public tournament/player pages, Clerk Next auth, HeroUI, Tailwind, and web-only query hooks.
-- `apps/mobile` - Expo SDK 54 + React Native player companion (`@courtrank/mobile`). Includes player-first tournament browsing, join/withdraw flows, ranking, own profile tools, Clerk Expo auth, NativeWind, and mobile-only query hooks.
+- `apps/mobile` - Expo SDK 54 + React Native player companion (`@courtrank/mobile`). Includes player-first tournament browsing, join/withdraw flows, ranking, own profile tools, a `PLATFORM_ADMIN`-gated admin console, Clerk Expo auth, NativeWind, and mobile-only query hooks. Host/club owner flows stay web-only.
 - `packages/core` - framework-agnostic shared package (`@courtrank/core`). Contains models, pure lib helpers, API domain modules, API runtime config, query keys, and optimistic cache helpers. It must not depend on React, Next, Expo, Clerk, HeroUI, or NativeWind.
 
 ## Stack

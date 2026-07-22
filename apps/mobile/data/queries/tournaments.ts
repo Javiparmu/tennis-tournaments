@@ -2,6 +2,7 @@ import {
   type CreateTournamentJoinRequest,
   createJoinRequest,
   getMyJoinRequests,
+  getMyTournaments,
   getTournament,
   getTournamentBracket,
   getTournamentMatches,
@@ -9,8 +10,11 @@ import {
   getTournamentPlayers,
   getTournaments,
   getUpcomingCalendar,
+  joinTournamentByCode,
   optimistic,
   queryKeys,
+  type JoinTournamentByCodeRequest,
+  type Tournament,
   withdrawJoinRequest,
 } from "@courtrank/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,46 +33,63 @@ export function useUpcomingCalendarQuery(limit = 4) {
 }
 
 export function useTournamentQuery(id?: number) {
+  // Optionally authed: pass the token so PRIVATE tournaments (reached from the
+  // Ligas tab) authorize, while public deep-links still load when signed out.
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournament(id),
-    queryFn: () => getTournament(id as number),
+    queryFn: async () => getTournament(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentPhasesQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentPhases(id),
-    queryFn: () => getTournamentPhases(id as number),
+    queryFn: async () => getTournamentPhases(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentPlayersQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentPlayers(id),
-    queryFn: () => getTournamentPlayers(id as number),
+    queryFn: async () => getTournamentPlayers(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentMatchesQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentMatches(id),
-    queryFn: () => getTournamentMatches(id as number),
+    queryFn: async () => getTournamentMatches(await getToken(), id as number),
     enabled: id != null,
     staleTime: 30_000,
   });
 }
 
 export function useTournamentBracketQuery(id?: number) {
+  const { getToken } = useAuth();
   return useQuery({
     queryKey: queryKeys.tournamentBracket(id),
-    queryFn: () => getTournamentBracket(id as number),
+    queryFn: async () => getTournamentBracket(await getToken(), id as number),
     enabled: id != null,
+    staleTime: 30_000,
+  });
+}
+
+export function useMyTournamentsQuery() {
+  const { isLoaded, isSignedIn, getToken } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.myTournaments,
+    queryFn: async () => getMyTournaments(await getToken()),
+    enabled: isLoaded && isSignedIn,
     staleTime: 30_000,
   });
 }
@@ -106,6 +127,17 @@ export function useWithdrawJoinRequestMutation() {
       withdrawJoinRequest(await getToken(), vars.tournamentId, vars.requestId),
     ...optimistic<WithdrawJoinVars, unknown>(queryClient, {
       invalidate: (vars) => [queryKeys.myJoinRequests, queryKeys.tournament(vars.tournamentId)],
+    }),
+  });
+}
+
+export function useJoinTournamentByCodeMutation() {
+  const queryClient = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (payload: JoinTournamentByCodeRequest) => joinTournamentByCode(await getToken(), payload),
+    ...optimistic<JoinTournamentByCodeRequest, Tournament>(queryClient, {
+      invalidate: () => [queryKeys.myTournaments, queryKeys.tournaments],
     }),
   });
 }

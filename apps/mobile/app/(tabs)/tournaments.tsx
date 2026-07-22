@@ -1,9 +1,10 @@
 import { normalizeSearch } from "@courtrank/core";
 import { useRouter } from "expo-router";
+import { CircleAlert, Search, SearchX } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { ScrollView, View } from "react-native";
-import { EmptyState, Field, Hero, Skeleton } from "../../components/ui";
-import { TournamentRow } from "../../components/tournament-row";
+import { View } from "react-native";
+import { TournamentRow, TournamentRowSkeleton } from "../../components/tournament-row";
+import { EmptyState, Field, Hero, Screen } from "../../components/ui";
 import { useTournamentsQuery } from "../../data/queries/tournaments";
 
 export default function TournamentsScreen() {
@@ -19,17 +20,32 @@ export default function TournamentsScreen() {
   }, [data, query]);
 
   return (
-    <View className="flex-1 bg-ink">
-      <Hero title="Torneos">
-        <Field placeholder="Buscar torneo…" value={query} onChangeText={setQuery} autoCapitalize="none" />
-      </Hero>
-      <ScrollView contentContainerClassName="gap-3 px-5 py-4" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <Screen
+      tabBar
+      hero={
+        <Hero compact eyebrow="COMPETICIÓN" title="Torneos">
+          <Field
+            icon={Search}
+            placeholder="Buscar torneo…"
+            value={query}
+            onChangeText={setQuery}
+            autoCapitalize="none"
+          />
+        </Hero>
+      }
+    >
+      {/* Rows hug at gap-2 like every Section list — Screen's gap-4 is the group gap. */}
+      <View className="gap-2">
         {isLoading ? (
-          [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)
+          [0, 1, 2, 3].map((i) => <TournamentRowSkeleton key={i} />)
         ) : isError ? (
-          <EmptyState title="No se pudieron cargar los torneos" description="Inténtalo de nuevo más tarde." />
+          <EmptyState
+            icon={CircleAlert}
+            title="No se pudieron cargar los torneos"
+            description="Inténtalo de nuevo más tarde."
+          />
         ) : filtered.length === 0 ? (
-          <EmptyState title="Sin resultados" description="Prueba con otro término de búsqueda." />
+          <EmptyState icon={SearchX} title="Sin resultados" description="Prueba con otro término de búsqueda." />
         ) : (
           filtered.map((tournament) => (
             <TournamentRow
@@ -39,7 +55,7 @@ export default function TournamentsScreen() {
             />
           ))
         )}
-      </ScrollView>
-    </View>
+      </View>
+    </Screen>
   );
 }

@@ -20,7 +20,7 @@ The backend seed provisions these claimable accounts. Sign in with email + passw
 
 The seed creates these users with `auth_subject = NULL`; the backend claims the row on first Clerk sign-in with the matching email, so they survive DB resets with no manual relinking.
 
-Use the same Clerk email/password accounts in the mobile development build when testing player flows. The mobile app is player-first, so host/admin screens remain web-only.
+Use the same Clerk email/password accounts in the mobile development build when testing player flows. The mobile app is player-first; **host/club owner screens remain web-only**, but the `PLATFORM_ADMIN` admin console is now available on mobile too (reached from the Perfil tab). Sign in with the admin account to test it.
 
 ## Admin access
 
@@ -47,6 +47,7 @@ Run from the repo root:
 - Sign in with a seeded player-capable account via email/password; smoke one configured social provider when auth flows changed.
 - Browse tournaments -> open detail -> bracket/standings render -> submit a join request -> see pending status -> withdraw.
 - Open a player profile. Own profile should show rating/achievements and allow training/racket/stringing flows where implemented.
+- As a `PLATFORM_ADMIN`, the Perfil tab shows a shield entry into `/admin`; a normal player does not. Open it -> overview/requests/clubs render -> provision a club from a pending request (row clears + toast) -> delete a request.
 - Kill and reopen the app; the Clerk session should persist via secure-store token cache.
 
 Run from the repo root:

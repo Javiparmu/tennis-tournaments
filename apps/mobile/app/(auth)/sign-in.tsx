@@ -2,11 +2,11 @@ import { useSignIn } from "@clerk/clerk-expo";
 import { errorMessage } from "@courtrank/core";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, View } from "react-native";
+import { AuthScreen } from "../../components/auth-screen";
 import { SocialButtons } from "../../components/social-buttons";
+import { Button, Field, FormError } from "../../components/ui";
 
-// Minimal email/password sign-in (Phase 5 adds Google/Apple SSO + polish).
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
@@ -35,53 +35,36 @@ export default function SignInScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-ink">
-      <View className="flex-1 justify-center gap-4 px-6">
-        <Text className="mb-2 text-3xl font-bold text-paper">CourtRank</Text>
-        <Text className="mb-4 text-base text-paper/60">Entra para inscribirte y seguir tu progreso.</Text>
-
-        <TextInput
-          className="rounded-xl border border-paper/20 bg-paper/5 px-4 py-3 text-paper"
+    <AuthScreen subtitle="Entra para inscribirte y seguir tu progreso.">
+      <View className="gap-3">
+        <Field
           placeholder="Correo electrónico"
-          placeholderTextColor="#9ca3af"
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
-        <TextInput
-          className="rounded-xl border border-paper/20 bg-paper/5 px-4 py-3 text-paper"
-          placeholder="Contraseña"
-          placeholderTextColor="#9ca3af"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error ? <Text className="text-sm text-clay">{error}</Text> : null}
-
-        <Pressable
-          className="mt-2 items-center rounded-xl bg-clay py-3 active:opacity-80"
-          onPress={onSubmit}
-          disabled={submitting}
-        >
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text className="text-base font-semibold text-white">Entrar</Text>}
-        </Pressable>
-
-        <View className="my-2 flex-row items-center gap-3">
-          <View className="h-px flex-1 bg-paper/15" />
-          <Text className="text-xs text-paper/40">o</Text>
-          <View className="h-px flex-1 bg-paper/15" />
-        </View>
-        <SocialButtons />
-
-        <View className="mt-4 flex-row justify-center gap-1">
-          <Text className="text-paper/60">¿No tienes cuenta?</Text>
-          <Link href="/sign-up" className="font-semibold text-clay">
-            Regístrate
-          </Link>
-        </View>
+        <Field placeholder="Contraseña" secureTextEntry value={password} onChangeText={setPassword} />
+        <FormError message={error} />
+        <Button label="Entrar" loading={submitting} onPress={onSubmit} />
       </View>
-    </SafeAreaView>
+
+      <View className="flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-line-strong" />
+        <Text className="font-sans text-xs text-ink-faint">o</Text>
+        <View className="h-px flex-1 bg-line-strong" />
+      </View>
+
+      <SocialButtons />
+
+      <View className="flex-row justify-center gap-1">
+        <Text className="font-sans text-ink-muted">¿No tienes cuenta?</Text>
+        {/* NativeWind has no interop for expo-router's Link, so the classes go on a
+            nested Text — on the Link they would be dropped without a type error. */}
+        <Link href="/sign-up">
+          <Text className="font-sans-semibold text-lime">Regístrate</Text>
+        </Link>
+      </View>
+    </AuthScreen>
   );
 }

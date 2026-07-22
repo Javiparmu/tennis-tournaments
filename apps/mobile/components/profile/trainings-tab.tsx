@@ -1,11 +1,26 @@
-import { type TrainingVisibility, VISIBILITY_LABEL } from "@courtrank/core";
-import { Trash2 } from "lucide-react-native";
+import { errorMessage, type TrainingVisibility, VISIBILITY_LABEL } from "@courtrank/core";
+import { CalendarDays, Dumbbell, Plus, Trash2 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { useCreateTrainingMutation, useDeleteTrainingMutation, useMyTrainingsQuery } from "../../data/queries/trainings";
+import {
+  useCreateTrainingMutation,
+  useDeleteTrainingMutation,
+  useMyTrainingsQuery,
+} from "../../data/queries/trainings";
 import { todayIso, trainingRange } from "../../lib/date-range";
 import { colors } from "../../theme/tokens";
-import { Button, Card, Chip, EmptyState, Field, SegmentedTabs, Sheet, Skeleton } from "../ui";
+import {
+  Button,
+  Chip,
+  EmptyState,
+  Field,
+  FormError,
+  ListCard,
+  ListCardSkeleton,
+  ListRow,
+  SegmentedTabs,
+  Sheet,
+} from "../ui";
 
 const VISIBILITY_TABS = [
   { key: "PUBLIC" as const, label: VISIBILITY_LABEL.PUBLIC },
@@ -27,59 +42,99 @@ export function TrainingsTab() {
 
   const trainings = data?.trainings ?? [];
 
-  function submit() {
-    createTraining.mutate({
-      trainingDate: todayIso(),
-      durationMinutes: duration ? Number(duration) : null,
-      notes: notes.trim() || null,
-      visibility,
-    });
-    setDuration("");
-    setNotes("");
-    setVisibility("PUBLIC");
-    setOpen(false);
+  // Await the create so a rejected entry keeps the sheet open with the error shown,
+  // and the fields only clear once it actually persists.
+  async function submit() {
+    try {
+      await createTraining.mutateAsync({
+        trainingDate: todayIso(),
+        durationMinutes: duration ? Number(duration) : null,
+        notes: notes.trim() || null,
+        visibility,
+      });
+      setDuration("");
+      setNotes("");
+      setVisibility("PUBLIC");
+      setOpen(false);
+    } catch {
+      // Surfaced by FormError in the sheet.
+    }
   }
 
   return (
     <View className="gap-2">
-      <Button label="Registrar entreno de hoy" variant="secondary" onPress={() => setOpen(true)} />
+      {trainings.length > 0 ? (
+        <Button
+          label="Registrar entreno de hoy"
+          variant="secondary"
+          icon={<Plus color={colors.ink} size={18} />}
+          onPress={() => setOpen(true)}
+        />
+      ) : null}
 
       {isLoading ? (
-        <Skeleton className="h-20 w-full" />
+        <ListCardSkeleton rows={2} rowClassName="h-16" />
       ) : trainings.length === 0 ? (
-        <EmptyState title="Sin entrenos" description="Registra tu primer entrenamiento." />
+        <EmptyState
+          icon={Dumbbell}
+          title="Sin entrenos"
+          description="Registra tu primer entrenamiento."
+          action={
+            <Button
+              label="Registrar entreno de hoy"
+              variant="secondary"
+              icon={<Plus color={colors.ink} size={18} />}
+              onPress={() => setOpen(true)}
+            />
+          }
+        />
       ) : (
-        trainings.map((training) => (
-          <Card key={training.id}>
-            <View className="flex-row items-start justify-between gap-3">
-              <View className="flex-1">
-                <Text className="text-base font-medium text-paper">{training.trainingDate}</Text>
-                {training.durationMinutes ? (
-                  <Text className="mt-0.5 text-sm text-paper/60">{training.durationMinutes} min</Text>
+        <ListCard>
+          {trainings.map((training) => (
+            // `items-start` only when notes push the row to a second line.
+            <ListRow key={training.id} className={training.notes ? "items-start" : undefined}>
+              <View className="flex-1 gap-0.5">
+                <View className="flex-row items-center gap-1.5">
+                  <CalendarDays color={colors.inkFaint} size={12} />
+                  <Text className="font-mono-medium text-sm text-ink">{training.trainingDate}</Text>
+                  {training.durationMinutes ? (
+                    <Text className="font-mono text-xs text-ink-muted">{` · ${training.durationMinutes} min`}</Text>
+                  ) : null}
+                </View>
+                {training.notes ? (
+                  <Text className="mt-0.5 font-sans text-sm text-ink-muted">{training.notes}</Text>
                 ) : null}
-                {training.notes ? <Text className="mt-1 text-sm text-paper/70">{training.notes}</Text> : null}
               </View>
-              <View className="items-end gap-2">
-                <Chip label={VISIBILITY_LABEL[training.visibility]} tone="muted" />
-                <Pressable onPress={() => deleteTraining.mutate({ trainingId: training.id })} className="p-1 active:opacity-70">
-                  <Trash2 color={colors.clay} size={18} />
+              <View className="items-end gap-1">
+                <Chip label={VISIBILITY_LABEL[training.visibility]} tone="neutral" />
+                <Pressable
+                  onPress={() => deleteTraining.mutate({ trainingId: training.id })}
+                  accessibilityRole="button"
+                  accessibilityLabel="Eliminar entreno"
+                  className="-mr-2 h-11 w-11 items-center justify-center rounded-full active:opacity-70"
+                >
+                  <Trash2 color={colors.danger} size={18} />
                 </Pressable>
               </View>
-            </View>
-          </Card>
-        ))
+            </ListRow>
+          ))}
+        </ListCard>
       )}
 
-      <Sheet visible={open} onClose={() => setOpen(false)}>
-        <Text className="mb-1 text-lg font-semibold text-paper">Nuevo entreno</Text>
-        <Text className="mb-4 text-sm text-paper/50">Fecha: {todayIso()}</Text>
-        <Field label="Duración (min)" value={duration} onChangeText={setDuration} keyboardType="number-pad" className="mb-3" />
-        <Field label="Notas" value={notes} onChangeText={setNotes} multiline className="mb-3" />
-        <Text className="mb-1.5 text-sm font-medium text-paper/70">Visibilidad</Text>
-        <View className="mb-4">
-          <SegmentedTabs tabs={VISIBILITY_TABS} value={visibility} onChange={setVisibility} />
+      <Sheet visible={open} onClose={() => setOpen(false)} title="Nuevo entreno">
+        <View className="gap-3">
+          <Text className="font-sans text-sm text-ink-muted">
+            Fecha: <Text className="font-mono text-ink">{todayIso()}</Text>
+          </Text>
+          <Field inSheet label="Duración (min)" value={duration} onChangeText={setDuration} keyboardType="number-pad" />
+          <Field inSheet label="Notas" value={notes} onChangeText={setNotes} multiline />
+          <View className="gap-1.5">
+            <Text className="font-sans-medium text-sm text-ink-muted">Visibilidad</Text>
+            <SegmentedTabs tabs={VISIBILITY_TABS} value={visibility} onChange={setVisibility} />
+          </View>
+          <FormError message={createTraining.isError ? errorMessage(createTraining.error, "training.save") : null} />
+          <Button label="Guardar" loading={createTraining.isPending} onPress={submit} />
         </View>
-        <Button label="Guardar" loading={createTraining.isPending} onPress={submit} />
       </Sheet>
     </View>
   );
