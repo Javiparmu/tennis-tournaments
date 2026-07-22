@@ -7,6 +7,8 @@ export const queryKeys = {
   adminClubContactRequests: ["admin", "club-contact-requests"] as const,
   adminClubs: ["admin", "clubs"] as const,
   tournaments: ["tournaments"] as const,
+  myTournaments: ["tournaments", "me"] as const,
+  myLeagues: ["leagues", "me"] as const,
   userRoot: ["user"] as const,
   profileCalendarRoot: ["profile-calendar"] as const,
   myTrainingsRoot: ["my-trainings"] as const,
@@ -19,6 +21,9 @@ export const queryKeys = {
   tournamentPlayers: (id?: number) => ["tournament-players", id ?? "unknown"] as const,
   tournamentMatches: (id?: number) => ["tournament-matches", id ?? "unknown"] as const,
   tournamentBracket: (id?: number) => ["tournament-bracket", id ?? "unknown"] as const,
+  league: (id?: number) => ["league", id ?? "unknown"] as const,
+  leagueMembers: (id?: number) => ["league-members", id ?? "unknown"] as const,
+  leagueMatches: (id?: number) => ["league-matches", id ?? "unknown"] as const,
   myJoinRequests: ["my-join-requests"] as const,
   tournamentJoinRequests: (id?: number, status?: string) =>
     ["tournament-join-requests", id ?? "unknown", status ?? "all"] as const,

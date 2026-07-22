@@ -3,6 +3,7 @@ import type { Match, PhaseFormat } from "./match";
 export type SurfaceType = "CLAY" | "HARD" | "GRASS";
 
 export type TournamentStatus = "DRAFT" | "STARTED" | "COMPLETED" | "CANCELLED" | "ABANDONED";
+export type TournamentVisibility = "PUBLIC" | "PRIVATE";
 
 export type SeedingStrategy = "INPUT_ORDER" | "RANDOM" | "PARTIAL_SEEDED";
 
@@ -53,7 +54,10 @@ export type TournamentBasic = {
   description: string | null;
   surface: SurfaceType | null;
   status: TournamentStatus;
-  clubId: number;
+  clubId: number | null;
+  ownerUserId: number | null;
+  visibility: TournamentVisibility;
+  inviteCode: string | null;
   championPlayerId: number | null;
   startDate: string;
   endDate: string;
@@ -69,7 +73,7 @@ export type CreateTournamentRequest = {
   name: string;
   description?: string | null;
   surface?: SurfaceType | null;
-  clubId: number;
+  clubId?: number | null;
   startDate: string;
   endDate: string;
 };
@@ -92,10 +96,17 @@ export type CreatePhaseRequest = {
 
 export type AddPlayerInput = {
   playerId?: number | null;
+  // Email of an existing platform user; resolved server-side to their player so
+  // no user directory or email list is ever sent to the browser.
+  email?: string | null;
   name?: string | null;
   seed?: number | null;
 };
 
 export type AddPlayersRequest = {
   players: AddPlayerInput[];
+};
+
+export type JoinTournamentByCodeRequest = {
+  inviteCode: string;
 };

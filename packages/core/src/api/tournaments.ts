@@ -4,6 +4,7 @@ import type {
   CreatePhaseRequest,
   CreateTournamentJoinRequest,
   CreateTournamentRequest,
+  JoinTournamentByCodeRequest,
   DecideTournamentJoinRequest,
   Match,
   Player,
@@ -47,8 +48,15 @@ export async function getUpcomingCalendar(limit = 4): Promise<TournamentBasic[]>
   return upcomingCalendar(await getTournaments(), limit);
 }
 
-export async function getTournament(id: number): Promise<Tournament> {
-  return apiGet<Tournament>(`/tournaments/${id}`);
+// Optionally authed: public tournaments load anonymously, but PRIVATE ones need
+// the viewer's token so the backend authorizes access. Pass the token when the
+// viewer is signed in; omit it for anonymous public views.
+export async function getTournament(token: string | null | undefined, id: number): Promise<Tournament> {
+  return apiGet<Tournament>(`/tournaments/${id}`, token ?? undefined);
+}
+
+export async function getMyTournaments(token: string | null | undefined): Promise<TournamentBasic[]> {
+  return apiGet<TournamentBasic[]>("/users/me/tournaments", requireToken(token));
 }
 
 export async function createTournament(
@@ -69,6 +77,13 @@ export async function deleteTournament(token: string | null | undefined, id: num
   return apiDelete<void>(`/tournaments/${id}`, requireToken(token));
 }
 
+export async function joinTournamentByCode(
+  token: string | null | undefined,
+  payload: JoinTournamentByCodeRequest,
+): Promise<Tournament> {
+  return apiPost<Tournament>("/tournaments/join", payload, requireToken(token));
+}
+
 export async function startTournament(token: string | null | undefined, id: number): Promise<Tournament> {
   return apiPost<Tournament>(`/tournaments/${id}/start`, undefined, requireToken(token));
 }
@@ -77,8 +92,13 @@ export async function resetTournament(token: string | null | undefined, id: numb
   return apiPost<Tournament>(`/tournaments/${id}/reset`, undefined, requireToken(token));
 }
 
-export async function getTournamentPhases(id: number): Promise<TournamentPhaseSummary[]> {
-  return apiGet<TournamentPhaseSummary[]>(`/tournaments/${id}/phases`);
+// Optionally authed like getTournament: PRIVATE tournaments only expose their
+// phases to the viewer's token; public tournaments load anonymously.
+export async function getTournamentPhases(
+  token: string | null | undefined,
+  id: number,
+): Promise<TournamentPhaseSummary[]> {
+  return apiGet<TournamentPhaseSummary[]>(`/tournaments/${id}/phases`, token ?? undefined);
 }
 
 export async function createPhase(
@@ -89,8 +109,8 @@ export async function createPhase(
   return apiPost<TournamentPhase>(`/tournaments/${id}/phases`, payload, requireToken(token));
 }
 
-export async function getTournamentPlayers(id: number): Promise<Player[]> {
-  return apiGet<Player[]>(`/tournaments/${id}/players`);
+export async function getTournamentPlayers(token: string | null | undefined, id: number): Promise<Player[]> {
+  return apiGet<Player[]>(`/tournaments/${id}/players`, token ?? undefined);
 }
 
 export async function addTournamentPlayers(
@@ -109,12 +129,15 @@ export async function removeTournamentPlayer(
   return apiDelete<void>(`/tournaments/${id}/players/${playerId}`, requireToken(token));
 }
 
-export async function getTournamentMatches(id: number): Promise<Match[]> {
-  return apiGet<Match[]>(`/tournaments/${id}/matches`);
+export async function getTournamentMatches(token: string | null | undefined, id: number): Promise<Match[]> {
+  return apiGet<Match[]>(`/tournaments/${id}/matches`, token ?? undefined);
 }
 
-export async function getTournamentBracket(id: number): Promise<TournamentBracket> {
-  return apiGet<TournamentBracket>(`/tournaments/${id}/bracket`);
+export async function getTournamentBracket(
+  token: string | null | undefined,
+  id: number,
+): Promise<TournamentBracket> {
+  return apiGet<TournamentBracket>(`/tournaments/${id}/bracket`, token ?? undefined);
 }
 
 export async function getMyJoinRequests(token: string | null | undefined): Promise<TournamentJoinRequest[]> {

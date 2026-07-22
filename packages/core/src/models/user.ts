@@ -14,7 +14,10 @@ export type User = {
   authSubject: string | null;
   createdAt: string | null;
   updatedAt: string | null;
-  achievements: Achievement[];
+  // Only populated on detail reads (/users/me, /users/{id}, /users/by-username), and
+  // omitted entirely when the user has none — the backend never encodes the empty
+  // default. Read as `user.achievements ?? []`.
+  achievements?: Achievement[];
   // Completed/walkover matches won by the user's linked player. Omitted by the
   // backend when 0 (defaults are not serialized).
   matchWins?: number;

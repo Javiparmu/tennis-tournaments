@@ -71,6 +71,7 @@ export type UserMatchActivityResponse = {
 
 export type UpdateMatchScoreRequest = {
   score: TennisScore;
+  winnerId?: number;
 };
 
 export type UserProfileMatchEntry = {

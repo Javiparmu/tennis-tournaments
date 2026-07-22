@@ -33,7 +33,7 @@ export type ClubContactRequest = {
   createdAt: string;
   // Handle of the requester (the future club owner). Optional so responses from
   // an older backend — or requests captured before this field existed — still
-  // parse; the admin provision modal falls back to a manual input when absent.
+  // parse; the admin provision form shows it prefilled and read-only (empty when absent).
   ownerUsername?: string | null;
 };
 
